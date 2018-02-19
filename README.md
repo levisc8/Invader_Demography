@@ -1,2 +1,2 @@
-# Invader_Demography
-Demographic data and models for TRC Data Paper
+## Population dynamics for a variety of invasive species in the central United States
+This repository hosts R and Stan code for M/I-PMs and a raw demographic data set for 14 non-native species in the central US. Data includes information under ambient conditions and a competition removal experiment. I am currently working on a paper that describes the experimental methodology and provides additional details on the data set.
