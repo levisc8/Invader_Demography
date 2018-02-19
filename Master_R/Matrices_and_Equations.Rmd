@@ -1,0 +1,240 @@
+---
+title: "Matrices and Equations for Appendix"
+author: "Sam Levin"
+date: "February 2, 2018"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+
+### Ailanthus altissima
+Mostly from Cranddll & Knight 2017, but with fire effects left out and notation changed slightly for consistency's sake
+
+$$
+n(y, t+1) = vgf_{d}(y)B(t) + \int_L^U [P(y,x) + vgF(y,x) + C(y,x)]n(x,t) \mathrm{d}x  \tag{1}
+$$
+$$
+P(y, x) = s(x)g(y, x) \tag{2}\\
+$$
+
+$$
+F(y, x) = f_{p}(x)f_{s}(x)f_{d}(y) \tag{3}
+$$
+$$
+C(y,x) = c_{d}(y)h_{n}(x) \tag{4}
+$$
+$$
+B(t+1) = v_{s}s_{b}B(T) + vg_{b{}} \int_L^U[f_{p}(x)f_{s}(x)]n(x,t) \mathrm{d}x \tag{5}
+$$
+
+$$ \tag{6-12}
+\text{Control Treatment  Parameters}\\
+Logit(s(x)) = 0.944 + 0.063x \\
+g(y,x) = 1.05x \\ 
+log(f_s(x)) = 6.86 + 0.019y \\
+logit(f_p(x)) = -27.85 + 0.25y \\
+f_d = Normal(\mu = 0.7, \sigma = 0.245) \\
+h_n(x) = 0.62 \\
+c_d(y) = Normal(\mu = 2.97, \sigma = 1.63)\\
+$$
+
+$$ \tag{13-19} \\
+\text{Competitor Removal Treatment Parameters} \\
+Logit(s(x)) = 0.093 + 0.31x \\
+g(y,x) = 1.04x \\
+log(f_s(x)) = 6.86 + 0.019y \\
+logit(f_p(x)) = -27.85 + 0.25y \\
+f_d = Normal(\mu = 1.5, \sigma = 0.88) \\
+h_n(x) = 1.81 \\
+c_d(y) = Normal(\mu = 2.96, \sigma = 1.65) 
+$$
+
+
+### Alliaria petiolata
+
+$$\begin{bmatrix}
+    s_b & 0 & f * V * (1 - g_i) \\
+    g_b & 0 & f * v * g_i \\
+    0 & s & 0
+    \end{bmatrix}$$
+    
+    
+### Carduus nutans
+
+$$\begin{bmatrix}
+    S_{b} & 0 & f * e \\
+    g_{b} & 0 & f * g_{i} \\
+    0 & s_{j} & 0
+    \end{bmatrix}$$ 
+    
+    
+### Draba verna
+
+$$\begin{bmatrix}
+    0 & v_{3} * (1 - g_{i}) & 0 & 0 & 0 \\
+    0 & 0 & v_{2} * (1-g_{i}) & 0 & 0 \\
+    0 & 0 & 0 & v_{1} * (1- g_{i}) & 0 \\
+    0 & 0 & 0 & 0 & s * f * v_{0} * (1-g_{i}) \\ 
+    v_{4} * g_{i} & v_{3} * g_{i} & v_{2} * g_{i} &
+    v_{1} * g_{i} &  s * f * v_{0} * g_{i}
+  \end{bmatrix}$$
+  
+^^ This one seems a little out of place w/ respect to the way we did Kummerowia for example. Can you double check this one? I think it's an equally legitimate alternative way of modeling seed bank transitions (i.e. if you don't germinate, you become a year older in the seed bank), but it just seems odd we chose to do it this way here and a different way below.
+
+### Euonymus alatus
+
+_Eqs 1-3 adapted from [Kuss et al. 2008 ](https://pdfs.semanticscholar.org/59dc/056c6c597db340ab352bb7df38269793b88f.pdf)_
+
+$$
+n(y, t + 1) = \int_L^U [P(y,x)]n(x,t) \mathrm dx + \int_L^U [F(y,x)]n(x, t-1) \mathrm dx \tag{1}
+$$ 
+
+$$
+P(y,x) = s(x)g(y,x) \tag{2}
+$$
+
+$$
+F(y,x) = E_{p_{i}}f_{p}(x,t-1)f_{s}(x, t-1)f_{d}(y,t+1)\tag{3}\\
+\text{I think I need to add a } +E_{p_2}f_p(x,t-2)... \text{ here}\\ \text{ Thoughts?}
+$$
+$$ \tag{4-8}
+\text{Control Treatment Parameters} \\
+Logit(S(x)) = -1.3459 + 0.31055x + -0.00013x^2\\
+G(y,x) = 82.295 + f_g(x) \text{ where } f_g(x) \text{ is a standard smooth function of }x\\
+Log(f_s(x)) = 1.178 + 0.0157y \\
+Logit(f_p(x)) = -7.5401 + 0.03225y \\ 
+f_d(y) = Normal(\mu = 7.545, \sigma = 2.7695)
+$$
+
+$$ \tag{9-13} \\
+\text{Competitor Removal Treatment Parameters} \\
+Logit(s(x)) = 1.5086 + 0.03314x + 0.00117x^2\\
+g(y,x) = 82.551 + f_g(x) \text{ where } f_g(x) \text{ is a standard smooth function of }x\\
+Log(f_s(x)) = 1.178 + 0.0157y \\
+Logit(f_p(x)) = -7.5401 + 0.03225y \\
+f_d(y) = Normal(\mu = 7.545, \sigma = 2.7695)
+$$
+
+
+### Kummerowia striata
+
+$$\begin{bmatrix}
+    0 & 0 & f * v * g_{b_2} \\
+    1 & 0 & f * v * g_{b_1} \\
+    0 & 1 & s * f * v * g_{i}
+\end{bmatrix}$$
+
+
+### Lepidium campestre
+
+$$\begin{bmatrix}
+    s * f * g_i 
+\end{bmatrix}$$
+
+### Lespedeza cuneata
+
+$$\begin{bmatrix}
+    0 & 0 & 0 & F_{S} * (1-g) * v & F_{M} * (1-g) * v & F_{L} * (1-g) * v \\
+    g * v & 0 & 0 & F_{S} * g * v & F_{M} * g * v & F_{L} * g * v \\
+    0 & P_{Sdl1} * S_{Sdl} & 0 & 0 & 0 & 0 \\
+    0 & P2_{Sdl1} * S_{Sdl} & P_{Sdl2} * S_{Sdl2} & S_{S} * C_{SS} & S_{M} * R_{SM} & 0 \\
+    0 & 0 & 0 & S_{S} * P_{MS} & S_{M} * C_{MM} & S_{L} * R_{ML} \\
+    0 & 0 & 0 & 0 & S_{M} * P_{LM} & S_{L} * C_{LL}
+\end{bmatrix}$$
+
+
+### Ligustrum obtusifolium
+
+$$ 
+n(y, t + 1) = \int_L^U [P(y,x)]n(x,t) \mathrm dx  + \int_L^U[F(y,x)]n(x, t-1)\mathrm dx \tag{1}
+$$
+
+
+$$
+P(y,x) = s(x)g(y,x) \tag{2}
+$$
+
+$$
+F(y,x) = E_p g_i f_p(x,t-1)f_s(x,t-1)f_d(y,t+1) \tag{3}
+$$
+
+$$ \tag{4-8}\\
+\text{Control Treatment Parameters}\\
+Logit(s(x)) = ...\\
+g(y,x) = ...\\
+Logit(f_p(x)) = ...\\
+Log(f_s(x)) = ...\\
+f_d(y) = Normal(\mu = ..., \sigma = ...)
+$$
+
+$$ \tag{9-13}\\
+\text{Competitor Remvoal Treatment Parameters}\\
+Logit(s(x)) = ...\\
+g(y,x) = ...\\
+Logit(f_p(x)) = ...\\
+Log(f_s(x)) = ...\\
+f_d(y) = Normal(\mu = ..., \sigma = ...)
+$$
+
+### Lonicera maackii 
+$$ 
+n(y, t + 1) = \int_L^U [P(y,x) + F(y,x)]n(x,t) \mathrm dx \tag{1}
+$$
+
+$$
+P(y,x) = s(x)g(y,x) \tag{2}
+$$
+
+$$
+F(y,x) = E_p g_i f_p(x)f_s(x)f_d(y)
+$$
+
+$$\tag{4-8}\\
+\text{Control Treatment Parameters} \\
+Logit(s(x)) = ...\\
+g(y,x) = ...\\
+Logit(f_p(x)) = ...\\
+Log(f_s(x)) = ...\\
+f_d(y) = Normal(\mu = ..., \sigma = ...)
+$$
+
+$$\tag{9-13}\\
+\text{Competitor Removal Treatment Parameters} \\
+Logit(s(x)) = ...\\
+g(y,x) = ...\\
+Logit(f_p(x)) = ...\\
+Log(f_s(x)) = ...\\
+f_d(y) = Normal(\mu = ..., \sigma = ...)
+$$
+
+### Perilla frutescens
+
+$$\begin{bmatrix} s * f * g_i  \end{bmatrix}$$
+
+### Potentilla recta
+
+$$\begin{bmatrix}
+    s_{b} & 0 & 0 & f * v * (1-g_{i}) \\
+    g_{b} & 0 & 0 & f * v * g_{i} \\
+    0 & s_{1a} * s_{1b} * (1-p_{1}) & s_{2} * (1-p_{2}) & s_{3} * (1-p_{3}) \\
+    0 & s_{1a} * s_{1b} * p_{1} & s_{2} * p_{2} & s_{3} * p_{3}
+\end{bmatrix}$$
+
+### Thlaspi perfoliatum
+
+$$\begin{bmatrix} 
+    s_{b} & s * f * v * (1-g_i)\\
+    g_{b} & s * f * v * g_i
+\end{bmatrix}$$
+
+
+### Verbascum thapsus
+
+$$\begin{bmatrix}
+    s_{b} * (1-g_{b}) & 0 & f * v * (1-g_{i}) \\
+    s_{b} * g_{b} & 0 & f * v * g_{i} \\
+    0 & s_{j} & 0
+\end{bmatrix}$$
+

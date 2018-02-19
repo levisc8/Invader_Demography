@@ -1,0 +1,670 @@
+#####################################################################################
+### Ligustrum Exploration and IPM ######################################
+#####################################################################################
+
+# All plants are modeled as ramets. will switch to genets if needed
+# 1. Growth: splines look good when separated by treatment and then add in big plants.
+#    sticking with those for now. Tried a linear model but found that slopes were all < 1 which implied
+#    plants shrink on average. That didn't sound reasonable too me.
+# Rae: Why use a 200 cm cutoff for adding all large? It appears that 165-175 might be a slightly better place to start.
+# Then you could say all RAs were used in estimating growth for each treatment. This is something we might want to discuss more.
+# The larger plants seem to drive the slope where as the smaller plants drive the intercept. Are we biasing the slope by lumping?
+#   
+# 2. Survival: Doesn't look like much of a treatment effect, but will model them separately for now
+#    to see if it affects lambda. I have also written code to combine all treatments so combining them later
+#    would not take very long. 
+#     -For now, keeping plants <200 separate, combining above that.
+# 3. Fecundity: We have fruit production, probability of reproduction
+#    recruit size distribution (assumed no treatment effect since we have no data on that from 2015). 
+#     -Use Spline for fruit production, binom for Pr(repro), normal for recruit size dist.
+#       All are pooled across trts
+#
+# 4. Clones: Competitor removal seems to produce smaller clones than the others. Will investigate other parameters
+#     -No relationship between size of parents and whether they clone. will be a fixed mean probability
+#     -Marginally significant relationship between size and number of clones in quasipoisson. Normal poisson
+#      model appears to be underdispersed, and is non-significant. Visual examination appears to indicate
+#      there is a relationship, but there are large outliers too. Next, tried Splines and Zero-Truncated Poisson.
+#      Zero-Truncated Poisson works, and actually makes sense, since a plant that is considered clonal cannot
+#      produce less than 1 clone. Using 0-truncated Pois for now.
+#     -Clone size distributions look different, modeling separately
+#   OMITTING CLONES FOR NOW DUE TO POSSIBLE ISSUES WITH UNDERLYING DATA COLLECTION METHODS
+
+rm(list = ls(all=T)) 
+cat("\014")
+graphics.off()
+
+### LIBRARIES ###
+# library(rstan)
+library(MASS)
+library(dplyr)
+library(magrittr)
+library(stringr)
+library(mgcv)
+
+setwd("C:/Users/sl13sise/Dropbox/invaders demography")
+
+source('Ligustrum/IPM/R/IPM_Functions_Ligustrum.r') 
+
+# load the data and do some basic restructuring
+RAs<-read.csv("Ligustrum/IPM/Data/RA4R.csv")
+# str(RAs)
+AllPlants<-read.csv("Ligustrum/IPM/Data/Ligobt4R-8.8.15.csv",
+                    stringsAsFactors = FALSE) %>%
+           filter(Clone == 0 | is.na(Clone)) %>%
+  filter(Trt != 'Herb')
+
+AllPlants$Plant <- as.numeric(AllPlants$Plant)
+# str(AllPlants)
+AllPlants$growth <- AllPlants$Ht15 - AllPlants$Ht14
+AllPlants <- AllPlants %>% arrange(Quadrat,Plant)
+
+
+
+
+# Growth---------------------------------------------------------------------------------------
+# Linear models. 
+Big.Plants <- filter(AllPlants, Trt == "All")
+
+growth.lms <- AllPlants %>% 
+  filter(Trt!="All") %>% 
+  group_by(Trt) %>%
+  do(LM = lm(Ht15 ~ Ht14, data = rbind(., Big.Plants)),
+     SumLM = summary(lm(Ht15 ~ Ht14, data = rbind(. ,Big.Plants))),
+     GAM = gam(Ht15 ~ s(Ht14), data = rbind(., Big.Plants)))
+
+
+par(mfrow = c(1, 1))
+xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE), .1)
+plot(Ht15 ~ Ht14, data = AllPlants)
+abline(growth.lms$LM[[2]], col = 'black')
+abline(growth.lms$LM[[1]], col = 'green')
+lines(xx, predict(growth.lms$GAM[[1]], 
+                  data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'green', lty = 2)
+lines(xx, predict(growth.lms$GAM[[2]], 
+                  data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'black', lty = 2)
+
+abline(1:500,1:500,col='red')
+legend('topleft',c("Control", "CR",
+                   "Control GAM", "CR GAM",
+                   "1:1 Growth Line"),
+       col = c('black', 'green', 
+               'black', 'green',
+               'red'),
+       lty = c(1, 1, 2, 2, 1))
+
+growth.lms$SumLM[[1]]
+growth.lms$SumLM[[2]]
+
+AIC(growth.lms$LM[[1]], growth.lms$GAM[[1]])
+AIC(growth.lms$LM[[2]], growth.lms$GAM[[2]])
+
+AllGrow <- lm(Ht15 ~ Ht14, data = AllPlants)
+summary(AllGrow)
+
+# Survival across treatments----------------------------------------------------------------------
+# Logistic regression first with all plants that are classed by treatment.
+AllSmall <- filter(AllPlants, Trt != 'All')
+AllBig <- filter(AllPlants, Trt == 'All')
+AllControl <- filter(AllPlants, Trt == 'Control')
+AllCR <- filter(AllPlants, Trt == 'Comp')
+
+
+# There is no way to model all of them 
+# together, but we'll see what their regressions look like separately.
+ContLinearGlm <- glm(Alive2015 ~ Ht14,
+                     data = rbind(AllControl, AllBig),
+                     family = binomial())
+CRLinearGlm <- glm(Alive2015 ~ Ht14,
+                   data = rbind(AllCR, AllBig),
+                   family = binomial())
+
+# Both return warnings of probabilities = 0|1. trying Quadratic fits now
+ContQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+                     data = rbind(AllControl, AllBig),
+                     family = binomial())
+CRQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+                   data = rbind(AllCR, AllBig),
+                   family = binomial())
+summary(ContLinearGlm)
+summary(CRLinearGlm)
+summary(ContQuadGlm)
+summary(CRQuadGlm)
+
+AIC(ContLinearGlm, ContQuadGlm)
+AIC(CRLinearGlm,CRQuadGlm)
+# Plot fits to see how they look
+xx <- seq(0, max(AllPlants$Ht15, na.rm = TRUE) + 50, 1)
+plot(Alive2015 ~ Ht14, data = AllPlants,
+     xlim = c(0, 600))
+lines(xx, predict(ContLinearGlm,
+                  data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'black', 
+      lty = 1)
+lines(xx, predict(ContQuadGlm, 
+                  data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'black',
+      lty = 2)
+lines(xx, predict(CRLinearGlm,
+                  data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'green',
+      lty = 1)
+lines(xx, predict(CRQuadGlm,
+                  data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'green',
+      lty = 2)
+legend('bottomright',
+       c('Control', 'Control Quad', 'CR', 'CR Quad'),
+       col = c('black', 'black', 'green', 'green'),
+       lty = c(1, 2, 1, 2))
+
+
+# Fecundity-------------------------------------------------------------------------------
+# we are missing a recruit size distribution from year two. For now, I am using the initial
+# seedling size distribution and seeing how that goes. We can figure out something else
+# later. Modeled without a seedbank based on work on congeners by Shelton and Cain 2002
+
+# first, we will estimate fecundity from our sample of 10 RAs
+fec <- glm(Fruit ~ Ht,
+           data = RAs,
+           family = quasipoisson())
+summary(fec)
+# normal poisson is very overdispersed, trying lm and splines next
+feclm <- lm(Fruit ~ Ht,
+            data = RAs)
+summary(feclm)
+
+fec.gam <- gam(Fruit ~ s(Ht),
+               data = RAs)
+summary(fec.gam)
+
+par(mfrow = c(1,1))
+xx <- seq(0, max(RAs$Ht), 1)
+plot(Fruit ~ Ht, data = RAs)
+lines(xx, predict(fec, data.frame(Ht = xx), type = 'response'),
+      col = 1)
+abline(feclm, col = 2)
+lines(xx, predict(fec.gam, data.frame(Ht = xx), type = 'response'),
+      col = 3)
+legend('topleft', c('Poisson','Linear','Spline'), 
+       col = c(1, 2, 3), lty = 1)
+
+# Rae: The spline is returning a negative intercept.
+
+#Pr(Reproductive) - Logistic regression ----------------------------------
+AllPlants$Repro <- ifelse(AllPlants$Stg15 == "RA", 1, 0)
+
+Regression.Data <- filter(AllPlants, Alive2015 != "NA")
+
+Repro.Glm <- glm(Repro ~ Ht14,
+                 data = Regression.Data,
+                 family = binomial())
+summary(Repro.Glm)
+plot(Repro ~ Ht15,
+     data = Regression.Data)
+xx<-seq(0, max(AllPlants$Ht14, na.rm = TRUE), 0.1)
+lines(xx, predict(Repro.Glm, data.frame(Ht14 = xx), type = 'response'),
+      lty = 2, col = 'red')
+
+
+
+
+# Recruit size distribution----------------------------------------------------------------------
+# Not really sure how to do this with no data from 2015. Using 2014 size distribution for now,
+# but there's really no way to separate out the treatments, and I think this is the only place
+# we could potentially see treatment effect. However, we may be able to justify this by pointing out
+# that there was no difference in growth or survival for small plants between the two censuses,
+# so maybe we're ok
+sdls <- filter(AllPlants, Stg14 == "SDL")
+Sdl.mean <- mean(sdls$Ht14, na.rm = TRUE)
+Sdl.SD <- sd(sdls$Ht14, na.rm = TRUE)
+
+xx <- seq(0, max(sdls$Ht14, na.rm = TRUE), 0.5)
+hist(sdls$Ht14,
+     breaks = 1,
+     border = 'white',
+     xlab = 'Ht 2014',
+     freq = FALSE,
+     ylim = c(0, max(dnorm(xx, Sdl.mean, Sdl.SD)) + 0.05))
+lines(xx, dnorm(xx, Sdl.mean, Sdl.SD), 
+      col = 'red', lty = 2)
+
+# no treatment effect on seedling growth or survival, so I think we can justify saying no treatment
+# effect on seedling size distribution
+sdl.tab <- table(sdls$Trt, sdls$Alive2015)
+sdl.chisq <- chisq.test(sdl.tab, correct = FALSE)
+sdl.chisq
+sdl.tab
+sdl.chisq$exp
+
+sdl.grow.aov <- aov(growth ~ Trt,
+                    data = AllPlants[AllPlants$Stg14 == "SDL", ])
+summary(sdl.grow.aov)
+boxplot(growth ~ Trt,
+        data = AllPlants[AllPlants$Stg14 == "SDL", ])
+
+# Figures for Appendix
+xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE), 0.1)
+par(mfrow = c(2,3), xpd = TRUE)
+plot(Ht15 ~ Ht14, data = AllPlants,
+     xlab = 'Size (t)',
+     ylab = 'Size (t+1)')
+lines(xx, predict(growth.lms$LM[[2]],
+                  data.frame(Ht14 = xx), 
+                  type = 'response'),
+      col = 'black',
+      lty = 2)
+lines(xx, predict(growth.lms$LM[[1]], 
+                  data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'green',
+      lty = 2)
+
+xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE) + 30, 0.1)
+plot(Alive2015 ~ Ht14, data = AllPlants,
+     xlab = 'Size (t)',
+     ylab = 'Survival (t+1)',
+     xlim = c(0, max(AllPlants$Ht14, na.rm = TRUE) + 30))
+lines(xx, predict.surv(xx, CRLinearGlm),
+      col = 'green', lty = 1)
+lines(xx, predict.surv(xx, CRQuadGlm),
+      col = 'green', lty = 2)
+lines(xx, predict.surv(xx, ContLinearGlm),
+      col = 'black', lty = 1)
+lines(xx, predict.surv(xx, ContQuadGlm),
+      col = 'black', lty = 2)
+legend('bottomright', c('CR Linear',
+                        'CR Quad',
+                        'Cont Linear',
+                        'Cont Quad'),
+       lty = c(1, 2, 1, 2),
+       col = c('green', 'green',
+               'black', 'black'))
+
+xx <- seq(min(RAs$Ht), max(RAs$Ht) - 5, 1)
+plot(Fruit ~ Ht, data = RAs,
+     xlab = 'Size (t+1)',
+     ylab = 'Seeds (t+1)')
+lines(xx, predict(fec, 
+                  data.frame(Ht = xx),
+                  type = 'response'),
+      col = 'red',
+      lty = 2)
+
+xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE), .1)
+
+plot(Repro ~ Ht14, data = AllPlants,
+     xlab = 'Size (t)',
+     ylab = 'Reproductive (t+1)')
+lines(xx, predict(Repro.Glm, data.frame(Ht14 = xx),
+                  type = 'response'),
+      col = 'red',
+      lty = 2)
+
+xx <- seq(0, max(sdls$Ht14, na.rm = TRUE), 0.5)
+hist(sdls$Ht14,
+     breaks = 1,
+     border = 'white',
+     xlab = 'Recruit size (t)',
+     freq = FALSE,
+     ylim = c(0, max(dnorm(xx, Sdl.mean, Sdl.SD)) + 0.05),
+     main = '')
+lines(xx, dnorm(xx, Sdl.mean, Sdl.SD),
+      col = 'red',
+      lty = 2)
+
+legend(x = 33.25, y = 0.23,
+       'Panel A',
+       bty = 'n',
+       xpd = NA,
+       cex = 1.3)
+legend(x = 30, y = 0.2, c('Treatment','Control', 'Competitor removal',
+                           'Pooled values'),
+       lty = c(NA, 2, 2, 2), col = c(NA,'black', 'green', 'red'),
+       xpd = NA, bty = 'n',
+       cex = 1.3)
+
+# Clonal reproduction-----------------------------------
+
+# For.Cloning<-filter(AllPlants,!is.na(Clone))
+# # add column indicating parent plant
+# for(i in 1:length(For.Cloning$Quadrat)){
+#   if(For.Cloning$Clone[i] !=0){
+#     For.Cloning$Parent[i] <- For.Cloning$Plant[i]%>%str_sub(1,-2)
+#   }else{
+#     For.Cloning$Parent[i]<-NA
+#   }
+# }
+# 
+# For.Cloning$Parent<-as.numeric(For.Cloning$Parent)
+# For.Cloning$QuadPlant<-paste(For.Cloning$Quadrat,For.Cloning$Plant,sep="-")
+# 
+# # calculate number of clones produced by each parent and add that to For.Cloning data frame
+# Clone.Count<-For.Cloning%>%filter(Parent!="NA")%>%group_by(Quadrat,Parent)%>%summarise(Clone.N=n())
+# Clone.Count$QuadPlant<-paste(Clone.Count$Quadrat,Clone.Count$Parent,sep="-")
+# 
+# For.Cloning<-left_join(For.Cloning,Clone.Count,by=c("QuadPlant"))%>%select(-Parent.x,
+#                                                                            -Quadrat.y,-Parent.y,-QuadPlant)
+# 
+# For.Cloning$Clonal<-ifelse(!is.na(For.Cloning$Clone.N),1,0)
+# For.Cloning$Clonal[For.Cloning$Clone==1]<-NA #the clones themselves wouldn't be expected to be clonal...
+# 
+# # Pr(Clonal) by treatment-------------------------------
+# tab<-table(For.Cloning$Trt,For.Cloning$Clonal)
+# chisq.test(tab)
+# tab
+# chisq.test(tab)$exp
+# # Pr(clonal) does not differ by treatment, so we will lump them all together.
+# Pr.Clonal.Reg<-glm(Clonal~Ht14,data=For.Cloning, family=binomial())
+# summary(Pr.Clonal.Reg)
+# 
+# xx<-seq(0,max(For.Cloning$Ht14,na.rm=T),1)
+# plot(Clonal~Ht14,data=For.Cloning)
+# lines(xx,predict(Pr.Clonal.Reg,data.frame(Ht14=xx),type='response'),col='red')
+# 
+# # it would appear that initial size is not a useful predictor of whether or not a plant clones, so this will be
+# # a discrete parameter
+# Pr.Clonal<-mean(For.Cloning$Clonal,na.rm=T)
+# 
+# # number of clones by size and treatment
+# Clone.Trt.N<-aov(Clone.N~Trt,data=For.Cloning)
+# summary(Clone.Trt.N)
+# 
+# # Treatment has no strong effect on number of clones produced. Looking to see if size is a reasonable
+# # predictor when treatments are lumped together
+# 
+# par(mfrow=c(1,1))
+# plot(Clone.N~Ht14,data=For.Cloning,xlim=c(0,200))
+# Clone.N.Pois<-glm(Clone.N~Ht14,data=For.Cloning,family=quasipoisson())
+# Clone.N.Spline<-gam(Clone.N~s(Ht14),data=For.Cloning)
+# Clone.N.ZTPois<-vglm(Clone.N~Ht14,data=For.Cloning,family=pospoisson)
+# summary(Clone.N.Pois)
+# summary(Clone.N.Spline)
+# summary(Clone.N.ZTPois)
+# lines(xx,predict(Clone.N.Spline,data.frame(Ht14=xx),type='response'),col='green')
+# lines(xx,predict(Clone.N.Pois,data.frame(Ht14=xx),type='response'),col='red')
+# lines(xx,predict(Clone.N.ZTPois,data.frame(Ht14=xx),type='response'),col='blue')
+# legend('topleft',c('Spline','Quasi-Poisson','Zero-truncated Poisson'),col=c('green','red','blue'),lty=1)
+# 
+# # Clone size distribution-----------------
+# Clones<-filter(For.Cloning,Clone==1)
+# 
+# cont.clone.mean<-mean(Clones$Clone.Height[Clones$Trt=="Control"])
+# cont.clone.sd<-sd(Clones$Clone.Height[Clones$Trt=="Control"])
+# comp.clone.mean<-mean(Clones$Clone.Height[Clones$Trt=="Comp"])
+# comp.clone.sd<-sd(Clones$Clone.Height[Clones$Trt=="Comp"])
+# herb.clone.mean<-mean(Clones$Clone.Height[Clones$Trt=="Herb"])
+# herb.clone.sd<-mean(Clones$Clone.Height[Clones$Trt=="Herb"])
+# 
+# par(mfrow=c(1,1))
+# xx<-seq(0,max(Clones$Clone.Height),1)
+# hist(Clones$Clone.Height,main="",breaks=1,border='white',freq=F,ylim=c(0,.03))
+# lines(xx,dnorm(xx,cont.clone.mean,cont.clone.sd),col=1)
+# lines(xx,dnorm(xx,comp.clone.mean,comp.clone.sd),col=2)
+# lines(xx,dnorm(xx,herb.clone.mean,herb.clone.sd),col=3)
+# legend('topright',c('Control','CR','HR'),col=c(1,2,3),lty=1)
+# 
+# clone.size.aov<-aov(Clone.Height~Trt,data=Clones)
+# summary(clone.size.aov)
+# TukeyHSD(clone.size.aov)
+# print(model.tables(clone.size.aov,'mean'))
+# boxplot(Clone.Height~Trt,data=Clones)
+
+
+# Discrete parameters------------------------------------
+
+# Establishment Pr()
+# germination will come from our experiment and will be the average of all non-acid
+# treated cells. Establishment will have to come from somewhere else and I am really 
+# not sure where given the dearth of literature on the demography of this species.
+# Ramula 2008 used simulated parameters in lieu of certain vital rates, so maybe 
+# we should investigate that further. One idea I have is to try a variety of 
+# values and see which ones make the most sense. However we'd still be guessing 
+# at the most sensible value since we don't have much by way of recruitment info in 
+# 2015
+
+germ.prob <- 0.5067 
+
+# Using this as baseline estimate, but will substitute
+# from 0.01 - 1 in bootstrapping loop to estimate sensitivity
+est.prob <- 0.15 
+
+# Create fecundity parameters data frame-------------------------------
+f.params <- data.frame(prob.repro.int = as.numeric(coefficients(Repro.Glm)[1]),
+                       prob.repro.slope = as.numeric(coefficients(Repro.Glm)[2]),
+                       recruit.size.mean = Sdl.mean,
+                       recruit.size.sd = Sdl.SD,
+                       germ = germ.prob,
+                       est.prob = est.prob) 
+
+
+# the size range must extend beyond the limits of the data
+min.size <- min(AllPlants$Ht14, na.rm = TRUE) * .6
+max.size <- max(AllPlants$Ht14, na.rm = TRUE) * 1.2
+S <- 500 # Number of cells in matrix  
+
+# matrix variables 
+b <-  min.size + c(0:S)*(max.size - min.size)/S  # boundary points of mesh cells
+Y <- 0.5* (b[1:S] + b[2:(S+1)])  # mid points of mesh cells 
+h <- Y[2]-Y[1]  # cell widths
+
+# make a matrix of transitions for each growth distribution-------------
+source('C:/Users/sl13sise/Dropbox/ATSC 2018 participant folder/23.1.18/Rees/R code and Data/MatrixImage.R')
+
+Gmat_comp <- h * (outer(Y, Y,
+                        FUN = grow.prob,
+                        model = growth.lms$LM[[1]]))
+
+Gmat_cont <- h * (outer(Y, Y, 
+                        FUN = grow.prob,
+                        model = growth.lms$LM[[2]]))
+
+Gmat_cont <- Gmat_cont/matrix(as.vector(apply(Gmat_cont,
+                                              2,
+                                              sum)),
+                              nrow = S,
+                              ncol = S,
+                              byrow = TRUE)
+
+Gmat_comp <- Gmat_comp/matrix(as.vector(apply(Gmat_comp,
+                                              2,
+                                              sum)),
+                              nrow = S,
+                              ncol = S,
+                              byrow = TRUE)
+
+matrix.image(Gmat_cont, main = 'Control')
+matrix.image(Gmat_comp, main = 'CR')
+
+par(mfrow=c(1,2))
+plot((1-colSums(Gmat_comp)),type='l',main="CR")
+abline(h=0,col='red',lty=2)
+plot((1-colSums(Gmat_cont)),type='l', main="Cont")
+abline(h=0,col='red',lty=2)
+
+s.cont_Lin <- diag(predict.surv(Y, ContLinearGlm))
+s.cont_Quad <- diag(predict.surv(Y, ContQuadGlm))
+s.comp_Lin <- diag(predict.surv(Y, CRLinearGlm))
+s.comp_Quad <- diag(predict.surv(Y, CRQuadGlm))
+
+# make a P matrix (growth and survival)
+P_Cont_Lin <- Gmat_cont %*% s.cont_Lin 
+P_Cont_Quad <- Gmat_cont %*% s.cont_Quad
+P_Comp_Lin <- Gmat_comp %*% s.comp_Lin
+P_Comp_Quad <- Gmat_comp %*% s.comp_Quad
+
+# inspect survival + growth kernel
+matrix.image(P_Cont_Lin, main = 'Control, Linear SurvModel')
+matrix.image(P_Cont_Quad, main = 'Control, Quadratic SurvModel')
+matrix.image(P_Comp_Lin, main = 'CR, Linear SurvModel')
+matrix.image(P_Comp_Quad, main = 'CR, Quadratic SurvModel')
+
+# Build F Matrix-----------------------------------
+
+par(mfrow = c(1,1))
+FRow <- c(0, SB.Go(Y, f.params, fec.model = fec))
+FCol <- h * SB.Emerge(Y, f.params)
+
+# build full K kernel -----------------------------------
+K_cont_Lin <- rbind(FRow, cbind(FCol, P_Cont_Lin))
+K_cont_Quad <- rbind(FRow, cbind(FCol, P_Cont_Quad))
+K_comp_Lin <- rbind(FRow, cbind(FCol, P_Comp_Lin))
+K_comp_Quad <- rbind(FRow, cbind(FCol, P_Comp_Quad))
+
+# Calculate lambdas--------------------------------
+eigen_cont_Lin <- eigen(K_cont_Lin)
+lambda_cont_Lin <- max(Re(eigen_cont_Lin$values))
+
+eigen_cont_Quad <- eigen(K_cont_Quad)
+lambda_cont_Quad <- max(Re(eigen_cont_Quad$values))
+
+eigen_comp_Lin <- eigen(K_comp_Lin)
+lambda_comp_Lin <- max(Re(eigen_comp_Lin$values))
+
+eigen_comp_Quad <- eigen(K_comp_Quad)
+lambda_comp_Quad <- max(Re(eigen_comp_Quad$values))
+
+lambda_cont_Lin
+lambda_cont_Quad
+lambda_comp_Lin
+lambda_comp_Quad
+
+
+
+# boot strapping and sensitivity to establishment probability-------------------------
+# 
+AllLambdas<-list(est.prob = seq(.01, 1, .01),
+                 lambda_comp = rep(0,100),
+                 lambda_comp_up = rep(0, 100),
+                 lambda_comp_lo = rep(0, 100),
+                 lambda_cont = rep(0,100),
+                 lambda_cont_up = rep(0, 100),
+                 lambda_cont_lo = rep(0, 100))
+
+for(i in unique(AllLambdas$est.prob)){
+  it <- i * 100
+  lambdas_cont_Lin <- rep(NA, 1000)
+  lambdas_comp_Lin <- rep(NA, 1000)
+  lambdas_cont_Quad <- rep(NA, 1000)
+  lambdas_comp_Quad <- rep(NA, 1000)
+
+  # substitute in new establishment probability
+  f.params$est.prob <- est.prob <- i
+  
+
+  # Build new F Matrix-----------------------------------
+  FRow <- c(0, SB.Go(Y, f.params, fec.model = fec))
+  FCol <- h * SB.Emerge(Y, f.params)
+  
+  # build full K kernel -----------------------------------
+  K_cont_Lin <- rbind(FRow, cbind(FCol, P_Cont_Lin))
+  K_cont_Quad <- rbind(FRow, cbind(FCol, P_Cont_Quad))
+  K_comp_Lin <- rbind(FRow, cbind(FCol, P_Comp_Lin))
+  K_comp_Quad <- rbind(FRow, cbind(FCol, P_Comp_Quad))
+
+  # build full K kernel-----------------------------------
+  # we don't need to rebuild survival/growth kernel because those don't include
+  # est.prob in their calculation
+
+  eigen_cont<-eigen(K_cont)
+  lambda_cont<-max(Re(eigen_cont$values))
+  AllLambdas$lambda_cont[it] <- lambda_cont
+
+  eigen_comp<-eigen(K_comp)
+  lambda_comp<-max(Re(eigen_comp$values))
+  AllLambdas$lambda_comp[it]<- lambda_comp
+
+  for(j in 1:1000){
+
+    # Resample raw data sets, re-fit survival, growth and pr(Repro values)
+    x1 <- sample(1:dim(AllControl)[1], dim(AllControl)[1], replace = TRUE)
+    x2 <- sample(1:dim(AllCR)[1], dim(AllCR)[1], replace = TRUE)
+    x3 <- sample(1:dim(AllBig)[1], dim(AllBig)[1], replace = TRUE)
+    
+    BootCont <- AllControl[x1, ]
+    BootCR <- AllCR[x2, ]
+    BootBig <- AllBig[x3, ]
+    
+    
+   
+  }
+  
+  if(it %% 10 == 0){
+    message(paste0(it, "% of data processed\n"))
+  }
+  
+  AllLambdas$lambda_comp_lo[it] <- sort(lambdas_comp) %>% .[25]
+  AllLambdas$lambda_comp_up[it] <- sort(lambdas_comp) %>% .[975]
+  AllLambdas$lambda_cont_lo[it] <- sort(lambdas_cont) %>% .[25]
+  AllLambdas$lambda_cont_up[it] <- sort(lambdas_cont) %>% .[975]
+}
+
+
+write.csv(AllLambdas, 'Ligustrum/IPM/Results/Bootstrapped_Lambdas.csv')
+
+# I ran the loop above on the RStudio server so all we need now is to read in the
+# results and plot them
+library(ggplot2)
+library(cowplot)
+library(dplyr)
+# setwd("C:/Users/sl13sise/Dropbox/invaders demography/Ligustrum/IPM")
+# Lambdas <- read.csv('Data/Bootstrapped_Lambdas.csv') %>% .[-7, ]
+
+Fig <- ggplot(Lambdas, aes(x = est.prob)) +
+  stat_smooth(aes(y = lambda_comp),
+              formula = y ~ poly(x, 2),
+              method = 'lm',
+              se = FALSE,
+              col = 'red',
+              alpha = 0.7) +
+  geom_ribbon(aes(ymax = lambda_comp_up, 
+                  ymin = lambda_comp_lo),
+              fill = 'red',
+              alpha = 0.3) +
+  stat_smooth(aes(y = lambda_cont),
+              formula = y ~ poly(x, 2),
+              method = 'lm',
+              se = FALSE,
+              col = 'blue',
+              alpha = 0.7) + 
+  geom_ribbon(aes(ymax = lambda_cont_up,
+                  ymin = lambda_cont_lo),
+              fill = 'blue',
+              alpha = 0.3) +
+  scale_y_continuous('Lambda',
+                     breaks = seq(1, 1.5, .1),
+                     limits = c(1, 1.5)) +
+  scale_x_continuous('Seedling establishment probability') 
+
+
+ggdraw() +
+  draw_plot(Fig, x = 0, y = 0,
+            height = 1, width = .85) +
+  annotate('text', x = .89, y = .8,
+           label = 'Treatment') +
+  annotate('text', x = .9, y = .77,
+           label = 'Control') +
+  annotate('point', x = .855, y = .77,
+           col = 'red', alpha = 0.6) +
+  annotate('text', x = .8855, y = .745,
+           label = 'CR') +
+  annotate('point', x = .855, y = .745,
+           col = 'blue', alpha = 0.6) + 
+  annotate('text', x = .9, y = .85, label = 'B')
+
+  
+
+
+
+# Rae: I am not sure I understand the issue with the clones. Did you record all individuals in a plot in 2014?
+# If so, all new individuals in 2015 are clones. Can you do a comparison of number of new clones in each plots?
+# Maybe even the number of new clones per adult? I think clones can be included even if you do not know parentage.
+# This plant is highly clonal, so you can't really ignore it. With Ailanthus, we found that removing competition
+# significanly increased the number of clones leading to a significantly greater population growth rate.

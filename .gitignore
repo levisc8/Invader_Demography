@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*gmailr_signature.R
+*.csv
+*.png
+*.httr-oauth
+*.zip
+*.doc
+*.html
