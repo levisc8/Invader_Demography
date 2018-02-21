@@ -167,7 +167,9 @@ eigen_comp_Quad <- eigen(K_comp_Quad)
 lambda_comp_Quad <- max(Re(eigen_comp_Quad$values))
 
 # boot strapping and sensitivity to establishment probability-------------------------
-# 
+# Additionally, at for one of these iterations, we need to store
+# the boot strapped values for parameters so we can generate the
+# vital rate figure panels
 AllLambdas<-list(est.prob = seq(.01, 1, .01),
                  lambda_comp_Lin = rep(0,100),
                  lambda_comp_Lin_up = rep(0, 100),
@@ -181,6 +183,44 @@ AllLambdas<-list(est.prob = seq(.01, 1, .01),
                  lambda_cont_Quad = rep(0,100),
                  lambda_cont_Quad_up = rep(0, 100),
                  lambda_cont_Quad_lo = rep(0, 100))
+
+ObservedValues <- list(GrowSlope_CR = c(coef(CompGrowLM)[2],
+                                        rep(NA, 1000)),
+                       GrowInt_CR = c(coef(CompGrowLM)[1],
+                                      rep(NA, 1000)),
+                       GrowSlope_Cont = c(coef(ContGrowLM)[2],
+                                          rep(NA, 1000)),
+                       GrowInt_Cont = c(coef(ContGrowLM)[1],
+                                        rep(NA, 1000)),
+                       RepSlope = c(coef(ReproGLM)[2],
+                                    rep(NA, 1000)),
+                       RepInt = c(coef(ReproGLM)[1],
+                                  rep(NA, 1000)),
+                       RecMean = c(SdlMean,
+                                   rep(NA, 1000)),
+                       RecSD = c(SdlSD,
+                                 rep(NA, 1000)),
+                       SurvInt_Cont_Lin = c(coef(ContLinGlm)[1],
+                                            rep(NA, 1000)),
+                       SurvSlope_Cont_Lin = c(coef(ContLinGlm)[2],
+                                              rep(NA, 1000)),
+                       SurvInt_Cont_Quad = c(coef(ContQuadGlm)[1],
+                                             rep(NA, 1000)),
+                       SurvSlope_Cont_Quad = c(coef(ContQuadGlm)[2],
+                                               rep(NA, 1000)),
+                       SurvSlope2_Cont_Quad = c(coef(ContQuadGlm)[3],
+                                                rep(NA, 1000)),
+                       SurvInt_CR_Lin = c(coef(CRLinGlm)[1],
+                                          rep(NA, 1000)),
+                       SurvSlope_CR_Lin = c(coef(CRLinGlm)[2],
+                                            rep(NA, 1000)),
+                       SurvInt_CR_Quad = c(coef(CRQuadGlm)[1],
+                                           rep(NA, 1000)),
+                       SurvSlope_CR_Quad = c(coef(CRQuadGlm)[2],
+                                             rep(NA, 1000)),
+                       SurvSelope2_CR_Quad = c(coef(CRQuadGlm)[3],
+                                               rep(NA, 1000)),
+                       Obs_Boot = c('Observed', rep('Boot', 1000)))
 
 AllCR <- filter(AllPlants, Trt == 'Comp')
 AllCont <- filter(AllPlants, Trt == 'Control')
@@ -337,6 +377,31 @@ for(i in unique(AllLambdas$est.prob)){
     boot_eigen_comp_Quad <- eigen(boot_K_comp_Quad)
     boot_lambdas_comp_Quad[j] <- max(Re(boot_eigen_comp_Quad$values))
     
+    # Store boot strap values for vital rates that don't depend
+    # on EstProb. We only do this once because doing so 100
+    # is wildly unnecessary
+    if(it = 1) {
+      ObservedValues$GrowSlope_CR[j + 1] <- coef(BootCRGrow)[2]
+      ObservedValues$GrowInt_CR[j + 1] <- coef(BootCRGrow)[1]
+      ObservedValues$GrowSlope_Cont[j + 1] <- coef(BootContGrow)[2]
+      ObservedValues$GrowInt_Cont[j + 1] <- coef(BootContGrow)[1]
+      ObservedValues$RepSlope[j + 1] <- coef(BootReproGLM)[2]
+      ObservedValues$RepInt[j + 1] <- coef(BootReproGLM)[1]
+      ObservedValues$RecMean[j + 1] <- BootSdlMean
+      ObservedValues$RecSD[j + 1] <- BootSdlSD
+      ObservedValues$SurvInt_Cont_Lin[j + 1] <- coef(ContLinGlm)[1]
+      ObservedValues$SurvSlope_Cont_Lin[j + 1] <- coef(ContLinGlm)[2]
+      ObservedValues$SurvInt_Cont_Quad[j + 1] <- coef(ContQuadGlm)[1]
+      ObservedValues$SurvSlope_Cont_Quad[j + 1] <- coef(ContQuadGlm)[2]
+      ObservedValues$SurvSlope2_Cont_Quad[j + 1] <- coef(ContQuadGlm)[3]
+      ObservedValues$SurvInt_CR_Lin[j + 1] <- coef(CRLinGlm)[1]
+      ObservedValues$SurvSlope_CR_Lin[j + 1] <- coef(CRLinGlm)[2]
+      ObservedValues$SurvInt_CR_Quad[j + 1] <- coef(CRQuadGlm)[1]
+      ObservedValues$SurvSlope_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[2]
+      ObservedValues$SurvSelope2_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[3]
+      ObservedValues$Obs_Boot[j + 1] <- 'Boot'
+    }
+    
   } # inner bootstrapping loop
   
   # Store confidence intervals from inner loop
@@ -375,17 +440,17 @@ for(i in unique(AllLambdas$est.prob)){
 } # Estprob perturbation loop
 
 
-write.csv(AllLambdas, 'Bootstrapping_Output_Ligustrum.csv',
-          row.names = FALSE)
-
-library(gmailr)
-sig <- source("gmailr_signature.R")
-
-
-draft <- mime() %>%
-  to(c("levisc8@gmail.com")) %>%
-  from("samlevin.rstudio@gmail.com") %>%
-  subject("Ligustrum Bootstrapping complete") %>%
-  text_body(paste("Script complete, results on RStudio Server",
-                  sig$value, sep = '\n\n')) %>%
-  send_message()
+# write.csv(AllLambdas, 'Bootstrapping_Output_Ligustrum.csv',
+#           row.names = FALSE)
+# 
+# library(gmailr)
+# sig <- source("gmailr_signature.R")
+# 
+# 
+# draft <- mime() %>%
+#   to(c("levisc8@gmail.com")) %>%
+#   from("samlevin.rstudio@gmail.com") %>%
+#   subject("Ligustrum Bootstrapping complete") %>%
+#   text_body(paste("Script complete, results on RStudio Server",
+#                   sig$value, sep = '\n\n')) %>%
+#   send_message()
