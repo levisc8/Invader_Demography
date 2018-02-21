@@ -10,8 +10,8 @@ library(magrittr)
 library(stringr)
 library(mgcv)
 
-# setwd('C:/Users/sl13sise/Dropbox/invaders demography/Ligustrum/IPM/LigObt_RS_Server') # local
-setwd("~/LigObt_RS_Server/") # server
+setwd('C:/Users/sl13sise/Dropbox/invaders demography/Ligustrum/IPM/LigObt_RS_Server') # local
+# setwd("~/LigObt_RS_Server/") # server
 
 source('IPM_Functions_Ligustrum.R') 
 
@@ -184,21 +184,21 @@ AllLambdas<-list(est.prob = seq(.01, 1, .01),
                  lambda_cont_Quad_up = rep(0, 100),
                  lambda_cont_Quad_lo = rep(0, 100))
 
-ObservedValues <- list(GrowSlope_CR = c(coef(CompGrowLM)[2],
+OutputValues <- list(GrowSlope_CR = c(coef(growth.lms$LM[[1]])[2],
                                         rep(NA, 1000)),
-                       GrowInt_CR = c(coef(CompGrowLM)[1],
+                       GrowInt_CR = c(coef(growth.lms$LM[[1]])[1],
                                       rep(NA, 1000)),
-                       GrowSlope_Cont = c(coef(ContGrowLM)[2],
+                       GrowSlope_Cont = c(coef(growth.lms$LM[[2]])[2],
                                           rep(NA, 1000)),
-                       GrowInt_Cont = c(coef(ContGrowLM)[1],
+                       GrowInt_Cont = c(coef(growth.lms$LM[[2]])[1],
                                         rep(NA, 1000)),
-                       RepSlope = c(coef(ReproGLM)[2],
+                       RepSlope = c(coef(Repro.Glm)[2],
                                     rep(NA, 1000)),
-                       RepInt = c(coef(ReproGLM)[1],
+                       RepInt = c(coef(Repro.Glm)[1],
                                   rep(NA, 1000)),
-                       RecMean = c(SdlMean,
+                       RecMean = c(Sdl.mean,
                                    rep(NA, 1000)),
-                       RecSD = c(SdlSD,
+                       RecSD = c(Sdl.SD,
                                  rep(NA, 1000)),
                        SurvInt_Cont_Lin = c(coef(ContLinGlm)[1],
                                             rep(NA, 1000)),
@@ -226,7 +226,7 @@ AllCR <- filter(AllPlants, Trt == 'Comp')
 AllCont <- filter(AllPlants, Trt == 'Control')
 AllBig <- filter(AllPlants, Trt == 'All')
 
-for(i in unique(AllLambdas$est.prob)){
+for(i in unique(AllLambdas$est.prob)[1]){
   it <- i * 100
   boot_lambdas_cont_Lin <- rep(NA, 1000)
   boot_lambdas_comp_Lin <- rep(NA, 1000)
@@ -381,25 +381,25 @@ for(i in unique(AllLambdas$est.prob)){
     # on EstProb. We only do this once because doing so 100
     # is wildly unnecessary
     if(it = 1) {
-      ObservedValues$GrowSlope_CR[j + 1] <- coef(BootCRGrow)[2]
-      ObservedValues$GrowInt_CR[j + 1] <- coef(BootCRGrow)[1]
-      ObservedValues$GrowSlope_Cont[j + 1] <- coef(BootContGrow)[2]
-      ObservedValues$GrowInt_Cont[j + 1] <- coef(BootContGrow)[1]
-      ObservedValues$RepSlope[j + 1] <- coef(BootReproGLM)[2]
-      ObservedValues$RepInt[j + 1] <- coef(BootReproGLM)[1]
-      ObservedValues$RecMean[j + 1] <- BootSdlMean
-      ObservedValues$RecSD[j + 1] <- BootSdlSD
-      ObservedValues$SurvInt_Cont_Lin[j + 1] <- coef(ContLinGlm)[1]
-      ObservedValues$SurvSlope_Cont_Lin[j + 1] <- coef(ContLinGlm)[2]
-      ObservedValues$SurvInt_Cont_Quad[j + 1] <- coef(ContQuadGlm)[1]
-      ObservedValues$SurvSlope_Cont_Quad[j + 1] <- coef(ContQuadGlm)[2]
-      ObservedValues$SurvSlope2_Cont_Quad[j + 1] <- coef(ContQuadGlm)[3]
-      ObservedValues$SurvInt_CR_Lin[j + 1] <- coef(CRLinGlm)[1]
-      ObservedValues$SurvSlope_CR_Lin[j + 1] <- coef(CRLinGlm)[2]
-      ObservedValues$SurvInt_CR_Quad[j + 1] <- coef(CRQuadGlm)[1]
-      ObservedValues$SurvSlope_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[2]
-      ObservedValues$SurvSelope2_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[3]
-      ObservedValues$Obs_Boot[j + 1] <- 'Boot'
+      OutputValues$GrowSlope_CR[j + 1] <- coef(BootCRGrow)[2]
+      OutputValues$GrowInt_CR[j + 1] <- coef(BootCRGrow)[1]
+      OutputValues$GrowSlope_Cont[j + 1] <- coef(BootContGrow)[2]
+      OutputValues$GrowInt_Cont[j + 1] <- coef(BootContGrow)[1]
+      OutputValues$RepSlope[j + 1] <- coef(BootReproGLM)[2]
+      OutputValues$RepInt[j + 1] <- coef(BootReproGLM)[1]
+      OutputValues$RecMean[j + 1] <- BootSdlMean
+      OutputValues$RecSD[j + 1] <- BootSdlSD
+      OutputValues$SurvInt_Cont_Lin[j + 1] <- coef(ContLinGlm)[1]
+      OutputValues$SurvSlope_Cont_Lin[j + 1] <- coef(ContLinGlm)[2]
+      OutputValues$SurvInt_Cont_Quad[j + 1] <- coef(ContQuadGlm)[1]
+      OutputValues$SurvSlope_Cont_Quad[j + 1] <- coef(ContQuadGlm)[2]
+      OutputValues$SurvSlope2_Cont_Quad[j + 1] <- coef(ContQuadGlm)[3]
+      OutputValues$SurvInt_CR_Lin[j + 1] <- coef(CRLinGlm)[1]
+      OutputValues$SurvSlope_CR_Lin[j + 1] <- coef(CRLinGlm)[2]
+      OutputValues$SurvInt_CR_Quad[j + 1] <- coef(CRQuadGlm)[1]
+      OutputValues$SurvSlope_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[2]
+      OutputValues$SurvSelope2_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[3]
+      OutputValues$Obs_Boot[j + 1] <- 'Boot'
     }
     
   } # inner bootstrapping loop
@@ -439,6 +439,10 @@ for(i in unique(AllLambdas$est.prob)){
   
 } # Estprob perturbation loop
 
+OutputValues %>%
+  as_tibble() %>%
+  write.csv(., file = 'Ligustrum_Bootstrapped_Vital_Rates.csv',
+            row.names = FALSE)
 
 # write.csv(AllLambdas, 'Bootstrapping_Output_Ligustrum.csv',
 #           row.names = FALSE)
