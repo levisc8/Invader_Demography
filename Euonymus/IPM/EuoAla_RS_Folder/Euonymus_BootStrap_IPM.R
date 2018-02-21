@@ -283,13 +283,13 @@ for(i in seq_len(nBootSamples)) {
   
   # Create fecundity vectors and corner
   boot.f.params <- data.frame(prob.repro.int = as.numeric(coefficients(BootReproGLM)[1]),
-                         prob.repro.slope = as.numeric(coefficients(BootReproGLM)[2]),
-                         recruit.size.mean = BootSdlMean,
-                         recruit.size.sd = BootSdlSD,
-                         seed.int = as.numeric(coefficients(fecquasi)[1]),
-                         seed.slope = coefficients(fecquasi)[2],
-                         E2 = Establishment.prob2,
-                         E3 = Establishment.prob3)
+                              prob.repro.slope = as.numeric(coefficients(BootReproGLM)[2]),
+                              recruit.size.mean = BootSdlMean,
+                              recruit.size.sd = BootSdlSD,
+                              seed.int = as.numeric(coefficients(fecquasi)[1]),
+                              seed.slope = coefficients(fecquasi)[2],
+                              E2 = Establishment.prob2,
+                              E3 = Establishment.prob3)
   
   SB2.Go <- SB.Go(Y, params = boot.f.params,
                   SB.Year = 2)
