@@ -41,7 +41,6 @@ library(magrittr)
 library(stringr)
 library(mgcv)
 
-setwd("C:/Users/sl13sise/Dropbox/invaders demography")
 
 source('Ligustrum/IPM/R/IPM_Functions_Ligustrum.r') 
 
@@ -509,7 +508,10 @@ matrix.image(P_Comp_Quad, main = 'CR, Quadratic SurvModel')
 # Build F Matrix-----------------------------------
 
 par(mfrow = c(1,1))
-FRow <- c(0, SB.Go(Y, f.params, fec.model = fec))
+FRow <- c(0, SB.Go(Y,
+                   f.params,
+                   repro.model = Repro.Glm,
+                   fec.model = fec))
 FCol <- h * SB.Emerge(Y, f.params)
 
 # build full K kernel -----------------------------------
@@ -536,135 +538,3 @@ lambda_cont_Quad
 lambda_comp_Lin
 lambda_comp_Quad
 
-
-
-# boot strapping and sensitivity to establishment probability-------------------------
-# 
-AllLambdas<-list(est.prob = seq(.01, 1, .01),
-                 lambda_comp = rep(0,100),
-                 lambda_comp_up = rep(0, 100),
-                 lambda_comp_lo = rep(0, 100),
-                 lambda_cont = rep(0,100),
-                 lambda_cont_up = rep(0, 100),
-                 lambda_cont_lo = rep(0, 100))
-
-for(i in unique(AllLambdas$est.prob)){
-  it <- i * 100
-  lambdas_cont_Lin <- rep(NA, 1000)
-  lambdas_comp_Lin <- rep(NA, 1000)
-  lambdas_cont_Quad <- rep(NA, 1000)
-  lambdas_comp_Quad <- rep(NA, 1000)
-
-  # substitute in new establishment probability
-  f.params$est.prob <- est.prob <- i
-  
-
-  # Build new F Matrix-----------------------------------
-  FRow <- c(0, SB.Go(Y, f.params, fec.model = fec))
-  FCol <- h * SB.Emerge(Y, f.params)
-  
-  # build full K kernel -----------------------------------
-  K_cont_Lin <- rbind(FRow, cbind(FCol, P_Cont_Lin))
-  K_cont_Quad <- rbind(FRow, cbind(FCol, P_Cont_Quad))
-  K_comp_Lin <- rbind(FRow, cbind(FCol, P_Comp_Lin))
-  K_comp_Quad <- rbind(FRow, cbind(FCol, P_Comp_Quad))
-
-  # build full K kernel-----------------------------------
-  # we don't need to rebuild survival/growth kernel because those don't include
-  # est.prob in their calculation
-
-  eigen_cont<-eigen(K_cont)
-  lambda_cont<-max(Re(eigen_cont$values))
-  AllLambdas$lambda_cont[it] <- lambda_cont
-
-  eigen_comp<-eigen(K_comp)
-  lambda_comp<-max(Re(eigen_comp$values))
-  AllLambdas$lambda_comp[it]<- lambda_comp
-
-  for(j in 1:1000){
-
-    # Resample raw data sets, re-fit survival, growth and pr(Repro values)
-    x1 <- sample(1:dim(AllControl)[1], dim(AllControl)[1], replace = TRUE)
-    x2 <- sample(1:dim(AllCR)[1], dim(AllCR)[1], replace = TRUE)
-    x3 <- sample(1:dim(AllBig)[1], dim(AllBig)[1], replace = TRUE)
-    
-    BootCont <- AllControl[x1, ]
-    BootCR <- AllCR[x2, ]
-    BootBig <- AllBig[x3, ]
-    
-    
-   
-  }
-  
-  if(it %% 10 == 0){
-    message(paste0(it, "% of data processed\n"))
-  }
-  
-  AllLambdas$lambda_comp_lo[it] <- sort(lambdas_comp) %>% .[25]
-  AllLambdas$lambda_comp_up[it] <- sort(lambdas_comp) %>% .[975]
-  AllLambdas$lambda_cont_lo[it] <- sort(lambdas_cont) %>% .[25]
-  AllLambdas$lambda_cont_up[it] <- sort(lambdas_cont) %>% .[975]
-}
-
-
-write.csv(AllLambdas, 'Ligustrum/IPM/Results/Bootstrapped_Lambdas.csv')
-
-# I ran the loop above on the RStudio server so all we need now is to read in the
-# results and plot them
-library(ggplot2)
-library(cowplot)
-library(dplyr)
-# setwd("C:/Users/sl13sise/Dropbox/invaders demography/Ligustrum/IPM")
-# Lambdas <- read.csv('Data/Bootstrapped_Lambdas.csv') %>% .[-7, ]
-
-Fig <- ggplot(Lambdas, aes(x = est.prob)) +
-  stat_smooth(aes(y = lambda_comp),
-              formula = y ~ poly(x, 2),
-              method = 'lm',
-              se = FALSE,
-              col = 'red',
-              alpha = 0.7) +
-  geom_ribbon(aes(ymax = lambda_comp_up, 
-                  ymin = lambda_comp_lo),
-              fill = 'red',
-              alpha = 0.3) +
-  stat_smooth(aes(y = lambda_cont),
-              formula = y ~ poly(x, 2),
-              method = 'lm',
-              se = FALSE,
-              col = 'blue',
-              alpha = 0.7) + 
-  geom_ribbon(aes(ymax = lambda_cont_up,
-                  ymin = lambda_cont_lo),
-              fill = 'blue',
-              alpha = 0.3) +
-  scale_y_continuous('Lambda',
-                     breaks = seq(1, 1.5, .1),
-                     limits = c(1, 1.5)) +
-  scale_x_continuous('Seedling establishment probability') 
-
-
-ggdraw() +
-  draw_plot(Fig, x = 0, y = 0,
-            height = 1, width = .85) +
-  annotate('text', x = .89, y = .8,
-           label = 'Treatment') +
-  annotate('text', x = .9, y = .77,
-           label = 'Control') +
-  annotate('point', x = .855, y = .77,
-           col = 'red', alpha = 0.6) +
-  annotate('text', x = .8855, y = .745,
-           label = 'CR') +
-  annotate('point', x = .855, y = .745,
-           col = 'blue', alpha = 0.6) + 
-  annotate('text', x = .9, y = .85, label = 'B')
-
-  
-
-
-
-# Rae: I am not sure I understand the issue with the clones. Did you record all individuals in a plot in 2014?
-# If so, all new individuals in 2015 are clones. Can you do a comparison of number of new clones in each plots?
-# Maybe even the number of new clones per adult? I think clones can be included even if you do not know parentage.
-# This plant is highly clonal, so you can't really ignore it. With Ailanthus, we found that removing competition
-# significanly increased the number of clones leading to a significantly greater population growth rate.

@@ -1,12 +1,13 @@
 
 ##Clear everything
-rm(list=ls(all=TRUE)) 
+rm(list = ls()) 
 cat("\014") 
 
 #import data into R studio
 library(dplyr)
-ks <- read.csv("C:/Users/sl13sise/Dropbox/invaders demography/Alliaria/GM4R.csv",
-               stringsAsFactors = F) %>%
+library(ggplot2)
+ks <- read.csv("Alliaria/GM4R.csv",
+               stringsAsFactors = FALSE) %>%
   filter(Treatment != 'Herb')
 
 # Calculate number of plots per treatment
@@ -18,9 +19,9 @@ Plot.N <- ks %>%
 sdlPerPlot <- ks %>% 
   group_by(Treatment, Density, Plot) %>%
   summarise(N.SDL = n(),
-            N.RA = sum(RA, na.rm = T),
+            N.RA = sum(RA, na.rm = TRUE),
             s2 = N.RA/N.SDL,
-            Fec = mean(Seeds,na.rm = T))
+            Fec = mean(Seeds,na.rm = TRUE))
 
 # visually examine relationship
 plot(s2 ~ N.SDL, data = sdlPerPlot)
@@ -33,12 +34,12 @@ paramsD <- ks[ks$Plot %in% idx, ] %>%
   group_by(Treatment) %>% 
   summarise(plot.n = length(unique(Plot)),
             N.SDL = n(),
-            N.RA = sum(RA, na.rm = T),
+            N.RA = sum(RA, na.rm = TRUE),
             s2 = N.RA/N.SDL) 
 
 Fec <- ks %>% 
   group_by(Treatment) %>% 
-  summarise(Fec = mean(Seeds, na.rm = T))
+  summarise(Fec = mean(Seeds, na.rm = TRUE))
 
 
 
@@ -146,8 +147,10 @@ for(j in 1:nreps) {
     s2 = N.RA/N.SDL
   )
   
-  Fec1 <- bootFecData %>% group_by(Treatment) %>% summarise(
-    Fec = mean(Seeds, na.rm = T)
+  Fec1 <- bootFecData %>% 
+    group_by(Treatment) %>% 
+    summarise(Fec = mean(Seeds,
+                         na.rm = TRUE)
   )
   
   paramsD1[paramsD1$Treatment == 'Comp',
@@ -170,142 +173,125 @@ for(j in 1:nreps) {
   
 
   ##Control
-  s1_c=1
-  s2_c=paramsD1[paramsD1$Treatment=="Control","s2"] %>% as.numeric
-  f_c=paramsD1[paramsD1$Treatment=="Control","Fec"] %>% as.numeric
-  boot_s2_c[j]=s2_c
-  boot_f_c[j]=f_c
+  s1_c <- 1
+  s2_c <- paramsD1[paramsD1$Treatment == "Control","s2"] %>% as.numeric
+  f_c <- paramsD1[paramsD1$Treatment == "Control","Fec"] %>% as.numeric
+  boot_s2_c[j] <- s2_c
+  boot_f_c[j] <- f_c
   
   ##Comp Rem
-  s1_cr=1
-  s2_cr=paramsD1[paramsD1$Treatment=="Comp","s2"] %>% as.numeric
-  f_cr=paramsD1[paramsD1$Treatment=="Comp","Fec"] %>% as.numeric
-  boot_s2_cr[j]=s2_cr
-  boot_f_cr[j]=f_cr
+  s1_cr <- 1
+  s2_cr <- paramsD1[paramsD1$Treatment == "Comp","s2"] %>% as.numeric
+  f_cr <- paramsD1[paramsD1$Treatment == "Comp","Fec"] %>% as.numeric
+  boot_s2_cr[j] <- s2_cr
+  boot_f_cr[j] <- f_cr
   
   
   ##Bootstrapped matrices!
-  G1=.5503
-  G2=.3171
-  v=.8228
+  G1 <- 0.5503
+  G2 <- 0.3171
+  v <- 0.8228
   
-  A_cont=matrix(c(1-G2,0,f_c*v*(1-G1),
-                  G2*s1_c,0,f_c*G1*s1_c,
-                  0,s2_c,0),
-                nrow=3, byrow=TRUE, 
-                dimnames=list(c("SB","Rosette","RA"),c("SB","Rosette","RA")))
+  A_cont <- matrix(c(1-G2, 0, f_c*v*(1-G1),
+                     G2*s1_c, 0, f_c*G1*s1_c,
+                     0, s2_c, 0),
+                nrow = 3,
+                byrow = TRUE, 
+                dimnames = list(c("SB","Rosette","RA"),
+                                c("SB","Rosette","RA")))
   
-  A_cr=matrix(c(1-G2,0,f_cr*v*(1-G1),
-                G2*s1_cr,0,f_cr*G1*s1_cr,
-                0,s2_cr,0),
-              nrow=3, byrow=TRUE, 
-              dimnames=list(c("SB","Rosette","RA"),c("SB","Rosette","RA")))
+  A_cr <- matrix(c(1-G2, 0, f_cr*v*(1-G1),
+                G2*s1_cr, 0, f_cr*G1*s1_cr,
+                0, s2_cr, 0),
+              nrow = 3,
+              byrow = TRUE, 
+              dimnames = list(c("SB","Rosette","RA"),
+                              c("SB","Rosette","RA")))
 
   ev <- eigen(A_cont)
   
   lmax <- which(Re(ev$values) == max(Re(ev$values)))
   lmax <- lmax[1]  
   lambda_cont <- Re(ev$values[lmax])
-   boot_l_c[j]=lambda_cont
+   boot_l_c[j] <- lambda_cont
   
   ev <- eigen(A_cr)
   
   lmax <- which(Re(ev$values) == max(Re(ev$values)))
   lmax <- lmax[1]  
   lambda_cr <- Re(ev$values[lmax])
-  boot_l_cr[j]=lambda_cr
+  boot_l_cr[j] <- lambda_cr
   
 }
 
 
-boot_s2_c=sort(boot_s2_c)
-boot_s2_cr=sort(boot_s2_cr)
+boot_s2_c <- sort(boot_s2_c)
+boot_s2_cr <- sort(boot_s2_cr)
 
-boot_f_c=sort(boot_f_c)
-boot_f_cr=sort(boot_f_cr)
+boot_f_c <- sort(boot_f_c)
+boot_f_cr <- sort(boot_f_cr)
 
-boot_l_c=sort(boot_l_c)
-boot_l_cr=sort(boot_l_cr)
+boot_l_c <- sort(boot_l_c)
+boot_l_cr <- sort(boot_l_cr)
 
 ##Extract Confidence Intervals
-lower=c(boot_s2_c[25], boot_s2_cr[25],
-        boot_f_c[25], boot_f_cr[25], 
-        boot_l_c[25], boot_l_cr[25])
+lower <- c(boot_s2_c[25], boot_s2_cr[25],
+           boot_f_c[25], boot_f_cr[25], 
+           boot_l_c[25], boot_l_cr[25])
 
-upper=c( boot_s2_c[975], boot_s2_cr[975],
-        boot_f_c[975], boot_f_cr[975], 
-        boot_l_c[975], boot_l_cr[975])
+upper <- c(boot_s2_c[975], boot_s2_cr[975],
+           boot_f_c[975], boot_f_cr[975], 
+           boot_l_c[975], boot_l_cr[975])
 
-results=data.frame(values, lower, upper) 
+results <- tibble(values, lower, upper) 
 
-results$Trtvalue=c("Control","CR")
-results$Trtvalue=factor(results$Trtvalue,
-                        levels=c("Control","CR"))
-S2=results[1:2,]
-fec=results[3:4,]
-lambda=results[5:6,]
+results$Trt <- c('Control', 'CR')
+results$Var <- factor(c('paste(italic(s))', 
+                        'paste(italic(s))',
+                        'paste(italic(f))',
+                        'paste(italic(f))',
+                        'lambda',
+                        'lambda'),
+                      levels = c('paste(italic(s))',
+                                 'paste(italic(f))',
+                                 'lambda'),
+                      ordered = TRUE)
+
+ggplot(data = results,
+       aes(x = Trt)) +
+  geom_point(aes(y = values,
+                 color = Trt),
+             size = 4.5) + 
+  facet_wrap(~Var,
+             scales = 'free',
+             labeller = label_parsed) + 
+  geom_linerange(aes(ymin = lower,
+                     ymax = upper,
+                     color = Trt),
+                 size = 1.25) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(color = 'black',
+                                    fill = NA),
+        strip.background = element_rect(fill = 'white'),
+        strip.text = element_text(size = 18),
+        axis.title.x = element_text(size = 18,
+                                    margin = margin(t = 20,
+                                                    r = 0,
+                                                    l = 0,
+                                                    b = 0)),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16)) +
+  scale_x_discrete('Treatment') + 
+  scale_y_continuous('') + 
+  scale_color_manual('Treatment',
+                     breaks = c('Control', 'CR'),
+                     values = c('black', 'green'))
 
 
-par(mfrow = c(1, 3), mar = c(5,6,4,2) + 0.15)
-
-plot(as.integer(S2$Trtvalue), S2$values,
-     pch = 1,
-     ylim = c(0, 1),
-     axes = FALSE,
-     main = "",
-     xlab = "", 
-     ylab = "Mean Survival (S)",
-     cex.lab = 1.8)
-arrows(as.integer(S2$Trtvalue), S2$lower, 
-       as.integer(S2$Trtvalue),S2$upper, 
-       length = 0.05,
-       angle = 90,
-       code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1, at = c(1, 2),
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
-plot(as.integer(fec$Trtvalue), fec$values,
-     pch = 1,
-     ylim = c(0, 600),
-     axes = FALSE,
-     main = "", 
-     xlab = "Treatment",
-     ylab = "Mean Fecundity (F)",
-     cex.lab = 1.8)
-arrows(as.integer(fec$Trtvalue), fec$lower, 
-       as.integer(fec$Trtvalue),fec$upper, 
-       length = 0.05,
-       angle = 90,
-       code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1,
-      at = c(1, 2),
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
-plot(as.integer(lambda$Trtvalue), lambda$values,
-     pch = 1,
-     ylim = c(0, 3),
-     axes = FALSE,
-     main = "", 
-     xlab = "",
-     ylab = expression(paste('Lambda (', lambda, ')')),
-     cex.lab = 1.8)
-arrows(as.integer(lambda$Trtvalue), lambda$lower, 
-       as.integer(lambda$Trtvalue),lambda$upper,
-       length = 0.05,
-       angle = 90,
-       code = 3)
-mtext(c("Control", "CR"),
-      side = 1,
-      line = 1,
-      at = c(1, 2),
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
+ggsave(filename = 'Alliaria_VR_Panel.png',
+       path = 'Alliaria',
+       height = 5,
+       width = 8,
+       unit = 'in')

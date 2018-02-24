@@ -2,7 +2,6 @@
 # Hopefully this is a bit more rigorous
 # than my last pass at this
 # Begin: 12/4/17
-# Last modified: 1/12/18
 
 # Quick notes: I can only use 2012-2013 transition to parameterize
 # values for seedlings. We apparently have no data
@@ -21,61 +20,6 @@ PopData <- read.csv('Lespedeza/MatModel/Lespedeza4R.csv',
            !is.na(Stage2012) |
            Trt_Burn2013 == 'Control-Unburned' &
            !is.na(Stage2012))
-
-# PopData$Survival2013[is.na(PopData$Survival2013)] <- 0
-
-# Code to investigate stage class delineations. We don't have information 
-# on sizes for SDL and SDL2 in 2012 (not sure why, but we don't). I'll
-# test for differences in survival between them to see if we should
-# lump them together or keep them separate
-# Small plant stage delineations -----------
-SmallPlant <- filter(PopData, !is.na(Plant) & 
-                       Stage2012 == 'SDL' |
-                       Stage2012 == 'SDL2')
-SmallPlantSurvTab <- table(SmallPlant$Trt2013,
-                           SmallPlant$Stage2012,
-                           SmallPlant$Survival2013)
-SmallPlantSurvTab
-
-mantelhaen.test(SmallPlantSurvTab)
-
-SmallPlantFecTab <- table(SmallPlant$Trt2013,
-                          SmallPlant$Stage2012,
-                          SmallPlant$Fec2013)
-SmallPlantFecTab
-
-mantelhaen.test(SmallPlantFecTab)
-
-
-# Based on this, I think we should keep them as separate stage classes.
-# they have identical survival, but the odds of being reproductive are
-# diferent. Our sample sizes are quite poor, but I think given the tiny
-# number of CR seedlings and the fact that at least one of them became 
-# reproductive combined with the large # of Cont seedlings and none of
-# them becoming reproductive, we should consider that a treatment effect.
-
-# Next, adult stage class delineation --------------
-plot(Survival2013 ~ Size2012, data = PopData)
-range(PopData$Size2012[PopData$Stage2012 == 'Adult'], na.rm = TRUE)
-range(PopData$Size2012[PopData$Stage2012 == 'Adult' & 
-                         PopData$Survival2013 == 0],
-      na.rm = TRUE)
-
-MortalityCutoff <- range(PopData$Size2012[PopData$Stage2012 == 'Adult' & 
-                                            PopData$Survival2013 == 0],
-                         na.rm = TRUE) %>% max()
-# We see mortality in small adults between 12.2 and 268 cm, and then none above 
-# 268 cm. I think that might make for a reasonable cut off between small adult and 
-# large adult class. Next, I'll investigate if there's a cut off within small or
-# large adults based on reproductive status.
-
-plot(Fec2013 ~ Size2012, data = PopData)
-SmallFec <- filter(PopData, Size2012 < 350)
-range(SmallFec$Size2012[SmallFec$Fec2013 == 0],na.rm = TRUE)
-SmallPlantFecTab <- table(SmallFec$Trt2013, 
-                          SmallFec$Fec2013)
-
-chisq.test(SmallPlantFecTab, correct = TRUE) # no treatment effect
 
 # Delineating stage classes for adults at 250, 251-1000, 1000 > cm.
 # This provides adequate sample sizes to capture demographic differences
@@ -138,9 +82,10 @@ for(i in 1:dim(PopData)[1]) {
 
 # Select relevant columns and then filter out the seedling counts
 # by quadrat.
-MatData <- select(PopData, Plant, Plot, Quadrat, Trt2013, 
-                  StageMatMod, StageMatModNext,
-                  Survival2013, Fec2013, Seeds2013) %>%
+MatData <- PopData %>%
+  select(Plant, Plot, Quadrat, 
+         Trt2013, StageMatMod, StageMatModNext, 
+         Survival2013, Fec2013, Seeds2013) %>%
   filter(!is.na(Plant)) %>%
   setNames(c('Plant', 'Plot', 'Quad', 'Trt',
              'Stage','StageNext',
@@ -168,7 +113,7 @@ SurvParams <-MatData %>%
   group_by(Stage, Trt) %>%
   summarise(N = n(),
             Surv = mean(Survival, na.rm = TRUE)) %>%
-  data.frame
+  data.frame()
 
 # Finally, transition parameters. These are bit trickier and require-----------------
 # some restructuring of the data before they can be summarized
@@ -193,7 +138,7 @@ TransParams <- MatData %>%
             Med_Large = mean(`Med - Large`, na.rm = TRUE),
             Large_Med = mean(`Large - Med`, na.rm = TRUE),
             Large_Large = mean(`Large - Large`, na.rm = TRUE)) %>%
-  data.frame
+  data.frame()
 
 # Check to make sure that all rows sum to 1
 for(i in 1:dim(TransParams)[1]) {
@@ -337,10 +282,10 @@ Cont_Retro_Large <- TransParams[TransParams$Stage == 'Large' &
 # Fixed parameters from Schutzenhofer et al 2009----------
 # using the average of their values for cleistagamous and chasmogamous seeds
 # values from Table 1 in paper
-germCL <- .471
-germCH <- .883
-seedViabilityCL <- .357
-seedViabilityCH <- .297
+germCL <- 0.471
+germCH <- 0.883
+seedViabilityCL <- 0.357
+seedViabilityCH <- 0.297
 
 meanGerm <- mean(c(germCL, germCH))
 meanSV <- mean(c(seedViabilityCL, seedViabilityCH))
@@ -408,7 +353,9 @@ values <- c(Cont_F_Large, CR_F_Large,
 nResamp <- 1000
 # This nasty looking line of code initializes all of the vectors to store the outputs
 # from the bootstrapping loop
-eval(parse(text = paste0('boot_', ls()[grepl('Cont|CR', ls())], ' <- rep(NA, nResamp)')))
+eval(parse(text = paste0('boot_', 
+                         ls()[grepl('Cont|CR', ls())], 
+                         ' <- rep(NA, nResamp)')))
 
 # Remove the erroneously created vectors which are actually matrices. 
 # the above step saves a lot of typing, but it's far from perfect!
@@ -764,63 +711,91 @@ LoCI <- c(boot_Cont_F_Large[25], boot_CR_F_Large[25],
           boot_Cont_Lambda[25], boot_CR_Lambda[25])
 
 # Create data frame to store everything -------------------
-AllData <- data.frame(Trt = rep(c('Control', 'CR'), 19),
-                      VitalRate = c(rep('Fecundity', 6),
-                                    rep('Growth', 2),
-                                    rep('Growth_2', 2),
-                                    rep('Growth', 4),
-                                    rep('Stasis',2),
-                                    rep('Growth', 2),
-                                    rep('Stasis', 2),
-                                    rep('Shrinkage', 2),
-                                    rep('Stasis', 2),
-                                    rep('Shrinkage', 2),
-                                    rep('Survival', 10),
-                                    rep('Lambda',2)),
-                      Stage = c(rep('Large', 2),
-                                rep('Med', 2),
-                                rep('Small', 2),
-                                rep('SDL', 4),
-                                rep('SDL2', 2),
-                                rep('Small', 4),
-                                rep('Med', 6),
-                                rep('Large', 4),
-                                rep('SDL', 2),
-                                rep('SDL2', 2),
-                                rep('Small', 2),
-                                rep('Med', 2),
-                                rep('Large', 2),
-                                rep(NA, 2)),
-                      values = values,
-                      UpCI = UpCI,
-                      LoCI = LoCI,
-                      stringsAsFactors = FALSE)
+AllData <- tibble(Trt = rep(c('Control', 'CR'), 19),
+                  VitalRate = factor(c(rep('paste(italic(f[i]))', 6),
+                                       rep('paste(italic(p[ij]))', 8),
+                                       rep('paste(italic(c[ii]))', 2),
+                                       rep('paste(italic(p[ij]))', 2),
+                                       rep('paste(italic(c[ii]))', 2),
+                                       rep('paste(italic(r[ij]))', 2),
+                                       rep('paste(italic(c[ii]))', 2),
+                                       rep('paste(italic(r[ij]))', 2),
+                                       rep('paste(italic(s[i]))', 10),
+                                       rep('lambda',2)),
+                                     levels = c('paste(italic(s[i]))',
+                                                'paste(italic(c[ii]))',
+                                                'paste(italic(p[ij]))',
+                                                'paste(italic(r[ij]))',
+                                                'paste(italic(f[i]))',
+                                                'lambda'),
+                                     ordered = TRUE),
+                  Stage = c(rep('Large Adult', 2),
+                            rep('Medium Adult', 2),
+                            rep('Small Adult', 2),
+                            rep('Seedling', 4),
+                            rep('2nd Year Seedling', 2),
+                            rep('Small Adult', 4),
+                            rep('Medium Adult', 6),
+                            rep('Large Adult', 4),
+                            rep('Seedling', 2),
+                            rep('2nd Year Seedling', 2),
+                            rep('Small Adult', 2),
+                            rep('Medium Adult', 2),
+                            rep('Large Adult', 2),
+                            rep('Full Population', 2)),
+                  values = values,
+                  UpCI = UpCI,
+                  LoCI = LoCI) %>%
+  mutate(Trt_Stage = paste(.$Trt, .$Stage,.$VitalRate, sep = " "))
 
+ggplot(data = AllData, aes(x = Trt)) + 
+  geom_point(aes(x = Trt_Stage,
+                 y = values,
+                 color = Trt,
+                 shape = Stage),
+             size = 4.5) +
+  geom_linerange(aes(x = Trt_Stage,
+                     ymin = LoCI,
+                     ymax = UpCI,
+                     color = Trt),
+                 size = 1.25) + 
+  facet_wrap(~VitalRate,
+             scales = 'free',
+             labeller = label_parsed,
+             nrow = 3,
+             ncol = 2) +
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(color = 'black',
+                                    fill = NA),
+        strip.background = element_rect(fill = 'white'),
+        strip.text = element_text(size = 18),
+        axis.title.x = element_text(size = 18,
+                                    margin = margin(t = 20,
+                                                    l = 0,
+                                                    r = 0,
+                                                    b = 5)),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16)) +
+  scale_color_manual('Treatment',
+                     breaks = c('Control', 'CR'),
+                     values = c('black', 'green')) + 
+  scale_shape_manual('Stage',
+                     breaks = c('Seedling',
+                                '2nd Year Seedling',
+                                'Small Adult',
+                                'Medium Adult',
+                                'Large Adult',
+                                'Full Population'),
+                     values = c(15, 16, 17, 18, 25, 4)) +
+  scale_y_continuous('') +
+  scale_x_discrete('')
 
-# Create figure with all stages on for each vital rate. e.g. 
-# Fecundity with all SA,MA,LA shown for each treatment on single
-# figure
-
-Lambdas <- filter(AllData, VitalRate == 'Lambda')
-
-plot(as.integer(as.factor(Lambdas$Trt)), 
-     Lambdas$values,
-     pch=1,
-     ylim=c(0,max(Lambdas$UpCI)+1), 
-     axes=FALSE,
-     main="", 
-     xlab="",
-     ylab=expression(paste('Lambda (', lambda, ')')),
-     cex.lab=1.5)
-arrows(as.integer(as.factor(Lambdas$Trt)), Lambdas$LoCI,
-       as.integer(as.factor(Lambdas$Trt)), Lambdas$UpCI, 
-       length=0.05,
-       angle=90, 
-       code=3)
-mtext(c("Control","CR"),
-      side=1,
-      line=1,
-      at=c(1,2), 
-      cex=.8)
-axis(2, cex.axis=1)
-box(lwd=2)
+ggsave(filename = 'Lespedeza_VR_Panel.png',
+       path = 'Lespedeza/MatModel',
+       height = 6,
+       width = 9,
+       unit = 'in')

@@ -1,56 +1,57 @@
 ##Clear environment and console
-rm(list=ls(all=TRUE)) 
+rm(list = ls()) 
 cat("\014")
 
 library(dplyr)
+library(ggplot2)
 
 #import data into R studio
-setwd('C:/Users/sl13sise/Dropbox/invaders demography')
-ks=read.csv("Carduus/tenative.carduus.model.file.csv") %>%
+ks <- read.csv("Carduus/tenative.carduus.model.file.csv") %>%
    filter(Treatment != 'Herbivore')
 
 ks$Seeds=ks$Inflor15*88.5
 
 # check for density dependence
-ddTest <- group_by(ks,Treatment, Quad) %>% summarise(N=n(),
-                                               Sb=mean(Sbetween,na.rm=TRUE),
-                                               Seeds=mean(Seeds,na.rm=TRUE))
+ddTest <- ks %>% 
+  group_by(Treatment, Quad) %>% 
+  summarise(N = n(),
+            Sb = mean(Sbetween, na.rm = TRUE),
+            Seeds = mean(Seeds, na.rm = TRUE))
 
-params=group_by(ks, Treatment) %>% summarise(
-             N=n(),
-             Sb=mean(Sbetween,na.rm=TRUE),
-             Seeds=mean(Seeds,na.rm=TRUE))
+params <- ks %>% 
+  group_by(Treatment) %>%
+  summarise(N = n(),
+            Sb = mean(Sbetween, na.rm = TRUE),
+            Seeds = mean(Seeds, na.rm = TRUE))
 
 ##Control
-s_c=params[params$Treatment=="Control","Sb"] %>% as.numeric
-f_c=params[params$Treatment=="Control","Seeds"] %>% as.numeric
+s_c <- params[params$Treatment == "Control","Sb"] %>% as.numeric
+f_c <- params[params$Treatment == "Control","Seeds"] %>% as.numeric
 
 ##Comp Rem
-s_cr=params[params$Treatment=="Competitor","Sb"] %>% as.numeric 
-f_cr=params[params$Treatment=="Competitor","Seeds"] %>% as.numeric
+s_cr <- params[params$Treatment == "Competitor","Sb"] %>% as.numeric 
+f_cr <- params[params$Treatment == "Competitor","Seeds"] %>% as.numeric
 
 
-#seed viability and germination rate, Bolting probability set to 1 for the
-##Time being, can be more precisely calculated later....
-Gsb=.03
-Ssb=.2597
-B=1
-e=.2333
-Gi=.03
+#seed viability and germination rate,
+Gsb <- 0.03
+Ssb <- 0.2597
+e <- 0.2333
+Gi <- 0.03
 
-A_cont=matrix(c(Ssb, 0, f_c * e,
-                Gsb, 0, f_c * Gi,
-                0, s_c, 0),
-              nrow = 3, byrow = TRUE, 
-                  dimnames=list(c("SB", "Rosette", "RA"),
-                                c("SB", "Rosette", "RA")))
+A_cont <- matrix(c(Ssb, 0, f_c * e,
+                   Gsb, 0, f_c * Gi,
+                   0, s_c, 0),
+                 nrow = 3, byrow = TRUE, 
+                 dimnames=list(c("SB", "Rosette", "RA"),
+                               c("SB", "Rosette", "RA")))
 
-A_cr=matrix(c(Ssb, 0, f_cr * e,
-                  Gsb, 0, f_cr * Gi,
-                  0, s_cr, 0),
-                nrow = 3, byrow = TRUE, 
-                dimnames = list(c("SB", "Rosette", "RA"),
-                                c("SB", "Rosette", "RA")))
+A_cr <- matrix(c(Ssb, 0, f_cr * e,
+                 Gsb, 0, f_cr * Gi,
+                 0, s_cr, 0),
+               nrow = 3, byrow = TRUE, 
+               dimnames = list(c("SB", "Rosette", "RA"),
+                               c("SB", "Rosette", "RA")))
 
 ev <- eigen(A_cont)
 
@@ -66,9 +67,9 @@ lmax <- lmax[1]
 lambda_cr <- Re(ev$values[lmax])
 lambda_cr
 
-values=c(s_c, s_cr,
-         f_c, f_cr,
-         lambda_cont, lambda_cr)
+values <- c(s_c, s_cr,
+            f_c, f_cr,
+            lambda_cont, lambda_cr)
 
 
 ####################################################
@@ -77,7 +78,7 @@ values=c(s_c, s_cr,
 ##For now I fill in a column with 1000 rows with the value 'NA'.
 ##Later, I will replace the NAs with data.
 
-nreps=1000
+nreps <- 1000
 boot_s_c <- rep(NA, nreps)
 boot_s_cr <- rep(NA, nreps)
 boot_f_c <- rep(NA, nreps)
@@ -85,30 +86,31 @@ boot_f_cr <- rep(NA, nreps)
 boot_l_cont <- rep(NA, nreps)
 boot_l_cr <- rep(NA, nreps)
 
-cplants=subset(ks,Treatment=="Control")
-crplants=subset(ks,Treatment=="Competitor")
+cplants <- filter(ks, Treatment == "Control")
+crplants <- filter(ks, Treatment == "Competitor")
 
 
-nc=length(cplants[,1])
-ncr=length(crplants[,1])
+nc <- length(cplants[ ,1])
+ncr <- length(crplants[ ,1])
 #start the loop
-for(j in 1:nreps) {
+for(j in seq_len(nreps)) {
   
   #x3 is a column that picks n integers between the numbers 1 and n (because we have n plants in the data set).  
   #replace=TRUE means that we are sampling with replacement (once we choose a number, we can choose it again).
   
-  x2=sample(1:nc, nc, replace = TRUE)
-  x3=sample(1:ncr, ncr, replace = TRUE)
+  x2 <- sample(1:nc, nc, replace = TRUE)
+  x3 <- sample(1:ncr, ncr, replace = TRUE)
   
   bootc <- cplants[x2, ]
   bootcr <- crplants[x3, ]
   
   bootdata <- rbind(bootc, bootcr)
   
-  params1 <- group_by(bootdata,Treatment) %>% summarise(
-               N = length(Treatment),
-               Sb = mean(Sbetween, na.rm = TRUE),
-               Seeds = mean(Seeds, na.rm = TRUE))
+  params1 <- bootdata %>% 
+    group_by(Treatment) %>%
+    summarise(N = length(Treatment),
+              Sb = mean(Sbetween, na.rm = TRUE),
+              Seeds = mean(Seeds, na.rm = TRUE))
   
   ##Replaces all NaNs from summary function with observed parameter means
   ## otherwise, bootstrap code will not work.
@@ -135,23 +137,26 @@ for(j in 1:nreps) {
   
   
   ##Bootstrapped matrices!
-  Gsb=.03
-  Ssb=.2597
-  B=1
-  e=.2333
-  Gi=.03
+  Gsb <- 0.03
+  Ssb <- 0.2597
+  e <- 0.2333
+  Gi <- 0.03
   
-  A_cont=matrix(c(Ssb,0,f_c*e,
-                  Gsb,0,f_c*Gi,
-                  0,s_c,0),
-                nrow=3, byrow=TRUE, 
-                dimnames=list(c("SB","Rosette","RA"),c("SB","Rosette","RA")))
+  A_cont <- matrix(c(Ssb, 0, f_c*e,
+                     Gsb, 0, f_c*Gi,
+                     0, s_c, 0),
+                   nrow = 3,
+                   byrow = TRUE, 
+                   dimnames = list(c("SB","Rosette","RA"),
+                                   c("SB","Rosette","RA")))
   
-  A_cr=matrix(c(Ssb,0,f_cr*e,
-                Gsb,0,f_cr*Gi,
-                0,s_cr,0),
-              nrow=3, byrow=TRUE, 
-              dimnames=list(c("SB","Rosette","RA"),c("SB","Rosette","RA")))
+  A_cr <- matrix(c(Ssb, 0, f_cr*e,
+                   Gsb, 0, f_cr*Gi,
+                   0, s_cr, 0),
+                 nrow = 3,
+                 byrow = TRUE, 
+                 dimnames = list(c("SB","Rosette","RA"),
+                                 c("SB","Rosette","RA")))
              
                  
              ev <- eigen(A_cont)
@@ -159,90 +164,82 @@ for(j in 1:nreps) {
              lmax <- which(Re(ev$values) == max(Re(ev$values)))
              lmax <- lmax[1]  
              lambda_cont <- Re(ev$values[lmax])
-             boot_l_cont[j]=lambda_cont
+             boot_l_cont[j] <- lambda_cont
              
              ev <- eigen(A_cr)
              
              lmax <- which(Re(ev$values) == max(Re(ev$values)))
              lmax <- lmax[1]  
              lambda_cr <- Re(ev$values[lmax])
-             boot_l_cr[j]=lambda_cr
+             boot_l_cr[j] <- lambda_cr
              
 }
 
-boot_s_c=sort(boot_s_c)
-boot_s_cr=sort(boot_s_cr)
-boot_f_c=sort(boot_f_c)
-boot_f_cr=sort(boot_f_cr)
-boot_l_cont=sort(boot_l_cont)
-boot_l_cr=sort(boot_l_cr)
+boot_s_c <- sort(boot_s_c)
+boot_s_cr <- sort(boot_s_cr)
+boot_f_c <- sort(boot_f_c)
+boot_f_cr <- sort(boot_f_cr)
+boot_l_cont <- sort(boot_l_cont)
+boot_l_cr <- sort(boot_l_cr)
 
 ##Extract Confidence Intervals
-lower=c(boot_s_c[25], boot_s_cr[25],
-        boot_f_c[25], boot_f_cr[25], 
-        boot_l_cont[25], boot_l_cr[25])
+lower <- c(boot_s_c[25], boot_s_cr[25],
+           boot_f_c[25], boot_f_cr[25], 
+           boot_l_cont[25], boot_l_cr[25])
 
-upper=c(boot_s_c[975], boot_s_cr[975],
-        boot_f_c[975], boot_f_cr[975], 
-        boot_l_cont[975], boot_l_cr[975])
+upper <- c(boot_s_c[975], boot_s_cr[975],
+           boot_f_c[975], boot_f_cr[975], 
+           boot_l_cont[975], boot_l_cr[975])
 
-results=data.frame(values, lower, upper) 
+results <- tibble(values, lower, upper) 
 
-results$Trtvalue=c("Control","CR")
-results$Trtvalue=factor(results$Trtvalue,
-                        levels=c("Control","CR"))
-S1=results[1:2,]
-fec=results[3:4,]
-lambda=results[5:6,]
+results$Trt <- c("Control","CR")
+results$Var <- factor(c('paste(italic(s[j]))', 
+                        'paste(italic(s[j]))',
+                        'paste(italic(f))',
+                        'paste(italic(f))',
+                        'lambda',
+                        'lambda'),
+                      levels = c('paste(italic(s[j]))',
+                                 'paste(italic(f))',
+                                 'lambda'),
+                      ordered = TRUE)
+
+ggplot(data = results,
+       aes(x = Trt)) +
+  geom_point(aes(y = values,
+                 color = Trt),
+             size = 4.5) + 
+  facet_wrap(~Var,
+             scales = 'free',
+             labeller = label_parsed) + 
+  geom_linerange(aes(ymin = lower,
+                     ymax = upper,
+                     color = Trt),
+                 size = 1.25) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(color = 'black',
+                                    fill = NA),
+        strip.background = element_rect(fill = 'white'),
+        strip.text = element_text(size = 18),
+        axis.title.x = element_text(size = 18,
+                                    margin = margin(t = 20,
+                                                    r = 0,
+                                                    l = 0,
+                                                    b = 0)),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16)) +
+  scale_x_discrete('Treatment') + 
+  scale_y_continuous('') + 
+  scale_color_manual('Treatment',
+                     breaks = c('Control', 'CR'),
+                     values = c('black', 'green'))
 
 
-par(mfrow = c(1, 3), mar = c(5,6,4,2) + 0.1)
-plot(as.integer(S1$Trtvalue), S1$values,
-     pch = 1, 
-     ylim = c(0,1), 
-     axes = FALSE,
-     xlab = "",
-     ylab = expression(paste("Mean Survival (S "['j']*')')),
-     cex.lab=1.8)
-
-arrows(as.integer(S1$Trtvalue), S1$lower, 
-       as.integer(S1$Trtvalue),S1$upper, 
-       length=0.05, angle=90, code=3)
-mtext(c("Control","CR"),side=1,line=1,at=c(1,2), cex=1.0)
-axis(2, cex.axis=1)
-box(lwd=2)
-
-
-plot(as.integer(fec$Trtvalue), fec$values,pch = 1,
-     ylim = c(0,1500), axes = FALSE, xlab = "Treatment",
-     ylab = "Mean Fecundity (F)", cex.lab = 1.8)
-arrows(as.integer(fec$Trtvalue), fec$lower, 
-       as.integer(fec$Trtvalue),fec$upper, 
-       length = 0.05, angle = 90, code = 3)
-mtext(c("Control", "CR"),
-      side = 1, 
-      line = 1,
-      at = c(1, 2),
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
-plot(as.integer(lambda$Trtvalue), lambda$values,
-     pch = 1,
-     ylim = c(0,6), 
-     axes = FALSE,
-     xlab = "", 
-     ylab = expression(paste('Lambda (', lambda, ')', sep = "")),
-     cex.lab = 1.8)
-
-arrows(as.integer(lambda$Trtvalue), lambda$lower, 
-       as.integer(lambda$Trtvalue),lambda$upper, 
-       length = 0.05, angle = 90, code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1,
-      at = c(1, 2),
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
+ggsave(filename = 'Carduus_VR_Panel.png',
+       path = 'Carduus',
+       height = 5,
+       width = 8,
+       unit = 'in')

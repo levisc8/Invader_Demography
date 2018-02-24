@@ -10,8 +10,8 @@ library(magrittr)
 library(stringr)
 library(mgcv)
 
-setwd('C:/Users/sl13sise/Dropbox/invaders demography/Ligustrum/IPM/LigObt_RS_Server') # local
-# setwd("~/LigObt_RS_Server/") # server
+# setwd('C:/Users/sl13sise/Dropbox/invaders demography/Ligustrum/IPM/LigObt_RS_Server') # local
+setwd("~/LigObt_RS_Server/") # server
 
 source('IPM_Functions_Ligustrum.R') 
 
@@ -42,17 +42,17 @@ AllControl <- filter(AllPlants, Trt == 'Control')
 AllCR <- filter(AllPlants, Trt == 'Comp')
 
 ContLinGlm <- glm(Alive2015 ~ Ht14,
+                  data = rbind(AllControl, AllBig),
+                  family = binomial())
+CRLinGlm <- glm(Alive2015 ~ Ht14,
+                data = rbind(AllCR, AllBig),
+                family = binomial())
+ContQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
                    data = rbind(AllControl, AllBig),
                    family = binomial())
-CRLinGlm <- glm(Alive2015 ~ Ht14,
+CRQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
                  data = rbind(AllCR, AllBig),
                  family = binomial())
-ContQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
-                     data = rbind(AllControl, AllBig),
-                     family = binomial())
-CRQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
-                   data = rbind(AllCR, AllBig),
-                   family = binomial())
 
 # Fecundity-------------------------------------------------------------------------------
 
@@ -185,69 +185,69 @@ AllLambdas<-list(est.prob = seq(.01, 1, .01),
                  lambda_cont_Quad_lo = rep(0, 100))
 
 OutputValues <- list(GrowSlope_CR = c(coef(growth.lms$LM[[1]])[2],
-                                        rep(NA, 1000)),
-                       GrowInt_CR = c(coef(growth.lms$LM[[1]])[1],
                                       rep(NA, 1000)),
-                       GrowSlope_Cont = c(coef(growth.lms$LM[[2]])[2],
-                                          rep(NA, 1000)),
-                       GrowInt_Cont = c(coef(growth.lms$LM[[2]])[1],
-                                        rep(NA, 1000)),
-                       RepSlope = c(coef(Repro.Glm)[2],
+                     GrowInt_CR = c(coef(growth.lms$LM[[1]])[1],
                                     rep(NA, 1000)),
-                       RepInt = c(coef(Repro.Glm)[1],
+                     GrowSlope_Cont = c(coef(growth.lms$LM[[2]])[2],
+                                        rep(NA, 1000)),
+                     GrowInt_Cont = c(coef(growth.lms$LM[[2]])[1],
+                                      rep(NA, 1000)),
+                     RepSlope = c(coef(Repro.Glm)[2],
                                   rep(NA, 1000)),
-                       RecMean = c(Sdl.mean,
-                                   rep(NA, 1000)),
-                       RecSD = c(Sdl.SD,
+                     RepInt = c(coef(Repro.Glm)[1],
+                                rep(NA, 1000)),
+                     RecMean = c(Sdl.mean,
                                  rep(NA, 1000)),
-                       SurvInt_Cont_Lin = c(coef(ContLinGlm)[1],
-                                            rep(NA, 1000)),
-                       SurvSlope_Cont_Lin = c(coef(ContLinGlm)[2],
-                                              rep(NA, 1000)),
-                       SurvInt_Cont_Quad = c(coef(ContQuadGlm)[1],
-                                             rep(NA, 1000)),
-                       SurvSlope_Cont_Quad = c(coef(ContQuadGlm)[2],
-                                               rep(NA, 1000)),
-                       SurvSlope2_Cont_Quad = c(coef(ContQuadGlm)[3],
-                                                rep(NA, 1000)),
-                       SurvInt_CR_Lin = c(coef(CRLinGlm)[1],
+                     RecSD = c(Sdl.SD,
+                               rep(NA, 1000)),
+                     SurvInt_Cont_Lin = c(coef(ContLinGlm)[1],
                                           rep(NA, 1000)),
-                       SurvSlope_CR_Lin = c(coef(CRLinGlm)[2],
+                     SurvSlope_Cont_Lin = c(coef(ContLinGlm)[2],
                                             rep(NA, 1000)),
-                       SurvInt_CR_Quad = c(coef(CRQuadGlm)[1],
+                     SurvInt_Cont_Quad = c(coef(ContQuadGlm)[1],
                                            rep(NA, 1000)),
-                       SurvSlope_CR_Quad = c(coef(CRQuadGlm)[2],
+                     SurvSlope_Cont_Quad = c(coef(ContQuadGlm)[2],
                                              rep(NA, 1000)),
-                       SurvSelope2_CR_Quad = c(coef(CRQuadGlm)[3],
-                                               rep(NA, 1000)),
-                       Obs_Boot = c('Observed', rep('Boot', 1000)))
+                     SurvSlope2_Cont_Quad = c(coef(ContQuadGlm)[3],
+                                              rep(NA, 1000)),
+                     SurvInt_CR_Lin = c(coef(CRLinGlm)[1],
+                                        rep(NA, 1000)),
+                     SurvSlope_CR_Lin = c(coef(CRLinGlm)[2],
+                                          rep(NA, 1000)),
+                     SurvInt_CR_Quad = c(coef(CRQuadGlm)[1],
+                                         rep(NA, 1000)),
+                     SurvSlope_CR_Quad = c(coef(CRQuadGlm)[2],
+                                           rep(NA, 1000)),
+                     SurvSelope2_CR_Quad = c(coef(CRQuadGlm)[3],
+                                             rep(NA, 1000)),
+                     Obs_Boot = c('Observed', rep('Boot', 1000)))
 
 AllCR <- filter(AllPlants, Trt == 'Comp')
 AllCont <- filter(AllPlants, Trt == 'Control')
 AllBig <- filter(AllPlants, Trt == 'All')
 
-for(i in unique(AllLambdas$est.prob)[1]){
+for(i in unique(AllLambdas$est.prob)){
   it <- i * 100
   boot_lambdas_cont_Lin <- rep(NA, 1000)
   boot_lambdas_comp_Lin <- rep(NA, 1000)
   boot_lambdas_cont_Quad <- rep(NA, 1000)
   boot_lambdas_comp_Quad <- rep(NA, 1000)
-
+  
   # substitute in new establishment probability
   f.params$est.prob <- i
-
+  
   # Reconstruct the emergence column. This is the only parameter
   # affected by establishment probability, so first we test out
   # sensitivity to that. Then, bootstrap the data set with the
   # new establishment probability 
   FCol <- h * SB.Emerge(Y, f.params)
   
-  # build full K kernel -----------------------------------
+  # # build full K kernel -----------------------------------
   K_cont_Lin <- rbind(FRow, cbind(FCol, P_Cont_Lin))
   K_cont_Quad <- rbind(FRow, cbind(FCol, P_Cont_Quad))
   K_comp_Lin <- rbind(FRow, cbind(FCol, P_Comp_Lin))
   K_comp_Quad <- rbind(FRow, cbind(FCol, P_Comp_Quad))
-
+  
   eigen_cont_Lin <- eigen(K_cont_Lin)
   lambda_cont_Lin <- max(Re(eigen_cont_Lin$values))
   AllLambdas$lambda_cont_Lin[it] <- lambda_cont_Lin
@@ -255,7 +255,7 @@ for(i in unique(AllLambdas$est.prob)[1]){
   eigen_comp_Lin <- eigen(K_comp_Lin)
   lambda_comp_Lin <- max(Re(eigen_comp_Lin$values))
   AllLambdas$lambda_comp_Lin[it] <- lambda_comp_Lin
-
+  
   eigen_cont_Quad <- eigen(K_cont_Quad)
   lambda_cont_Quad <- max(Re(eigen_cont_Quad$values))
   AllLambdas$lambda_cont_Quad[it] <- lambda_cont_Quad
@@ -265,7 +265,7 @@ for(i in unique(AllLambdas$est.prob)[1]){
   AllLambdas$lambda_comp_Quad[it] <- lambda_comp_Quad
   
   for(j in 1:1000){
-
+    
     # Resample raw data sets, re-fit survival, growth and pr(Repro values)
     x1 <- sample(1:dim(AllControl)[1], dim(AllControl)[1], replace = TRUE)
     x2 <- sample(1:dim(AllCR)[1], dim(AllCR)[1], replace = TRUE)
@@ -297,7 +297,7 @@ for(i in unique(AllLambdas$est.prob)[1]){
     AllData <- rbind(BootCR, BootCont, BootBig)
     
     BootReproData <- filter(AllData, Alive2015 != 'NA')
-    BootReproGLM <- glm(Repro ~ Ht15, 
+    BootReproGLM <- glm(Repro ~ Ht14, 
                         data = BootReproData,
                         family = binomial())
     
@@ -315,14 +315,14 @@ for(i in unique(AllLambdas$est.prob)[1]){
                                 germ = germ.prob,
                                 est.prob = i)
     
-  
+    
     boot_Gmat_comp <- h * (outer(Y, Y,
-                            FUN = grow.prob,
-                            model = BootCRGrow))
+                                 FUN = grow.prob,
+                                 model = BootCRGrow))
     
     boot_Gmat_cont <- h * (outer(Y, Y, 
-                            FUN = grow.prob,
-                            model = BootContGrow))
+                                 FUN = grow.prob,
+                                 model = BootContGrow))
     
     boot_Gmat_cont <- boot_Gmat_cont/matrix(as.vector(apply(boot_Gmat_cont,
                                                             2,
@@ -380,7 +380,7 @@ for(i in unique(AllLambdas$est.prob)[1]){
     # Store boot strap values for vital rates that don't depend
     # on EstProb. We only do this once because doing so 100
     # is wildly unnecessary
-    if(it = 1) {
+    if(it == 1) {
       OutputValues$GrowSlope_CR[j + 1] <- coef(BootCRGrow)[2]
       OutputValues$GrowInt_CR[j + 1] <- coef(BootCRGrow)[1]
       OutputValues$GrowSlope_Cont[j + 1] <- coef(BootContGrow)[2]
@@ -389,14 +389,14 @@ for(i in unique(AllLambdas$est.prob)[1]){
       OutputValues$RepInt[j + 1] <- coef(BootReproGLM)[1]
       OutputValues$RecMean[j + 1] <- BootSdlMean
       OutputValues$RecSD[j + 1] <- BootSdlSD
-      OutputValues$SurvInt_Cont_Lin[j + 1] <- coef(ContLinGlm)[1]
-      OutputValues$SurvSlope_Cont_Lin[j + 1] <- coef(ContLinGlm)[2]
-      OutputValues$SurvInt_Cont_Quad[j + 1] <- coef(ContQuadGlm)[1]
-      OutputValues$SurvSlope_Cont_Quad[j + 1] <- coef(ContQuadGlm)[2]
-      OutputValues$SurvSlope2_Cont_Quad[j + 1] <- coef(ContQuadGlm)[3]
-      OutputValues$SurvInt_CR_Lin[j + 1] <- coef(CRLinGlm)[1]
-      OutputValues$SurvSlope_CR_Lin[j + 1] <- coef(CRLinGlm)[2]
-      OutputValues$SurvInt_CR_Quad[j + 1] <- coef(CRQuadGlm)[1]
+      OutputValues$SurvInt_Cont_Lin[j + 1] <- coef(BootContSurvLin)[1]
+      OutputValues$SurvSlope_Cont_Lin[j + 1] <- coef(BootContSurvLin)[2]
+      OutputValues$SurvInt_Cont_Quad[j + 1] <- coef(BootContSurvQuad)[1]
+      OutputValues$SurvSlope_Cont_Quad[j + 1] <- coef(BootContSurvQuad)[2]
+      OutputValues$SurvSlope2_Cont_Quad[j + 1] <- coef(BootContSurvQuad)[3]
+      OutputValues$SurvInt_CR_Lin[j + 1] <- coef(BootCrSurvLin)[1]
+      OutputValues$SurvSlope_CR_Lin[j + 1] <- coef(BootCrSurvLin)[2]
+      OutputValues$SurvInt_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[1]
       OutputValues$SurvSlope_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[2]
       OutputValues$SurvSelope2_CR_Quad[j + 1] <- coef(BootCrSurvQuad)[3]
       OutputValues$Obs_Boot[j + 1] <- 'Boot'
@@ -405,7 +405,7 @@ for(i in unique(AllLambdas$est.prob)[1]){
   } # inner bootstrapping loop
   
   # Store confidence intervals from inner loop
-  AllLambdas$lambda_comp_Lin_up[it] <- boot_lambdas_comp_Lin %>% 
+  AllLambdas$lambda_comp_Lin_up[it] <- boot_lambdas_comp_Lin %>%
     sort %>%
     .[975]
   AllLambdas$lambda_comp_Lin_lo[it] <- boot_lambdas_comp_Lin %>%
@@ -418,7 +418,7 @@ for(i in unique(AllLambdas$est.prob)[1]){
     sort %>%
     .[25]
   
-  AllLambdas$lambda_cont_Lin_up[it] <- boot_lambdas_cont_Lin %>% 
+  AllLambdas$lambda_cont_Lin_up[it] <- boot_lambdas_cont_Lin %>%
     sort %>%
     .[975]
   AllLambdas$lambda_cont_Lin_lo[it] <- boot_lambdas_cont_Lin %>%
@@ -431,11 +431,11 @@ for(i in unique(AllLambdas$est.prob)[1]){
     sort %>%
     .[25]
   
-  if(it %% 10 == 0){
-    base::message(paste0(it, "% of data processed\n"))
+  if(it %% 5 == 0){
+    base::message(paste0(it, "% of data processed"))
   }
   
-
+  
   
 } # Estprob perturbation loop
 
@@ -444,17 +444,17 @@ OutputValues %>%
   write.csv(., file = 'Ligustrum_Bootstrapped_Vital_Rates.csv',
             row.names = FALSE)
 
-# write.csv(AllLambdas, 'Bootstrapping_Output_Ligustrum.csv',
-#           row.names = FALSE)
-# 
-# library(gmailr)
-# sig <- source("gmailr_signature.R")
-# 
-# 
-# draft <- mime() %>%
-#   to(c("levisc8@gmail.com")) %>%
-#   from("samlevin.rstudio@gmail.com") %>%
-#   subject("Ligustrum Bootstrapping complete") %>%
-#   text_body(paste("Script complete, results on RStudio Server",
-#                   sig$value, sep = '\n\n')) %>%
-#   send_message()
+write.csv(AllLambdas, 'Bootstrapping_Output_Ligustrum.csv',
+          row.names = FALSE)
+
+library(gmailr)
+sig <- source("gmailr_signature.R")
+
+
+draft <- mime() %>%
+  to(c("levisc8@gmail.com")) %>%
+  from("samlevin.rstudio@gmail.com") %>%
+  subject("Ligustrum Bootstrapping complete") %>%
+  text_body(paste("Script complete, results on RStudio Server",
+                  sig$value, sep = '\n\n')) %>%
+  send_message()

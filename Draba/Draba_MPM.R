@@ -1,10 +1,10 @@
 ##Clear environment and console
-rm(list=ls(all=TRUE)) 
+rm(list = ls()) 
 cat("\014") 
 ##Import data
-ks=read.csv("C:/Users/sl13sise/Dropbox/invaders demography/Draba/Draba4R.csv")
+ks <- read.csv("Draba/Draba4R.csv")
 
-ks$Seeds=ks$fruits*17.2 
+ks$Seeds <- ks$fruits * 17.2 
 
 #subset plants into treatments
 
@@ -13,9 +13,11 @@ cr <- subset(ks, treatment == "Comp")
 
 
 library(dplyr)
-params <-  group_by(ks,treatment) %>%
-  summarise(Survival=mean(Alive,na.rm=T),
-            Seeds=mean(Seeds,na.rm=T))
+library(ggplot2)
+params <-  ks %>%
+  group_by(treatment) %>%
+  summarise(Survival = mean(Alive, na.rm = TRUE),
+            Seeds = mean(Seeds, na.rm = TRUE))
 
 params <- as.data.frame(params)
 
@@ -40,7 +42,9 @@ A_cont <- matrix(c(0, v3 * (1-G), 0, 0, 0,
                    0, 0, 0, v1 * (1-G), 0,
                    0, 0, 0, 0, s_c * f_c * v0 * (1-G),  
                    v4 * G, v3 * G, v2 * G, v1 * G, s_c * f_c * v0 * G),
-                 nrow = 5, ncol = 5, byrow = TRUE,
+                 nrow = 5, 
+                 ncol = 5, 
+                 byrow = TRUE,
                  dimnames = list(c('SB4', 'SB3', 'SB2', 'SB1', "P"),
                                  c('SB4', 'SB3', 'SB2', 'SB1', "P")))
 A_cr <- matrix(c(0, v3 * (1-G), 0, 0, 0,
@@ -48,7 +52,9 @@ A_cr <- matrix(c(0, v3 * (1-G), 0, 0, 0,
                  0, 0, 0, v1 * (1-G), 0,
                  0, 0, 0, 0, s_cr * f_cr * v0 * (1-G),  
                  v4 * G, v3 * G, v2 * G, v1 * G, s_cr * f_cr * v0 * G),
-               nrow = 5, ncol = 5, byrow = TRUE,
+               nrow = 5,
+               ncol = 5,
+               byrow = TRUE,
                dimnames = list(c('SB4', 'SB3', 'SB2', 'SB1', "P"),
                                c('SB4', 'SB3', 'SB2', 'SB1', "P")))
 
@@ -67,8 +73,8 @@ lambda_cr <- Re(ev$values[lmax])
 lambda_cr
 
 values <- c(s_c, s_cr,
-         f_c, f_cr,
-         lambda_c, lambda_cr)
+            f_c, f_cr,
+            lambda_c, lambda_cr)
 
 
 ####################################################
@@ -90,16 +96,17 @@ ncr <- length(cr[ ,1])
 #start the loop
 for(i in 1:nreps) {
   
-  x1 <- sample(1:nc, nc, replace = T)
-  x2 <- sample(1:ncr, ncr, replace = T)
+  x1 <- sample(1:nc, nc, replace = TRUE)
+  x2 <- sample(1:ncr, ncr, replace = TRUE)
  
   bootc <- c[x1, ]
   bootcr <- cr[x2, ]
-  bootdata=rbind(bootc,bootcr)
+  bootdata <- rbind(bootc,bootcr)
   
-  params1 <- group_by(bootdata, treatment) %>%
-    summarise(Survival = mean(Alive, na.rm = T),
-              Seeds = mean(Seeds, na.rm = T))
+  params1 <- bootdata %>%
+    group_by(treatment) %>%
+    summarise(Survival = mean(Alive, na.rm = TRUE),
+              Seeds = mean(Seeds, na.rm = TRUE))
   
   params1 <- as.data.frame(params1)
   names(params1) <- c("Treatment","Survival","Seeds")
@@ -117,7 +124,7 @@ for(i in 1:nreps) {
   s_cr <- params1[params1$Treatment == "Comp", "Survival"]
   
   f_c <- params1[params1$Treatment == "Control","Seeds"]
-  f_cr <- params1[params1$Treatment=="Comp","Seeds"]
+  f_cr <- params1[params1$Treatment == "Comp","Seeds"]
   
   boot_s_c[i] <- s_c
   boot_s_cr[i] <- s_cr
@@ -133,7 +140,9 @@ for(i in 1:nreps) {
                      0, 0, 0, v1 * (1-G), 0,
                      0, 0, 0, 0, s_c * f_c * v0 * (1-G),  
                      v4 * G, v3 * G, v2 * G, v1 * G, s_c * f_c * v0 * G),
-                   nrow = 5, ncol = 5, byrow = TRUE,
+                   nrow = 5, 
+                   ncol = 5,
+                   byrow = TRUE,
                    dimnames = list(c('SB4', 'SB3', 'SB2', 'SB1', "P"),
                                    c('SB4', 'SB3', 'SB2', 'SB1', "P")))
   A_cr <- matrix(c(0, v3 * (1-G), 0, 0, 0,
@@ -141,7 +150,9 @@ for(i in 1:nreps) {
                    0, 0, 0, v1 * (1-G), 0,
                    0, 0, 0, 0, s_cr * f_cr * v0 * (1-G),  
                    v4 * G, v3 * G, v2 * G, v1 * G, s_cr * f_cr * v0 * G),
-                 nrow = 5, ncol = 5, byrow = TRUE,
+                 nrow = 5, 
+                 ncol = 5, 
+                 byrow = TRUE,
                  dimnames = list(c('SB4', 'SB3', 'SB2', 'SB1', "P"),
                                  c('SB4', 'SB3', 'SB2', 'SB1', "P")))
 
@@ -171,79 +182,62 @@ boot_l_c <- sort(boot_l_c)
 boot_l_cr <- sort(boot_l_cr)
 
 
-lower=c(boot_s_c[25], boot_s_cr[25],
-        boot_f_c[25], boot_f_cr[25], 
-        boot_l_c[25], boot_l_cr[25])
-upper=c(boot_s_c[975], boot_s_cr[975],
-        boot_f_c[975], boot_f_cr[975],
-        boot_l_c[975], boot_l_cr[975])
+lower <- c(boot_s_c[25], boot_s_cr[25],
+           boot_f_c[25], boot_f_cr[25], 
+           boot_l_c[25], boot_l_cr[25])
+upper <- c(boot_s_c[975], boot_s_cr[975],
+           boot_f_c[975], boot_f_cr[975],
+           boot_l_c[975], boot_l_cr[975])
 
-results <- data.frame(values, lower, upper) 
+results <- tibble(values, lower, upper) 
 
 ##Use the code below to graph results for surival, fecundity, and lambda
+results$Trt <- c('Control', 'CR')
+results$Var <- factor(c('paste(italic(s))', 
+                        'paste(italic(s))',
+                        'paste(italic(f))',
+                        'paste(italic(f))',
+                        'lambda',
+                        'lambda'),
+                      levels = c('paste(italic(s))',
+                                 'paste(italic(f))',
+                                 'lambda'),
+                      ordered = TRUE)
 
-results$Trtvalue <- c("Control", "CR")
-results$Trtvalue <- factor(results$Trtvalue,
-                        levels = c("Control","CR"))
-surv <- results[1:2, ]
-fec <- results[3:4, ]
-lambda <- results[5:6, ]
+ggplot(data = results,
+       aes(x = Trt)) +
+  geom_point(aes(y = values,
+                 color = Trt),
+             size = 4.5) + 
+  facet_wrap(~Var,
+             scales = 'free',
+             labeller = label_parsed) + 
+  geom_linerange(aes(ymin = lower,
+                     ymax = upper,
+                     color = Trt),
+                 size = 1.25) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(color = 'black',
+                                    fill = NA),
+        strip.background = element_rect(fill = 'white'),
+        strip.text = element_text(size = 18),
+        axis.title.x = element_text(size = 18,
+                                    margin = margin(t = 20,
+                                                    r = 0,
+                                                    l = 0,
+                                                    b = 0)),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16)) +
+  scale_x_discrete('Treatment') + 
+  scale_y_continuous('') + 
+  scale_color_manual('Treatment',
+                     breaks = c('Control', 'CR'),
+                     values = c('black', 'green'))
 
-
-par(mfrow = c(1, 3), mar = c(5,6,4,2) + 0.1)
-
-plot(as.integer(surv$Trtvalue), 
-     surv$values, pch = 1, 
-     ylim = c(0, 1), axes = FALSE,
-     main = "",
-     xlab = "",
-     ylab = "Mean Survival",
-     cex.lab = 1.8)
-arrows(as.integer(surv$Trtvalue), surv$lower,
-       as.integer(surv$Trtvalue), surv$upper,
-       length = 0.05, angle = 90, code = 3)
-mtext(c("Control", "CR"), side = 1,
-      line = 1, at = c(1, 2), cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
-plot(as.integer(fec$Trtvalue), fec$values,
-     pch = 1, ylim = c(0, 100), 
-     axes = FALSE,
-     main = "",
-     xlab = "Treatment", 
-     ylab = "Mean Fecundity", 
-     cex.lab = 1.8)
-arrows(as.integer(fec$Trtvalue), fec$lower, 
-       as.integer(fec$Trtvalue),fec$upper, 
-       length = 0.05,
-       angle = 90,
-       code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1,
-      at = c(1,2), 
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
-plot(as.integer(lambda$Trtvalue), lambda$values,
-     pch = 1,
-     ylim = c(0, 4), 
-     axes = FALSE,
-     main = "", 
-     xlab = "",
-     ylab = expression(paste('Lambda (', lambda, ')')),
-     cex.lab = 1.8)
-arrows(as.integer(lambda$Trtvalue), lambda$lower, 
-       as.integer(lambda$Trtvalue),lambda$upper, 
-       length = 0.05,
-       angle = 90, 
-       code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1,
-      at = c(1, 2),
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
+ggsave(filename = 'Draba_VR_Panel.png',
+       path = 'Draba',
+       height = 5,
+       width = 8,
+       unit = 'in')

@@ -1,24 +1,25 @@
 ##Clear console and environment
 rm(list = ls()) 
-cat("\014") 
+cat("\014")
+library(dplyr)
+library(ggplot2)
 
 #import data into R studio
-ks <- read.csv("C:/Users/sl13sise/Dropbox/invaders demography/Verbascum/Herbdemo4R.csv",
-            stringsAsFactors = FALSE)
+ks <- read.csv("Verbascum/Herbdemo4R.csv",
+            stringsAsFactors = FALSE) %>%
+  filter(treatment != 'Herb') %>%
+  select(-c(1, 3, 9:16)) %>%
+  setNames(c("Treatment", "Plant", "Diameter",
+             "Notes", "Therb", "Alive1014",
+             "Seeds", "Alive15", "Notes2"))
 
-ks <- ks[ ,-c(1, 3, 9:16)]
-names(ks) <- c("Treatment","Plant","Diameter","Notes","Therb","Alive1014",
-            "Seeds","Alive15","Notes2")
-
-library(dplyr)
-ks <- filter(ks, Treatment != 'Herb')
+# Extract vital rate parameters
 params <- ks %>%
   group_by(Treatment) %>%
   summarise(N = length(Treatment),
             Sb = mean(Alive15, na.rm = TRUE),
-            Seeds = mean(Seeds, na.rm = TRUE))
-
-params <- as.data.frame(params)
+            Seeds = mean(Seeds, na.rm = TRUE)) %>%
+  as.data.frame()
 
 #extract model paramater values from "params" dataframe we created above!
 
@@ -98,7 +99,6 @@ crplants <- filter(ks, Treatment == "Comp")
 nc <- length(cplants[ ,1])
 ncr <- length(crplants[ ,1])
 
-n <- length(ks[ ,c(1)])
 #start the loop
 for(j in seq_len(nreps)) {
   
@@ -201,77 +201,55 @@ upper <- c(boot_s_c[975], boot_s_cr[975],
            boot_f_c[975], boot_f_cr[975], 
            boot_l_c[975], boot_l_cr[975])
 
-results <- data.frame(values, lower, upper) 
+results <- tibble(values, lower, upper) 
 
-results$Trtvalue <- c("Control", "CR")
-results$Trtvalue <- factor(results$Trtvalue,
-                           levels = c("Control","CR"))
-S1 <- results[1:2,]
-fec <- results[3:4,]
-lambda <- results[5:6,]
+results$Trt <- c('Control', 'CR')
+results$Var <- factor(c('paste(italic(s))', 
+                        'paste(italic(s))',
+                        'paste(italic(f))',
+                        'paste(italic(f))',
+                        'lambda',
+                        'lambda'),
+                      levels = c('paste(italic(s))',
+                                 'paste(italic(f))',
+                                 'lambda'),
+                      ordered = TRUE)
+
+ggplot(data = results,
+       aes(x = Trt)) +
+  geom_point(aes(y = values,
+                 color = Trt),
+             size = 4.5) + 
+  facet_wrap(~Var,
+             scales = 'free',
+             labeller = label_parsed) + 
+  geom_linerange(aes(ymin = lower,
+                     ymax = upper,
+                     color = Trt),
+                 size = 1.25) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(color = 'black',
+                                    fill = NA),
+        strip.background = element_rect(fill = 'white'),
+        strip.text = element_text(size = 18),
+        axis.title.x = element_text(size = 18,
+                                    margin = margin(t = 20,
+                                                    r = 0,
+                                                    l = 0,
+                                                    b = 0)),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16)) +
+  scale_x_discrete('Treatment') + 
+  scale_y_continuous('') + 
+  scale_color_manual('Treatment',
+                     breaks = c('Control', 'CR'),
+                     values = c('black', 'green'))
 
 
-par(mfrow = c(1, 3), 
-    mar = c(5,6,4,2) + 0.2)
-plot(as.integer(S1$Trtvalue), S1$values,
-     pch = 1, 
-     ylim = c(0,1), 
-     axes = FALSE,
-     main = "",
-     xlab = "", 
-     ylab = "Survival",
-     cex.lab = 1.8)
-arrows(as.integer(S1$Trtvalue), S1$lower, 
-       as.integer(S1$Trtvalue), S1$upper, 
-       length = 0.05, 
-       angle = 90,
-       code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1,
-      at = c(1,2), 
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
-plot(as.integer(fec$Trtvalue), fec$values,
-     pch = 1, 
-     ylim = c(0, 85000),
-     axes = FALSE,
-     main = "", 
-     xlab = "Treatment", 
-     ylab = "Mean Fecundity",
-     cex.lab = 1.8)
-arrows(as.integer(fec$Trtvalue), fec$lower, 
-       as.integer(fec$Trtvalue), fec$upper,
-       length = 0.05,
-       angle = 90,
-       code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1,
-      at = c(1,2),
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
-
-plot(as.integer(lambda$Trtvalue), lambda$values,
-     pch = 1, 
-     ylim = c(0,15), 
-     axes = FALSE,
-     main = "",
-     xlab = "Treatment", 
-     ylab = expression(paste('Lambda (', lambda, ')')),
-     cex.lab = 1.8)
-arrows(as.integer(lambda$Trtvalue), lambda$lower, 
-       as.integer(lambda$Trtvalue), lambda$upper, 
-       length = 0.05, 
-       angle = 90, 
-       code = 3)
-mtext(c("Control","CR"),
-      side = 1,
-      line = 1,
-      at = c(1,2), 
-      cex = 1.0)
-axis(2, cex.axis = 1)
-box(lwd = 2)
+ggsave(filename = 'Verbascum_VR_Panel.png',
+       path = 'Verbascum',
+       height = 5,
+       width = 8,
+       unit = 'in')
