@@ -3,8 +3,8 @@ title: "Equations"
 author: "Sam Levin"
 date: "February 23, 2018"
 output:
-  word_document: default
   pdf_document: default
+  word_document: default
   html_document:
     df_print: paged
 ---
@@ -12,9 +12,9 @@ output:
 ### Ailanthus altissima
 Mostly from Crandall & Knight 2017, but with fire effects left out and notation changed slightly for consistency's sake
 
-$$ \begin{array}
+$$ 
 n(y, t+1) = vgf_{d}(y)B(t) + \int_L^U [P(y,x) + vgF(y,x) + C(y,x)]n(x,t) \mathrm{d}x  
-\end{array}$$
+$$
 $$
 P(y, x) = s(x)g(y, x)
 $$
@@ -82,9 +82,9 @@ $$
 
 _Eqs 1-3 adapted from [Kuss et al. 2008 ](https://pdfs.semanticscholar.org/59dc/056c6c597db340ab352bb7df38269793b88f.pdf)_
 
-$$\begin{array}
+$$
 n(y, t + 1) = \int_L^U [P(y,x)]n(x,t) \mathrm{d}x + \int_L^U [F(y,x)]n(x, t-1) \mathrm{d}x 
-\end{array}$$ 
+$$ 
 $$
 P(y,x) = s(x)g(y,x) 
 $$
