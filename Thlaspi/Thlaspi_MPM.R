@@ -1,6 +1,5 @@
 ##Clear environment and console
 rm(list = ls())
-cat("\014") 
 library(dplyr)
 library(ggplot2)
 

@@ -206,7 +206,7 @@ Repro.Glm <- glm(Repro ~ Ht14,
                  data = Regression.Data,
                  family = binomial())
 summary(Repro.Glm)
-plot(Repro ~ Ht15,
+plot(Repro ~ Ht14,
      data = Regression.Data)
 xx<-seq(0, max(AllPlants$Ht14, na.rm = TRUE), 0.1)
 lines(xx, predict(Repro.Glm, data.frame(Ht14 = xx), type = 'response'),

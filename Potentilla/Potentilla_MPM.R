@@ -4,7 +4,6 @@
 
 ### clear everything ###
 rm(list = ls()) 
-cat("\014") 
 library(dplyr)
 library(ggplot2)
 

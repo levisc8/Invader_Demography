@@ -1,7 +1,6 @@
 
 ##Clear everything
 rm(list = ls()) 
-cat("\014") 
 
 #import data into R studio
 library(dplyr)

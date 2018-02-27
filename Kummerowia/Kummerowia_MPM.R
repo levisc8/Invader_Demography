@@ -1,7 +1,6 @@
 ##K striata model with 2015 survival and 2014 fecundity
 #import data into R studio
 rm(list = ls()) 
-cat("\014")
 
 library(dplyr)
 library(ggplot2)

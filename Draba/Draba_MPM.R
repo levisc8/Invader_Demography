@@ -1,6 +1,5 @@
-##Clear environment and console
+##Clear environment
 rm(list = ls()) 
-cat("\014") 
 ##Import data
 ks <- read.csv("Draba/Draba4R.csv")
 

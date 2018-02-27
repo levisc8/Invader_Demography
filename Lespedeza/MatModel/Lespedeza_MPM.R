@@ -9,7 +9,6 @@
 
 rm(list = ls())
 graphics.off()
-cat('\014')
 
 library(dplyr)
 
@@ -711,7 +710,7 @@ LoCI <- c(boot_Cont_F_Large[25], boot_CR_F_Large[25],
           boot_Cont_Lambda[25], boot_CR_Lambda[25])
 
 # Create data frame to store everything -------------------
-AllData <- tibble(Trt = rep(c('Control', 'CR'), 19),
+results <- tibble(Trt = rep(c('Control', 'CR'), 19),
                   VitalRate = factor(c(rep('paste(italic(f[i]))', 6),
                                        rep('paste(italic(p[ij]))', 8),
                                        rep('paste(italic(c[ii]))', 2),
@@ -748,7 +747,7 @@ AllData <- tibble(Trt = rep(c('Control', 'CR'), 19),
                   LoCI = LoCI) %>%
   mutate(Trt_Stage = paste(.$Trt, .$Stage,.$VitalRate, sep = " "))
 
-ggplot(data = AllData, aes(x = Trt)) + 
+ggplot(data = results, aes(x = Trt)) + 
   geom_point(aes(x = Trt_Stage,
                  y = values,
                  color = Trt,

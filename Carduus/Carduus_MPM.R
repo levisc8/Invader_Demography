@@ -1,6 +1,5 @@
 ##Clear environment and console
 rm(list = ls()) 
-cat("\014")
 
 library(dplyr)
 library(ggplot2)
@@ -9,7 +8,7 @@ library(ggplot2)
 ks <- read.csv("Carduus/tenative.carduus.model.file.csv") %>%
    filter(Treatment != 'Herbivore')
 
-ks$Seeds=ks$Inflor15*88.5
+ks$Seeds <- ks$Inflor15 * 88.5
 
 # check for density dependence
 ddTest <- ks %>% 

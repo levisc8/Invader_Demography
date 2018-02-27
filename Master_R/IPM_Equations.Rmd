@@ -97,7 +97,7 @@ I think I need to add a $ +E_{p_2}f_p(x,t-2)...$ here. Thoughts?
 
 **Control Treatment Parameters**
 $$
-Logit(S(x)) = -1.3459 + 0.31055x + -0.00013x^2
+Logit(s(x)) = -1.3459 + 0.31055x + -0.00013x^2
 $$
 $$
 g(y,x) = 82.295 + f_g(x) \text{ where } f_g(x) \text{ is a standard smooth function of }x
@@ -147,36 +147,37 @@ $$
 
 **Control Treatment Parameters**
 $$ 
-Logit(s(x)) = ...
+Logit(s(x)) = -0.352 + 0.122x + -0.000213x^2
+$$
+
+$$ 
+g(y,x) = 5.781 + 0.988x
 $$
 $$ 
-g(y,x) = ...
+Logit(f_p(x)) = -11.489 + 0.08368x
 $$
 $$ 
-Logit(f_p(x)) = ...
+Log(f_s(x)) = 2.6204 + 0.01256x
 $$
 $$ 
-Log(f_s(x)) = ...
-$$
-$$ 
-f_d(y) = Normal(\mu = ..., \sigma = ...)
+f_d(y) = Normal(\mu = 5.6655, \sigma = 2.0734)
 $$
 
 Competitor Remvoal Treatment Parameters
 $$ 
-Logit(s(x)) = ...
+Logit(s(x)) = 0.0209 + + 0.0831x + -0.00012999x^2
 $$
 $$ 
-g(y,x) = ...
+g(y,x) = 7.229 + 0.988x
 $$
 $$ 
-Logit(f_p(x)) = ...
+Logit(f_p(x)) = -11.489 + 0.08368x
 $$
 $$ 
-Log(f_s(x)) = ...
+Log(f_s(x)) = 2.6204 + 0.01256x
 $$
 $$ 
-f_d(y) = Normal(\mu = ..., \sigma = ...)
+f_d(y) = Normal(\mu = 5.6655, \sigma = 2.0734)
 $$
 
 ### Lonicera maackii 
@@ -193,36 +194,36 @@ $$
 **Control Treatment Parameters**
 
 $$
-Logit(s(x)) = ...
+Logit(s(x)) = -2.830987 + 0.403509x + -0.000421x^2
 $$
 $$
-g(y,x) = ...
-$$
-$$ 
-Logit(f_p(x)) = ...
+g(y,x) = 16.884 + 0.9972x
 $$
 $$ 
-Log(f_s(x)) = ...
+Logit(f_p(x)) = -10.4478 + 0.0485x
 $$
 $$ 
-f_d(y) = Normal(\mu = ..., \sigma = ...)
+Log(f_s(x)) = 3.391 + 0.0105x
+$$
+$$ 
+f_d(y) = Normal(\mu = 3.118, \sigma = 1.215)
 $$
 
 
 **Competitor Removal Treatment Parameters**
 
 $$
-Logit(s(x)) = ...
+Logit(s(x)) = -2.784776 + .272694x + -0.000175x^2
 $$
 $$
-g(y,x) = ...
-$$
-$$ 
-Logit(f_p(x)) = ...
-$$
-$$
-Log(f_s(x)) = ...
+g(y,x) = 14.6068 + 0.9964x
 $$
 $$ 
-f_d(y) = Normal(\mu = ..., \sigma = ...)
+Logit(f_p(x)) = -10.4478 + 0.0485x
+$$
+$$
+Log(f_s(x)) = 3.391 + 0.0105x
+$$
+$$ 
+f_d(y) = Normal(\mu = 3.118, \sigma = 1.215)
 $$
