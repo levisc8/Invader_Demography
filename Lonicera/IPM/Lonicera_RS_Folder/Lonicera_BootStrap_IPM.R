@@ -13,38 +13,19 @@ library(brms)
 setwd('Lonicera/IPM/Lonicera_RS_Folder') # local de-bugging
 # setwd('~/Lonicera_RS_Folder') # RS server
 # Read in data and get rid of extraneous info
-AllPlants <- read.csv('lonmaa1213.csv',
-                      stringsAsFactors = FALSE) %>%
-  select(Site,
-         Plot,
-         Trt_Burn2013,
-         Size2012, 
-         Hght.Jul.2013,
-         Stage2012,
-         StageJuly2013,
-         Fruits2013, 
-         Survival2013,
-         Resprout2013,
-         Fec2013) %>%
-  filter(Trt_Burn2013 == 'ContN' |
-           Trt_Burn2013 == 'CompN' |
-           Trt_Burn2013 == 'AllN') %>%
-  setNames(c('Site', 'Plot', 'Trt', 
-             'Size', 'SizeNext', 'Stage',
-             'StageNext', 'Fruit', 'Surv', 
-             'Resprout', 'Repro'))
+AllPlants <- read.csv('LM_Clean.csv',
+                      stringsAsFactors = FALSE)
 
-
-AllCR <- filter(AllPlants, Trt == 'CompN')
-AllCont <- filter(AllPlants, Trt == 'ContN')
-AllBig <- filter(AllPlants, Trt == 'AllN')
+AllCR <- filter(AllPlants, Treatment == 'CompN')
+AllCont <- filter(AllPlants, Treatment == 'ContN')
+AllBig <- filter(AllPlants, Treatment == 'AllN')
 
 # Growth Regressions. Model selection process omitted here
-CompGrowLM <- lm(SizeNext ~ Size, data = rbind(AllCR, AllBig))
-ContGrowLM <- lm(SizeNext ~ Size, data = rbind(AllCont, AllBig))
+CompGrowLM <- lm(Plant_Height13 ~ Plant_Height12, data = rbind(AllCR, AllBig))
+ContGrowLM <- lm(Plant_Height13 ~ Plant_Height12, data = rbind(AllCont, AllBig))
 
 # Survival. Logistic regressions w/ linear and polynomial terms to start off
-CompSurvBRM_Quad <- brm(Surv ~ Size + I(Size^2), 
+CompSurvBRM_Quad <- brm(Survival~ Plant_Height12 + I(Plant_Height12^2), 
                         data = rbind(AllCR, AllBig),
                         family = 'bernoulli',
                         control = list(adapt_delta = 0.97,
@@ -56,7 +37,7 @@ CompSurvBRM_Quad <- brm(Surv ~ Size + I(Size^2),
                         save_model = 'CR_Surv_BRM_Quad.stan') %>%
   add_waic()
 
-ContSurvBRM_Quad <-  brm(Surv ~ Size + I(Size^2), 
+ContSurvBRM_Quad <-  brm(Survival~ Plant_Height12 + I(Plant_Height12^2), 
                          data = rbind(AllCont, AllBig),
                          family = 'bernoulli',
                          control = list(adapt_delta = 0.97,
@@ -68,7 +49,7 @@ ContSurvBRM_Quad <-  brm(Surv ~ Size + I(Size^2),
                          save_model = 'Cont_Surv_BRM_Quad.stan') %>%
   add_waic()
 
-CompSurvBRM_Lin <- brm(Surv ~ Size, 
+CompSurvBRM_Lin <- brm(Survival~ Plant_Height12, 
                        data = rbind(AllCR, AllBig),
                        family = 'bernoulli',
                        control = list(adapt_delta = 0.97,
@@ -80,7 +61,7 @@ CompSurvBRM_Lin <- brm(Surv ~ Size,
                        save_model = 'CR_Surv_BRM_Lin.stan') %>%
   add_waic()
 
-ContSurvBRM_Lin <-  brm(Surv ~ Size, 
+ContSurvBRM_Lin <-  brm(Survival~ Plant_Height12, 
                         data = rbind(AllCont, AllBig),
                         family = 'bernoulli',
                         control = list(adapt_delta = 0.97,
@@ -111,26 +92,26 @@ SurvParamsCont_Lin <- fixef(ContSurvBRM_Lin)[ ,1]
 
 
 # Reproduction consists of 4 parameters:
-# Pr(Repro) = Repro ~ size (t+1) 
+# Pr(Repro) = Reproductive ~ size (t+1) 
 # Seeds = Seeds ~ size(t+1)
 # Sdl size dist = dnorm(mu, sd)
 # est prob = constant
 
 # Pr(Repro)
-ReproGLM <- glm(Repro ~ SizeNext, data = AllPlants, family = binomial())
+ReproGLM <- glm(Reproductive ~ Plant_Height13, data = AllPlants, family = binomial())
 
 # Regression is underdispersed. Using a quasibinomial instead
-ReproGLM <- glm(Repro ~ SizeNext, data = AllPlants, family = quasibinomial())
+ReproGLM <- glm(Reproductive ~ Plant_Height13, data = AllPlants, family = quasibinomial())
 
 # Seeds next. Creating a column for seeds by multiplying fruit# by 
 # average seeds/fruit from Amibeth's control treatment.
 AllPlants$Seeds <- round(AllPlants$Fruit * 2.79)
-SeedGLM <- glm(Seeds ~ SizeNext, data = AllPlants, family = quasipoisson())
+SeedGLM <- glm(Seeds ~ Plant_Height13, data = AllPlants, family = quasipoisson())
 
 # Recruit size distribution. 
-Seedlings <- filter(AllPlants, StageNext == 'S')
-SdlMean <- mean(Seedlings$SizeNext, na.rm = TRUE)
-SdlSD <- sd(Seedlings$SizeNext, na.rm = TRUE)
+Seedlings <- filter(AllPlants, Stage13 == 'S')
+SdlMean <- mean(Seedlings$Plant_Height13, na.rm = TRUE)
+SdlSD <- sd(Seedlings$Plant_Height13, na.rm = TRUE)
 
 
 # Data hard coded from Rae's 2011-12 population data in unburned controls
@@ -148,8 +129,8 @@ FecModels <- list(PRep = ReproGLM,
 source('Lonicera_Utility_Functions.R')
 
 # Begin setting up IPM 
-MinSize <- 0.9 * min(c(AllPlants$Size, AllPlants$SizeNext), na.rm = TRUE)
-MaxSize <- 1.1 * max(c(AllPlants$Size, AllPlants$SizeNext), na.rm = TRUE)
+MinSize <- 0.9 * min(c(AllPlants$Plant_Height12, AllPlants$Plant_Height13), na.rm = TRUE)
+MaxSize <- 1.1 * max(c(AllPlants$Plant_Height12, AllPlants$Plant_Height13), na.rm = TRUE)
 nMeshPts <- 500
 Boundaries <- MinSize + c(0:nMeshPts) * (MaxSize - MinSize) / nMeshPts
 MeshPts <- 0.5 * (Boundaries[1:nMeshPts] + Boundaries[2:(nMeshPts + 1)])
@@ -219,9 +200,9 @@ CompLambda_Lin_obs
 
 
 # Bootstrapping------------
-CRData <- filter(AllPlants, Trt == 'CompN')
-ContData <- filter(AllPlants, Trt == 'ContN')
-BigData <- filter(AllPlants, Trt == 'AllN')
+CRData <- filter(AllPlants, Treatment == 'CompN')
+ContData <- filter(AllPlants, Treatment == 'ContN')
+BigData <- filter(AllPlants, Treatment == 'AllN')
 
 nCR <- dim(CRData)[1]
 nCont <- dim(ContData)[1]
@@ -273,9 +254,9 @@ for(i in seq_len(nBootSamples)) {
   BootBigData <- BigData[BigSampler, ]
   
   # Growth regressions
-  BootCompGrowLM <- lm(SizeNext ~ Size, data = rbind(BootCRData,
+  BootCompGrowLM <- lm(Plant_Height13 ~ Plant_Height12, data = rbind(BootCRData,
                                                    BootBigData))
-  BootContGrowLM <- lm(SizeNext ~ Size, data = rbind(BootContData,
+  BootContGrowLM <- lm(Plant_Height13 ~ Plant_Height12, data = rbind(BootContData,
                                                      BootBigData))
   
   # Survival. These are created by resampling the joint posterior distribution
@@ -289,18 +270,18 @@ for(i in seq_len(nBootSamples)) {
   # Recreate reproduction parameters with pooled bootstrap samples
   AllBootData <- rbind(BootCRData, BootContData, BootBigData)
   
-  BootReproGLM <- glm(Repro ~ SizeNext, 
+  BootReproGLM <- glm(Reproductive ~ Plant_Height13, 
                       data = AllBootData,
                       family = quasibinomial())
   
-  BootSeedGLM <- glm(Seeds ~ SizeNext,
+  BootSeedGLM <- glm(Seeds ~ Plant_Height13,
                      data = AllBootData,
                      family = quasipoisson())
   
   
-  BootSdls <- filter(AllBootData, StageNext == 'S')
-  BootSdlMean <- mean(BootSdls$SizeNext, na.rm = TRUE)
-  BootSdlSD <- sd(BootSdls$SizeNext, na.rm = TRUE)
+  BootSdls <- filter(AllBootData, Stage13 == 'S')
+  BootSdlMean <- mean(BootSdls$Plant_Height13, na.rm = TRUE)
+  BootSdlSD <- sd(BootSdls$Plant_Height13, na.rm = TRUE)
   
   
   BootFecModels <- list(PRep = BootReproGLM,

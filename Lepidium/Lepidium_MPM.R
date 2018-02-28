@@ -4,13 +4,12 @@ rm(list = ls())
 ##Import data
 library(dplyr)
 library(ggplot2)
-ks <- read.csv("Lepidium/lep4R.csv")[,1:6] %>%
-  filter(treatment != 'Herb') %>%
-  setNames(c("Treatment","Plot","Plant","Alive","Fruits","Seeds"))
+ks <- read.csv("Lepidium/LepCam_Clean.csv") %>%
+  mutate(Seeds = Fruits * 2) # 2 seeds/fruit 
 
 params <- ks %>%
   group_by(Treatment) %>%
-  summarise(Survival = mean(Alive, na.rm = TRUE),
+  summarise(Survival = mean(Survival, na.rm = TRUE),
             Seeds = mean(Seeds, na.rm = TRUE)) %>%
   as.data.frame()
 
@@ -77,7 +76,7 @@ for(j in seq_len(nreps)) {
   
   params1 <- bootdata %>%
     group_by(Treatment) %>%
-    summarise(Survival = mean(Alive, na.rm = TRUE),
+    summarise(Survival = mean(Survival, na.rm = TRUE),
               Seeds = mean(Seeds, na.rm = TRUE)) %>%
     as.data.frame()
 

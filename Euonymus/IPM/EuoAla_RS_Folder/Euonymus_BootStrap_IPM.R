@@ -12,37 +12,38 @@ library(magrittr)
 library(stringr)
 library(mgcv)
 library(brms)
-setwd('~/EuoAla_RS_Folder')
+# setwd('~/EuoAla_RS_Folder')
+setwd('Euonymus/IPM/EuoAla_RS_Folder')
 
 source('IPM_Functions_Euonymus.R')  
 
 
 # load the data
-RAs<-read.csv("RA4R.csv")
-AllPlants1 <- read.csv("Euoala4R.csv") %>% 
-  filter(Trt != 'Herb')
-AllPlants1$incr<-AllPlants1$Ht15-AllPlants1$Ht14
+RAs<-read.csv("EA_RA_Clean.csv")
+AllPlants1 <- read.csv("EA_Clean.csv") 
+
+AllPlants1$incr<-AllPlants1$Plant_Height15-AllPlants1$Plant_Height14
 
 # Generate data sets for CR and control treatments
 
-AllSmall <- filter(AllPlants1, Trt != 'All')
-ControlGrowData <- filter(AllPlants1, Trt == 'Control' | 
-                            Trt == 'All')
-CrGrowData <- filter(AllPlants1, Trt == 'Comp' |
-                       Trt == 'All')
+AllSmall <- filter(AllPlants1, Treatment != 'All')
+ControlGrowData <- filter(AllPlants1, Treatment == 'Control' | 
+                            Treatment == 'All')
+CrGrowData <- filter(AllPlants1, Treatment == 'Comp' |
+                       Treatment == 'All')
 
 # Growth---------------------------------------------------------------------------------------
 # Prior investigation indicated that a GAM provided a better description 
 # of the growth dynamics
 
-ControlGam <- gam(Ht15 ~ s(Ht14), data = ControlGrowData)
-CRGam <- gam(Ht15 ~ s(Ht14), data = CrGrowData)
+ControlGam <- gam(Plant_Height15 ~ s(Plant_Height14), data = ControlGrowData)
+CRGam <- gam(Plant_Height15 ~ s(Plant_Height14), data = CrGrowData)
 
 # Survival across treatments----------------------------------------------------------------------
 # As with above, model selection procedures have been omitted in favor of brevity.
 # Those procedures can similarly be found in the script intended for smaller machines
 
-BrmSurvQuad_Cont <- brm(Alive15 ~ Ht14 + I(Ht14^2), 
+BrmSurvQuad_Cont <- brm(Survival ~ Plant_Height14 + I(Plant_Height14^2), 
                           data = ControlGrowData,
                           family = 'bernoulli',
                           iter = 6000,
@@ -51,7 +52,7 @@ BrmSurvQuad_Cont <- brm(Alive15 ~ Ht14 + I(Ht14^2),
                           control = list(adapt_delta = 0.97,
                                          max_treedepth = 15)) 
 
-BrmSurvQuad_CR <- brm(Alive15 ~ Ht14 + I(Ht14^2), 
+BrmSurvQuad_CR <- brm(Survival ~ Plant_Height14 + I(Plant_Height14^2), 
                           data = CrGrowData,
                           family = 'bernoulli',
                           iter = 6000,
@@ -89,23 +90,23 @@ fecquasi <- glm(Fruit ~ Ht,
 summary(fecquasi)
 
 #Pr(Reproductive) - Logistic regression ----------------------------------
-AllPlants1$Repro <- ifelse(AllPlants1$Stg15 == "RA", 1, 0)
+AllPlants1$Repro <- ifelse(AllPlants1$Stage15 == "RA", 1, 0)
 
-Regression.Data <- filter(AllPlants1, Alive15 != "NA")
+Regression.Data <- filter(AllPlants1, Survival != "NA")
 
-Repro.Glm <- glm(Repro ~ Ht15,
+Repro.Glm <- glm(Repro ~ Plant_Height15,
                  data = Regression.Data,
                  family = binomial())
 
 AllPlants1$Fruits15 <- exp(coefficients(fecquasi)[1] + 
-                            coefficients(fecquasi)[2] *AllPlants1$Ht15)
-AllPlants1$Fruits15[AllPlants1$Stg15 != "RA"] <- NA
+                            coefficients(fecquasi)[2] *AllPlants1$Plant_Height15)
+AllPlants1$Fruits15[AllPlants1$Stage15 != "RA"] <- NA
 summary(AllPlants1$Fruits15)
 
 # Recruit size distribution----------------------------------------------------------------------
-sdls <- filter(AllPlants1, Stg14 == "SDL")
-Sdl.mean <- mean(sdls$Ht14, na.rm = TRUE)
-Sdl.SD <- sd(sdls$Ht14, na.rm = TRUE)
+sdls <- filter(AllPlants1, Stage14 == "SDL")
+Sdl.mean <- mean(sdls$Plant_Height14, na.rm = TRUE)
+Sdl.SD <- sd(sdls$Plant_Height14, na.rm = TRUE)
 
 # Discrete parameters------------------------------------
 
@@ -131,8 +132,8 @@ f.params<-data.frame(prob.repro.int=as.numeric(coefficients(Repro.Glm)[1]),
 
 # Build P Matrix and F Vectors-----------------------------------
 # the size range must extend beyond the limits of the data
-min.size <- min(AllPlants1$Ht14, na.rm = TRUE) * .8
-max.size <- max(AllPlants1$Ht14, na.rm = TRUE) * 1.2
+min.size <- min(AllPlants1$Plant_Height14, na.rm = TRUE) * .8
+max.size <- max(AllPlants1$Plant_Height14, na.rm = TRUE) * 1.2
 S <- 500 # Number of cells in matrix  
 
 # matrix variables 
@@ -229,9 +230,9 @@ lambda_CR_obs <- max(Re(eigen_CR$values))
 
 
 
-CRData <- filter(AllPlants1, Trt == 'Comp')
-ContData <- filter(AllPlants1, Trt == 'Control')
-BigData <- filter(AllPlants1, Trt == 'All')
+CRData <- filter(AllPlants1, Treatment == 'Comp')
+ContData <- filter(AllPlants1, Treatment == 'Control')
+BigData <- filter(AllPlants1, Treatment == 'All')
 
 nCR <- dim(CRData)[1]
 nCont <- dim(ContData)[1]
@@ -258,9 +259,9 @@ for(i in seq_len(nBootSamples)) {
   BootBigData <- BigData[BigSampler, ]
   
   # Growth models with bootstrapped data sets
-  BootCrGAM <- gam(Ht15 ~ s(Ht14), data = rbind(BootCRData,
+  BootCrGAM <- gam(Plant_Height15 ~ s(Plant_Height14), data = rbind(BootCRData,
                                                 BootBigData))
-  BootControlGAM <- gam(Ht15 ~ s(Ht14), data = rbind(BootContData,
+  BootControlGAM <- gam(Plant_Height15 ~ s(Plant_Height14), data = rbind(BootContData,
                                                   BootBigData))
   
   # Resample the posterior distributions for survival parameters
@@ -269,16 +270,16 @@ for(i in seq_len(nBootSamples)) {
   
   # pr(Repro)
   AllBootData <- rbind(BootCRData, BootContData, BootBigData)
-  BootReproData <- filter(AllBootData, Alive15 != 'NA')
+  BootReproData <- filter(AllBootData, Survival != 'NA')
   
-  BootReproGLM <- glm(Repro ~ Ht15,
+  BootReproGLM <- glm(Repro ~ Plant_Height15,
                       data = BootReproData,
                       family = binomial())
   
   # Seedling sizes
-  BootSdls <- filter(AllBootData, Stg14 == 'SDL')
-  BootSdlMean <- mean(BootSdls$Ht14, na.rm = TRUE)
-  BootSdlSD <- sd(BootSdls$Ht14, na.rm = TRUE)
+  BootSdls <- filter(AllBootData, Stage14 == 'SDL')
+  BootSdlMean <- mean(BootSdls$Plant_Height14, na.rm = TRUE)
+  BootSdlSD <- sd(BootSdls$Plant_Height14, na.rm = TRUE)
   
   
   # Create fecundity vectors and corner

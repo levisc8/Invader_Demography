@@ -8,48 +8,30 @@ library(mgcv)
 library(brms)
 
 # Read in data and get rid of extraneous info
-AllPlants <- read.csv('Lonicera/IPM/Data/lonmaa1213.csv',
-                      stringsAsFactors = FALSE) %>%
-  select(Site,
-         Plot,
-         Trt_Burn2013,
-         Size2012, 
-         Hght.Jul.2013,
-         Stage2012,
-         StageJuly2013,
-         Fruits2013, 
-         Survival2013,
-         Resprout2013,
-         Fec2013) %>%
-  filter(Trt_Burn2013 == 'ContN' |
-           Trt_Burn2013 == 'CompN' |
-           Trt_Burn2013 == 'AllN') %>%
-  setNames(c('Site', 'Plot', 'Trt', 
-             'Size', 'SizeNext', 'Stage',
-             'StageNext', 'Fruit', 'Surv', 
-             'Resprout', 'Repro'))
+AllPlants <- read.csv('Lonicera/IPM/Data/LM_Clean.csv',
+                      stringsAsFactors = FALSE)
 
 
-AllCR <- filter(AllPlants, Trt == 'CompN')
-AllCont <- filter(AllPlants, Trt == 'ContN')
-AllBig <- filter(AllPlants, Trt == 'AllN')
+AllCR <- filter(AllPlants, Treatment == 'CompN')
+AllCont <- filter(AllPlants, Treatment == 'ContN')
+AllBig <- filter(AllPlants, Treatment == 'AllN')
 
 # Growth Regressions. Try Linear fit and splines for comparison
-CompGrowLM <- lm(SizeNext ~ Size, data = rbind(AllCR, AllBig))
-ContGrowLM <- lm(SizeNext ~ Size, data = rbind(AllCont, AllBig))
-CompGrowGAM <- gam(SizeNext ~ s(Size), data = rbind(AllCR, AllBig))
-ContGrowGAM <- gam(SizeNext ~ s(Size), data = rbind(AllCont, AllBig))
+CompGrowLM <- lm(Plant_Height13 ~ Plant_Height12, data = rbind(AllCR, AllBig))
+ContGrowLM <- lm(Plant_Height13 ~ Plant_Height12, data = rbind(AllCont, AllBig))
+CompGrowGAM <- gam(Plant_Height13 ~ s(Plant_Height12), data = rbind(AllCR, AllBig))
+ContGrowGAM <- gam(Plant_Height13 ~ s(Plant_Height12), data = rbind(AllCont, AllBig))
 
-plot(SizeNext ~ Size, data = AllPlants, type = 'n')
-points(AllCR$Size, AllCR$SizeNext, col = 'green', pch = 3)
-points(AllCont$Size, AllCont$SizeNext, col = 'black', pch = 1)
-points(AllBig$Size, AllBig$SizeNext, col = 'red', pch = 2)
+plot(Plant_Height13 ~ Plant_Height12, data = AllPlants, type = 'n')
+points(AllCR$Plant_Height12, AllCR$Plant_Height13, col = 'green', pch = 3)
+points(AllCont$Plant_Height12, AllCont$Plant_Height13, col = 'black', pch = 1)
+points(AllBig$Plant_Height12, AllBig$Plant_Height13, col = 'red', pch = 2)
 abline(CompGrowLM, lty = 2, col = 'green')
 abline(ContGrowLM, lty = 2, col = 'black')
-xx <- seq(0, max(AllPlants$Size, na.rm = TRUE) * 1.2, 1)
-lines(xx, predict(CompGrowGAM, data.frame(Size = xx), type = 'response'),
+xx <- seq(0, max(AllPlants$Plant_Height12, na.rm = TRUE) * 1.2, 1)
+lines(xx, predict(CompGrowGAM, data.frame(Plant_Height12 = xx), type = 'response'),
       col = 'green', lty = 1)
-lines(xx, predict(ContGrowGAM, data.frame(Size = xx), type = 'response'),
+lines(xx, predict(ContGrowGAM, data.frame(Plant_Height12 = xx), type = 'response'),
       col = 'black', lty = 1)
 
 summary(CompGrowLM)
@@ -65,28 +47,28 @@ AIC(ContGrowLM, ContGrowGAM)
 # the linear fit for simplicity's sake.
 
 # Survival. Logistic regressions w/ linear and polynomial terms to start off
-CompSurvLin <- glm(Surv ~ Size, data = rbind(AllCR, AllBig), family = binomial())
-ContSurvLin <- glm(Surv ~ Size, data = rbind(AllCont, AllBig), family = binomial())
-CompSurvQuad <- glm(Surv ~ Size + I(Size^2),
+CompSurvLin <- glm(Survival ~ Plant_Height12, data = rbind(AllCR, AllBig), family = binomial())
+ContSurvLin <- glm(Survival ~ Plant_Height12, data = rbind(AllCont, AllBig), family = binomial())
+CompSurvQuad <- glm(Survival ~ Plant_Height12 + I(Plant_Height12^2),
                     data = rbind(AllCR, AllBig), 
                     family = binomial())
-ContSurvQuad <- glm(Surv ~ Size + I(Size^2),
+ContSurvQuad <- glm(Survival ~ Plant_Height12 + I(Plant_Height12^2),
                     data = rbind(AllCont, AllBig),
                     family = binomial())
 
-plot(Surv ~ Size, data = AllPlants)
-lines(xx, predict(CompSurvLin, data.frame(Size = xx), type = 'response'),
+plot(Survival ~ Plant_Height12, data = AllPlants)
+lines(xx, predict(CompSurvLin, data.frame(Plant_Height12 = xx), type = 'response'),
       col = 'green', lty = 1)
-lines(xx, predict(ContSurvLin, data.frame(Size = xx), type = 'response'),
+lines(xx, predict(ContSurvLin, data.frame(Plant_Height12 = xx), type = 'response'),
       col = 'black', lty = 1)
-lines(xx, predict(CompSurvQuad, data.frame(Size = xx), type = 'response'),
+lines(xx, predict(CompSurvQuad, data.frame(Plant_Height12 = xx), type = 'response'),
       col = 'green', lty = 2)
-lines(xx, predict(ContSurvQuad, data.frame(Size = xx), type = 'response'),
+lines(xx, predict(ContSurvQuad, data.frame(Plant_Height12 = xx), type = 'response'),
       col = 'black', lty = 2)
 
 
 # None of these are working particularly well :( Trying brms next
-CompSurvBRM_Quad <- brm(Surv ~ Size + I(Size^2), 
+CompSurvBRM_Quad <- brm(Survival ~ Plant_Height12 + I(Plant_Height12^2), 
                         data = rbind(AllCR, AllBig),
                         family = 'bernoulli',
                         control = list(adapt_delta = 0.97,
@@ -98,7 +80,7 @@ CompSurvBRM_Quad <- brm(Surv ~ Size + I(Size^2),
                         save_model = 'Lonicera/IPM/R/CR_Surv_BRM_Quad.stan') %>%
   add_waic()
 
-ContSurvBRM_Quad <-  brm(Surv ~ Size + I(Size^2), 
+ContSurvBRM_Quad <-  brm(Survival ~ Plant_Height12 + I(Plant_Height12^2), 
                          data = rbind(AllCont, AllBig),
                          family = 'bernoulli',
                          control = list(adapt_delta = 0.97,
@@ -110,7 +92,7 @@ ContSurvBRM_Quad <-  brm(Surv ~ Size + I(Size^2),
                          save_model = 'Lonicera/IPM/R/Cont_Surv_BRM_Quad.stan') %>%
   add_waic()
 
-CompSurvBRM_Lin <- brm(Surv ~ Size, 
+CompSurvBRM_Lin <- brm(Survival ~ Plant_Height12, 
                        data = rbind(AllCR, AllBig),
                        family = 'bernoulli',
                        control = list(adapt_delta = 0.97,
@@ -122,7 +104,7 @@ CompSurvBRM_Lin <- brm(Surv ~ Size,
                        save_model = 'Lonicera/IPM/R/CR_Surv_BRM_Lin.stan') %>%
   add_waic()
 
-ContSurvBRM_Lin <-  brm(Surv ~ Size, 
+ContSurvBRM_Lin <-  brm(Survival ~ Plant_Height12, 
                         data = rbind(AllCont, AllBig),
                         family = 'bernoulli',
                         control = list(adapt_delta = 0.97,
@@ -135,21 +117,21 @@ ContSurvBRM_Lin <-  brm(Surv ~ Size,
   add_waic()
 
 
-plot(Surv ~ Size, data = AllPlants, xlim = c(0, 515))
+plot(Survival ~ Plant_Height12, data = AllPlants, xlim = c(0, 515))
 lines(xx, predict(CompSurvBRM_Quad,
-                  data.frame(Size = xx), 
+                  data.frame(Plant_Height12 = xx), 
                   type = 'response')[ ,1],
       col = 'green')
 lines(xx, predict(ContSurvBRM_Quad,
-                  data.frame(Size = xx),
+                  data.frame(Plant_Height12 = xx),
                   type = 'response')[ ,1])
 lines(xx, predict(CompSurvBRM_Lin,
-                  data.frame(Size = xx),
+                  data.frame(Plant_Height12 = xx),
                   type = 'response')[ ,1],
       col = 'green',
       lty = 2)
 lines(xx, predict(ContSurvBRM_Lin, 
-                  data.frame(Size = xx),
+                  data.frame(Plant_Height12 = xx),
                   type = 'response')[ ,1],
       lty = 2)
 
@@ -158,22 +140,22 @@ lines(xx, predict(ContSurvBRM_Lin,
 # It's predictions of mortality rate are high (likely unrealistically so). 
 # I'll try a binomial spline next
 
-SurvCRGAM <- gam(Surv ~ s(Size),
+SurvCRGAM <- gam(Survival ~ s(Plant_Height12),
                  data = rbind(AllCR, AllBig),
                  family = binomial())
 
-SurvContGAM <- gam(Surv ~ s(Size),
+SurvContGAM <- gam(Survival ~ s(Plant_Height12),
                  data = rbind(AllCont, AllBig),
                  family = binomial())
 
-plot(Surv ~ Size, data = AllPlants,
+plot(Survival ~ Plant_Height12, data = AllPlants,
      xlim = c(0, 515))
 lines(xx, predict(SurvCRGAM, 
-                  data.frame(Size = xx),
+                  data.frame(Plant_Height12 = xx),
                   type = 'response'),
       col = 'green')
 lines(xx, predict(SurvContGAM,
-                  data.frame(Size = xx),
+                  data.frame(Plant_Height12 = xx),
                   type = 'response'))
 
 # Still not any better. I think I'll stick with the 
@@ -225,41 +207,41 @@ ggsave(filename = 'Survival_Regression_Chains_Cont_Lin.png',
        device = 'png')
 
 # Reproduction consists of 4 parameters:
-# Pr(Repro) = Repro ~ size (t+1) 
-# Seeds = Seeds ~ size(t+1)
+# Pr(Repro) = Reproductive~ Plant_Height13 (t+1) 
+# Seeds = Seeds ~ Plant_Height13(t+1)
 # Sdl size dist = dnorm(mu, sd)
 # est prob = constant
 
 # Pr(Repro)
-ReproGLM <- glm(Repro ~ SizeNext, data = AllPlants, family = binomial())
+ReproGLM <- glm(Reproductive ~ Plant_Height13, data = AllPlants, family = binomial())
 summary(ReproGLM)
 
 # Regression is underdispersed. Using a quasibinomial instead
-ReproGLM <- glm(Repro ~ SizeNext, data = AllPlants, family = quasibinomial())
+ReproGLM <- glm(Reproductive ~ Plant_Height13, data = AllPlants, family = quasibinomial())
 summary(ReproGLM)
 
 # Seeds next. Creating a column for seeds by multiplying fruit# by 
 # average seeds/fruit from Amibeth's control treatment.
 AllPlants$Seeds <- round(AllPlants$Fruit * 2.79)
-SeedGLM <- glm(Seeds ~ SizeNext, data = AllPlants, family = poisson())
+SeedGLM <- glm(Seeds ~ Plant_Height13, data = AllPlants, family = poisson())
 summary(SeedGLM)
 
 # Again, overdispersed. using quasipoisson instead
 
-SeedGLM <- glm(Seeds ~ SizeNext, data = AllPlants, family = quasipoisson())
+SeedGLM <- glm(Seeds ~ Plant_Height13, data = AllPlants, family = quasipoisson())
 summary(SeedGLM)
 
 # Recruit size distribution. I'll see if we have enough per treatment
 # to keep these separate. otherwise, combine them all
 
-table(AllPlants$StageNext, AllPlants$Trt)
-table(AllPlants$Stage, AllPlants$Trt)
+table(AllPlants$Stage13, AllPlants$Treatment)
+table(AllPlants$Stage12, AllPlants$Treatment)
 
 # We only have 17 total at t+1. Not great even for pooling. 
 # Definitely going to combine across treatments.
-Seedlings <- filter(AllPlants, StageNext == 'S')
-SdlMean <- mean(Seedlings$SizeNext, na.rm = TRUE)
-SdlSD <- sd(Seedlings$SizeNext, na.rm = TRUE)
+Seedlings <- filter(AllPlants, Stage13 == 'S')
+SdlMean <- mean(Seedlings$Plant_Height13, na.rm = TRUE)
+SdlSD <- sd(Seedlings$Plant_Height13, na.rm = TRUE)
 
 
 # Data hard coded from Rae's 2011-12 population data in unburned controls
@@ -277,8 +259,8 @@ FecModels <- list(PRep = ReproGLM,
 source('Lonicera/IPM/R/Lonicera_Utility_Functions.R')
 
 # Begin setting up IPM 
-MinSize <- 0.9 * min(c(AllPlants$Size, AllPlants$SizeNext), na.rm = TRUE)
-MaxSize <- 1.1 * max(c(AllPlants$Size, AllPlants$SizeNext), na.rm = TRUE)
+MinSize <- 0.9 * min(c(AllPlants$Plant_Height12, AllPlants$Plant_Height13), na.rm = TRUE)
+MaxSize <- 1.1 * max(c(AllPlants$Plant_Height12, AllPlants$Plant_Height13), na.rm = TRUE)
 nMeshPts <- 500
 Boundaries <- MinSize + c(0:nMeshPts) * (MaxSize - MinSize) / nMeshPts
 MeshPts <- 0.5 * (Boundaries[1:nMeshPts] + Boundaries[2:(nMeshPts + 1)])
@@ -343,7 +325,6 @@ ContLambda_Quad_obs
 CompLambda_Quad_obs
 ContLambda_Lin_obs
 CompLambda_Lin_obs
-
 
 
 

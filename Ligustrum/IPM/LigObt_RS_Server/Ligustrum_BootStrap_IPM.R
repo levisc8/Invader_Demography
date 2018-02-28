@@ -10,72 +10,70 @@ library(magrittr)
 library(stringr)
 library(mgcv)
 
-# setwd('C:/Users/sl13sise/Dropbox/invaders demography/Ligustrum/IPM/LigObt_RS_Server') # local
+# setwd('C:/Users/sl13sise/Dropbox/Thesis_SL/Invader_Demography/Ligustrum/IPM/LigObt_RS_Server') # local
 setwd("~/LigObt_RS_Server/") # server
 
 source('IPM_Functions_Ligustrum.R') 
 
 # load the data and do some basic restructuring
-RAs <- read.csv("RA4R.csv")
+RAs <- read.csv("LO_RA_Clean.csv")
 # str(RAs)
-AllPlants <- read.csv("Ligobt4R-8.8.15.csv",
-                      stringsAsFactors = FALSE) %>%
-  filter(Clone == 0 | is.na(Clone)) %>%
-  filter(Trt != 'Herb')
+AllPlants <- read.csv("LO_Clean.csv",
+                      stringsAsFactors = FALSE)
 
-AllPlants$Plant <- as.numeric(AllPlants$Plant)
-AllPlants$growth <- AllPlants$Ht15 - AllPlants$Ht14
-AllPlants <- AllPlants %>% arrange(Quadrat,Plant)
+AllPlants$Plant_Number <- as.numeric(AllPlants$Plant_Number)
+AllPlants$growth <- AllPlants$Plant_Height15 - AllPlants$Plant_Height14
+AllPlants <- AllPlants %>% arrange(Plot,Plant_Number)
 
 # Growth-------------------------------------------------------
 # Linear models. 
-AllBig <- filter(AllPlants, Trt == 'All')
+AllBig <- filter(AllPlants, Treatment == 'All')
 
 growth.lms <- AllPlants %>% 
-  filter(Trt != "All") %>% 
-  group_by(Trt) %>%
-  do(LM = lm(Ht15 ~ Ht14, data = rbind(., AllBig)))
+  filter(Treatment != "All") %>% 
+  group_by(Treatment) %>%
+  do(LM = lm(Plant_Height15 ~ Plant_Height14, data = rbind(., AllBig)))
 
 # Survival across treatments----------------------------------------------------------------------
 # Logistic regression first with all plants that are classed by treatment.
-AllControl <- filter(AllPlants, Trt == 'Control')
-AllCR <- filter(AllPlants, Trt == 'Comp')
+AllControl <- filter(AllPlants, Treatment == 'Control')
+AllCR <- filter(AllPlants, Treatment == 'Comp')
 
-ContLinGlm <- glm(Alive2015 ~ Ht14,
+ContLinGlm <- glm(Survival ~ Plant_Height14,
                   data = rbind(AllControl, AllBig),
                   family = binomial())
-CRLinGlm <- glm(Alive2015 ~ Ht14,
+CRLinGlm <- glm(Survival ~ Plant_Height14,
                 data = rbind(AllCR, AllBig),
                 family = binomial())
-ContQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+ContQuadGlm <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                    data = rbind(AllControl, AllBig),
                    family = binomial())
-CRQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+CRQuadGlm <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                  data = rbind(AllCR, AllBig),
                  family = binomial())
 
 # Fecundity-------------------------------------------------------------------------------
 
 # first, we will estimate fecundity from our sample of 10 RAs
-fec <- glm(Fruit ~ Ht,
+fec <- glm(Seeds ~ Height,
            data = RAs,
            family = quasipoisson())
 summary(fec)
 
 #Pr(Reproductive) - Logistic regression ----------------------------------
-AllPlants$Repro <- ifelse(AllPlants$Stg15 == "RA", 1, 0)
+AllPlants$Repro <- ifelse(AllPlants$Stage15 == "RA", 1, 0)
 
-Regression.Data <- filter(AllPlants, Alive2015 != "NA")
+Regression.Data <- filter(AllPlants, Survival != "NA")
 
-Repro.Glm <- glm(Repro ~ Ht14,
+Repro.Glm <- glm(Repro ~ Plant_Height14,
                  data = Regression.Data,
                  family = binomial())
 
 
 # Recruit size distribution----------------------------------------------------------------------
-sdls <- filter(AllPlants, Stg14 == "SDL")
-Sdl.mean <- mean(sdls$Ht14, na.rm = TRUE)
-Sdl.SD <- sd(sdls$Ht14, na.rm = TRUE)
+sdls <- filter(AllPlants, Stage14 == "SDL")
+Sdl.mean <- mean(sdls$Plant_Height14, na.rm = TRUE)
+Sdl.SD <- sd(sdls$Plant_Height14, na.rm = TRUE)
 
 # Establishment Pr()
 germ.prob <- 0.5067 
@@ -94,8 +92,8 @@ f.params <- data.frame(prob.repro.int = as.numeric(coefficients(Repro.Glm)[1]),
 
 
 # the size range must extend beyond the limits of the data
-min.size <- min(AllPlants$Ht14, na.rm = TRUE) * .6
-max.size <- max(AllPlants$Ht14, na.rm = TRUE) * 1.2
+min.size <- min(AllPlants$Plant_Height14, na.rm = TRUE) * .6
+max.size <- max(AllPlants$Plant_Height14, na.rm = TRUE) * 1.2
 S <- 500 # Number of cells in matrix  
 
 # matrix variables 
@@ -222,9 +220,9 @@ OutputValues <- list(GrowSlope_CR = c(coef(growth.lms$LM[[1]])[2],
                                              rep(NA, 1000)),
                      Obs_Boot = c('Observed', rep('Boot', 1000)))
 
-AllCR <- filter(AllPlants, Trt == 'Comp')
-AllCont <- filter(AllPlants, Trt == 'Control')
-AllBig <- filter(AllPlants, Trt == 'All')
+AllCR <- filter(AllPlants, Treatment == 'Comp')
+AllCont <- filter(AllPlants, Treatment == 'Control')
+AllBig <- filter(AllPlants, Treatment == 'All')
 
 for(i in unique(AllLambdas$est.prob)){
   it <- i * 100
@@ -276,34 +274,34 @@ for(i in unique(AllLambdas$est.prob)){
     BootBig <- AllBig[x3, ]
     
     # Growth
-    BootCRGrow <- lm(Ht15 ~ Ht14, data = rbind(BootCR, BootBig))
-    BootContGrow <- lm(Ht15 ~ Ht14, data = rbind(BootCont, BootBig))
+    BootCRGrow <- lm(Plant_Height15 ~ Plant_Height14, data = rbind(BootCR, BootBig))
+    BootContGrow <- lm(Plant_Height15 ~ Plant_Height14, data = rbind(BootCont, BootBig))
     
     # Survival
-    BootCrSurvLin <- glm(Alive2015 ~ Ht14, 
+    BootCrSurvLin <- glm(Survival ~ Plant_Height14, 
                          data = rbind(BootCR, BootBig),
                          family = binomial())
-    BootContSurvLin <- glm(Alive2015 ~ Ht14, 
+    BootContSurvLin <- glm(Survival ~ Plant_Height14, 
                            data = rbind(BootCont, BootBig),
                            family = binomial())
-    BootCrSurvQuad <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+    BootCrSurvQuad <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                           data = rbind(BootCR, BootBig),
                           family = binomial())
-    BootContSurvQuad <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+    BootContSurvQuad <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                             data = rbind(BootCont, BootBig),
                             family = binomial())
     
     # pr(Repro) and seedling size distributions
     AllData <- rbind(BootCR, BootCont, BootBig)
     
-    BootReproData <- filter(AllData, Alive2015 != 'NA')
-    BootReproGLM <- glm(Repro ~ Ht14, 
+    BootReproData <- filter(AllData, Survival != 'NA')
+    BootReproGLM <- glm(Repro ~ Plant_Height14, 
                         data = BootReproData,
                         family = binomial())
     
-    BootSdls <- filter(AllData, Stg14 == 'SDL')
-    BootSdlMean <- mean(BootSdls$Ht14, na.rm = TRUE)
-    BootSdlSD <- sd(BootSdls$Ht14, na.rm = TRUE)
+    BootSdls <- filter(AllData, Stage14 == 'SDL')
+    BootSdlMean <- mean(BootSdls$Plant_Height14, na.rm = TRUE)
+    BootSdlSD <- sd(BootSdls$Plant_Height14, na.rm = TRUE)
     
     # Combine all the bootstrapped fecundity parameters, but use
     # the same establishment probability as the outer loop to generate

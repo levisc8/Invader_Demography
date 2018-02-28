@@ -4,19 +4,14 @@ library(dplyr)
 library(ggplot2)
 
 #import data into R studio
-ks <- read.csv("Verbascum/Herbdemo4R.csv",
-            stringsAsFactors = FALSE) %>%
-  filter(treatment != 'Herb') %>%
-  select(-c(1, 3, 9:16)) %>%
-  setNames(c("Treatment", "Plant", "Diameter",
-             "Notes", "Therb", "Alive1014",
-             "Seeds", "Alive15", "Notes2"))
+ks <- read.csv("Verbascum/VT_Clean.csv",
+            stringsAsFactors = FALSE) 
 
 # Extract vital rate parameters
 params <- ks %>%
   group_by(Treatment) %>%
   summarise(N = length(Treatment),
-            Sb = mean(Alive15, na.rm = TRUE),
+            Sb = mean(Survival, na.rm = TRUE),
             Seeds = mean(Seeds, na.rm = TRUE)) %>%
   as.data.frame()
 
@@ -116,7 +111,7 @@ for(j in seq_len(nreps)) {
   params1 <- bootdata %>%
     group_by(Treatment) %>%
     summarise(N = length(Treatment),
-              Sb = mean(Alive15, na.rm = TRUE),
+              Sb = mean(Survival, na.rm = TRUE),
               Seeds = mean(Seeds, na.rm = TRUE))
   
   params1 <- as.data.frame(params1)

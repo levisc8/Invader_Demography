@@ -8,17 +8,14 @@ library(dplyr)
 library(ggplot2)
 
 #import data into R studio
-ks <- read.csv("Potentilla/potrec20154R AG.csv",
-               stringsAsFactors = FALSE) %>%
-  filter(Treatment != 'Herb')
-
+ks <- read.csv("Potentilla/PR_Clean.csv",
+               stringsAsFactors = FALSE) 
 ##We found an average of 87.3 seeds/fruit in the field
-ks$Seeds <- ks$Fruits15 * 87.3
+ks$Seeds <- ks$Fruit15 * 87.3
 
 ##We also have a separate seedling survival data file, which makes this code a bit more complicated
 ##if you have it all in one file, then you won't need a couple steps outlined here.
-sdlsurv <- read.csv("Potentilla/Potentilla Seedlings 2015 AG.csv")%>%
-  filter(Treatment != 'Herb')
+sdlsurv <- read.csv("Potentilla/PR_SDL_Clean.csv")
 
 
 ##Subset seedlings into treatments for use later
@@ -26,12 +23,12 @@ csdl <- subset(sdlsurv, Treatment == "Control")
 crsdl <- subset(sdlsurv, Treatment == "Comp")
 
 params <- ks %>%
-  group_by(Treatment, Stg14) %>%
+  group_by(Treatment, Stage14) %>%
   summarise(N = length(Treatment),
-            Survival = mean(Alive15, na.rm = TRUE),
-            NRA.15 = length(Treatment[Stg15 == "NRA"]),
-            RA.15 = length(Treatment[Stg15 == "RA"]),
-            N15 = length(Treatment[Alive15 != 0]),
+            Survival = mean(Survival, na.rm = TRUE),
+            NRA.15 = length(Treatment[Stage15 == "NRA"]),
+            RA.15 = length(Treatment[Stage15 == "RA"]),
+            N15 = length(Treatment[Survival != 0]),
             pf = RA.15 / N15) %>%
   as.data.frame()
 
@@ -47,36 +44,36 @@ params <- ks %>%
 ##F_T=seed production in 2015
 
 ##Control
-s1a_c <- mean(csdl$Alive.815, na.rm = TRUE)
-s1b_c <- params[params$Stg14 == "SDL" &
+s1a_c <- mean(csdl$Survival, na.rm = TRUE)
+s1b_c <- params[params$Stage14 == "SDL" &
                   params$Treatment == "Control", "Survival"]
 s1_c <- s1a_c * s1b_c
-s2_c <- params[params$Stg14 == "NRA" &
+s2_c <- params[params$Stage14 == "NRA" &
                  params$Treatment == "Control", "Survival"]
-s3_c <- params[params$Stg14 == "RA" & 
+s3_c <- params[params$Stage14 == "RA" & 
                  params$Treatment == "Control", "Survival"]
-pfsdl_c <- params[params$Stg14 == "SDL" &
+pfsdl_c <- params[params$Stage14 == "SDL" &
                     params$Treatment == "Control", "pf"]
-pfnra_c <- params[params$Stg14 == "NRA" &
+pfnra_c <- params[params$Stage14 == "NRA" &
                     params$Treatment == "Control", "pf"]
-pfra_c <- params[params$Stg14 == "RA" &
+pfra_c <- params[params$Stage14 == "RA" &
                    params$Treatment == "Control", "pf"]
 f_c <- mean(ks[ks$Treatment == "Control", "Seeds"], na.rm = TRUE)
 
 ##Comp Rem
-s1a_cr <- mean(crsdl$Alive.815,na.rm=T)
-s1b_cr <- params[params$Stg14 == "SDL" &
+s1a_cr <- mean(crsdl$Survival,na.rm=T)
+s1b_cr <- params[params$Stage14 == "SDL" &
                    params$Treatment == "Comp", "Survival"]
 s1_cr <- s1b_cr * s1a_cr
-s2_cr <- params[params$Stg14 == "NRA" &
+s2_cr <- params[params$Stage14 == "NRA" &
                   params$Treatment == "Comp", "Survival"]
-s3_cr <- params[params$Stg14 == "RA" &
+s3_cr <- params[params$Stage14 == "RA" &
                   params$Treatment == "Comp", "Survival"]
-pfsdl_cr <- params[params$Stg14 == "SDL" &
+pfsdl_cr <- params[params$Stage14 == "SDL" &
                      params$Treatment == "Comp", "pf"]
-pfnra_cr <- params[params$Stg14 == "NRA" &
+pfnra_cr <- params[params$Stage14 == "NRA" &
                      params$Treatment == "Comp","pf"]
-pfra_cr <- params[params$Stg14 == "RA" &
+pfra_cr <- params[params$Stage14 == "RA" &
                     params$Treatment == "Comp","pf"]
 f_cr <- mean(ks[ks$Treatment == "Comp", "Seeds"], na.rm = TRUE)
 
@@ -162,17 +159,17 @@ boot_l_cr <- rep(NA, nreps)
 ##from each treatment as our field data does. Each one is sampled with replacement though,
 ##so the dataset is different in each of the 1000 runs.
 ccsdl <- filter(ks, Treatment == "Control" &
-                  Stg14 == "SDL")
+                  Stage14 == "SDL")
 crcrsdl <- filter(ks, Treatment == "Comp" &
-                    Stg14 == "SDL")
+                    Stage14 == "SDL")
 cnra <- filter(ks, Treatment == "Control" &
-                 Stg14 == "NRA")
+                 Stage14 == "NRA")
 crnra <- filter(ks, Treatment == "Comp" &
-                  Stg14 == "NRA")
+                  Stage14 == "NRA")
 cra <- filter(ks, Treatment == "Control" &
-                Stg14 == "RA")
+                Stage14 == "RA")
 crra <- filter(ks, Treatment == "Comp" &
-                 Stg14 == "RA")
+                 Stage14 == "RA")
 
 ##calculate number of plants in each stage class-treatment combination, so R knows
 ##how any to put into each one when bootstrapping
@@ -224,12 +221,12 @@ for(j in 1:nreps) {
 
   
   params1 <- bootdata %>%
-    group_by(Treatment, Stg14) %>% 
+    group_by(Treatment, Stage14) %>% 
     summarise(N = n(),
-              Survival = mean(Alive15, na.rm = TRUE),
-              NRA.15 = length(Treatment[Stg15 == "NRA"]),
-              RA.15 = length(Treatment[Stg15 == "RA"]),
-              N15 = length(Treatment[Alive15 != 0]),
+              Survival = mean(Survival, na.rm = TRUE),
+              NRA.15 = length(Treatment[Stage15 == "NRA"]),
+              RA.15 = length(Treatment[Stage15 == "RA"]),
+              N15 = length(Treatment[Survival != 0]),
               pf = RA.15/N15) %>%
     as.data.frame()
   
@@ -249,19 +246,19 @@ for(j in 1:nreps) {
   
   #extract model paramater values from "params" dataframe we created above!
   ##Control
-  s1a_c <- mean(bootcsdl$Alive.815, na.rm = TRUE)
-  s1b_c <- params1[params1$Stg14 == "SDL" &
+  s1a_c <- mean(bootcsdl$Survival, na.rm = TRUE)
+  s1b_c <- params1[params1$Stage14 == "SDL" &
                      params1$Treatment == "Control", "Survival"]
   s1_c <- s1a_c * s1b_c
-  s2_c <- params1[params1$Stg14 == "NRA" & 
+  s2_c <- params1[params1$Stage14 == "NRA" & 
                     params1$Treatment == "Control", "Survival"]
-  s3_c <- params1[params1$Stg14 == "RA" & 
+  s3_c <- params1[params1$Stage14 == "RA" & 
                     params1$Treatment == "Control", "Survival"]
-  pfsdl_c <- params1[params1$Stg14 == "SDL" & 
+  pfsdl_c <- params1[params1$Stage14 == "SDL" & 
                        params1$Treatment == "Control", "pf"]
-  pfnra_c <- params1[params1$Stg14 == "NRA" &
+  pfnra_c <- params1[params1$Stage14 == "NRA" &
                        params1$Treatment == "Control", "pf"]
-  pfra_c <- params1[params1$Stg14 == "RA" &
+  pfra_c <- params1[params1$Stage14 == "RA" &
                       params1$Treatment == "Control", "pf"]
   f_c <- mean(bootdata[bootdata$Treatment == "Control", "Seeds"],
               na.rm = TRUE)
@@ -276,19 +273,19 @@ for(j in 1:nreps) {
   
   
   ##Comp Rem
-  s1a_cr <- mean(bootcrsdl$Alive.815, na.rm = TRUE)
-  s1b_cr <- params1[params1$Stg14 == "SDL" &
+  s1a_cr <- mean(bootcrsdl$Survival, na.rm = TRUE)
+  s1b_cr <- params1[params1$Stage14 == "SDL" &
                       params1$Treatment == "Comp", "Survival"]
   s1_cr <- s1a_cr * s1b_cr
-  s2_cr <- params1[params1$Stg14 == "NRA" &
+  s2_cr <- params1[params1$Stage14 == "NRA" &
                      params1$Treatment == "Comp", "Survival"]
-  s3_cr <- params1[params1$Stg14 == "RA" &
+  s3_cr <- params1[params1$Stage14 == "RA" &
                      params1$Treatment == "Comp", "Survival"]
-  pfsdl_cr <- params1[params1$Stg14 == "SDL" &
+  pfsdl_cr <- params1[params1$Stage14 == "SDL" &
                         params1$Treatment == "Comp", "pf"]
-  pfnra_cr <- params1[params1$Stg14 == "NRA" &
+  pfnra_cr <- params1[params1$Stage14 == "NRA" &
                         params1$Treatment == "Comp", "pf"]
-  pfra_cr <- params1[params1$Stg14 == "RA" &
+  pfra_cr <- params1[params1$Stage14 == "RA" &
                        params1$Treatment == "Comp", "pf"]
   f_cr <- mean(bootdata[bootdata$Treatment == "Comp", "Seeds"],
                na.rm = TRUE)

@@ -13,12 +13,8 @@ graphics.off()
 library(dplyr)
 
 
-PopData <- read.csv('Lespedeza/MatModel/Lespedeza4R.csv', 
-                    stringsAsFactors = FALSE) %>%
-  filter(Trt_Burn2013 == 'Competition-Unburned' &
-           !is.na(Stage2012) |
-           Trt_Burn2013 == 'Control-Unburned' &
-           !is.na(Stage2012))
+PopData <- read.csv('Lespedeza/LesCun_Clean.csv', 
+                    stringsAsFactors = FALSE) 
 
 # Delineating stage classes for adults at 250, 251-1000, 1000 > cm.
 # This provides adequate sample sizes to capture demographic differences
@@ -29,16 +25,16 @@ PopData$StageMatMod <- NA
 
 # Reclassify stages based on logic from above ----------
 for(i in 1:dim(PopData)[1]) {
-  if(PopData$Stage2012[i] == 'SDL') {
+  if(PopData$Stage12[i] == 'SDL') {
     PopData$StageMatMod[i] <- 'SDL'
-  } else if(PopData$Stage2012[i] == 'SDL2') {
+  } else if(PopData$Stage12[i] == 'SDL2') {
     PopData$StageMatMod[i] <- 'SDL2'
-  } else if(PopData$Stage2012[i] == 'Adult') {
-    if(PopData$Size2012[i] > 8 &&
-       PopData$Size2012[i] <= 250) {
+  } else if(PopData$Stage12[i] == 'Adult') {
+    if(PopData$Size12[i] > 8 &&
+       PopData$Size12[i] <= 250) {
       PopData$StageMatMod[i] <- 'Small'
-    } else if(PopData$Size2012[i] > 250 &&
-              PopData$Size2012[i] < 1000) {
+    } else if(PopData$Size12[i] > 250 &&
+              PopData$Size12[i] < 1000) {
       PopData$StageMatMod[i] <- 'Med'
     } else {
       PopData$StageMatMod[i] <- 'Large'
@@ -50,28 +46,28 @@ for(i in 1:dim(PopData)[1]) {
 
 PopData$StageMatModNext <- NA
 for(i in 1:dim(PopData)[1]) { 
-  if(PopData$Survival2013[i] == 0 |
-     is.na(PopData$Survival2013[i])) { 
+  if(PopData$Survival[i] == 0 |
+     is.na(PopData$Survival[i])) { 
     # if it died, stagenext is NA
     PopData$StageMatModNext[i] <- NA
     
-  } else if(PopData$Survival2013[i] == 1 &
-            is.na(PopData$Stage2013[i]) |
-            is.na(PopData$Size2013[i])) { 
-    if(is.na(PopData$Size2013[i])){
+  } else if(PopData$Survival[i] == 1 &
+            is.na(PopData$Stage13[i]) |
+            is.na(PopData$Size13[i])) { 
+    if(is.na(PopData$Size13[i])){
     # if it didn't die, but we don't have any other info, stageNext is same Stage
       PopData$StageMatModNext[i] <- PopData$StageMatMod[i]
     } else {
-      PopData$StageMatModNext[i] <- PopData$Stage2013[i]
+      PopData$StageMatModNext[i] <- PopData$Stage13[i]
     }
     # The rest is pretty self explanatory
-  } else if(PopData$Stage2013[i] == 'SDL2') {
+  } else if(PopData$Stage13[i] == 'SDL2') {
     PopData$StageMatModNext[i] <- 'SDL2'
-  } else if(PopData$Stage2013[i] == 'Adult') {
-    if(PopData$Size2013[i] <= 250) {
+  } else if(PopData$Stage13[i] == 'Adult') {
+    if(PopData$Size13[i] <= 250) {
       PopData$StageMatModNext[i] <- 'Small'
-    } else if(PopData$Size2013[i] > 250 &&
-              PopData$Size2013[i] < 1000) {
+    } else if(PopData$Size13[i] > 250 &&
+              PopData$Size13[i] < 1000) {
       PopData$StageMatModNext[i] <- 'Med'
     } else {
       PopData$StageMatModNext[i] <- 'Large'
@@ -82,18 +78,18 @@ for(i in 1:dim(PopData)[1]) {
 # Select relevant columns and then filter out the seedling counts
 # by quadrat.
 MatData <- PopData %>%
-  select(Plant, Plot, Quadrat, 
-         Trt2013, StageMatMod, StageMatModNext, 
-         Survival2013, Fec2013, Seeds2013) %>%
-  filter(!is.na(Plant)) %>%
-  setNames(c('Plant', 'Plot', 'Quad', 'Trt',
+  select(Plant_Number, Plot, Quadrat, 
+         Treatment, StageMatMod, StageMatModNext, 
+         Survival, Reproductive, Seeds) %>%
+  filter(!is.na(Plant_Number)) %>%
+  setNames(c('Plant_Number', 'Plot', 'Quad', 'Trt',
              'Stage','StageNext',
              'Survival', 'Reproductive', 'Seeds'))
 MatData$Seeds[MatData$Reproductive == 0] <- NA
 
 # One plant is incorrectly classified as SDL two years in a row.
 # Correcting that below
-MatData$StageNext[MatData$Plant == 7563] <- 'SDL2'
+MatData$StageNext[MatData$Plant_Number == 7563] <- 'SDL2'
 # Now, begin extracting vital rates!
 
 # First, fecundity parameters----------

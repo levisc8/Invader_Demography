@@ -29,13 +29,11 @@
 #     -Clone size distributions look different, modeling separately
 #   OMITTING CLONES FOR NOW DUE TO POSSIBLE ISSUES WITH UNDERLYING DATA COLLECTION METHODS
 
-rm(list = ls(all=T)) 
-cat("\014")
+rm(list = ls()) 
 graphics.off()
 
 ### LIBRARIES ###
 # library(rstan)
-library(MASS)
 library(dplyr)
 library(magrittr)
 library(stringr)
@@ -45,44 +43,42 @@ library(mgcv)
 source('Ligustrum/IPM/R/IPM_Functions_Ligustrum.r') 
 
 # load the data and do some basic restructuring
-RAs<-read.csv("Ligustrum/IPM/Data/RA4R.csv")
+RAs<-read.csv("Ligustrum/IPM/Data/LO_RA_Clean.csv")
 # str(RAs)
-AllPlants<-read.csv("Ligustrum/IPM/Data/Ligobt4R-8.8.15.csv",
-                    stringsAsFactors = FALSE) %>%
-           filter(Clone == 0 | is.na(Clone)) %>%
-  filter(Trt != 'Herb')
+AllPlants<-read.csv("Ligustrum/IPM/Data/LO_Clean.csv",
+                    stringsAsFactors = FALSE) 
 
-AllPlants$Plant <- as.numeric(AllPlants$Plant)
+AllPlants$Plant_Number <- as.numeric(AllPlants$Plant_Number)
 # str(AllPlants)
-AllPlants$growth <- AllPlants$Ht15 - AllPlants$Ht14
-AllPlants <- AllPlants %>% arrange(Quadrat,Plant)
+AllPlants$growth <- AllPlants$Plant_Height15 - AllPlants$Plant_Height14
+AllPlants <- AllPlants %>% arrange(Plot,Plant_Number)
 
 
 
 
 # Growth---------------------------------------------------------------------------------------
 # Linear models. 
-Big.Plants <- filter(AllPlants, Trt == "All")
+Big.Plants <- filter(AllPlants, Treatment == "All")
 
 growth.lms <- AllPlants %>% 
-  filter(Trt!="All") %>% 
-  group_by(Trt) %>%
-  do(LM = lm(Ht15 ~ Ht14, data = rbind(., Big.Plants)),
-     SumLM = summary(lm(Ht15 ~ Ht14, data = rbind(. ,Big.Plants))),
-     GAM = gam(Ht15 ~ s(Ht14), data = rbind(., Big.Plants)))
+  filter(Treatment!="All") %>% 
+  group_by(Treatment) %>%
+  do(LM = lm(Plant_Height15 ~ Plant_Height14, data = rbind(., Big.Plants)),
+     SumLM = summary(lm(Plant_Height15 ~ Plant_Height14, data = rbind(. ,Big.Plants))),
+     GAM = gam(Plant_Height15 ~ s(Plant_Height14), data = rbind(., Big.Plants)))
 
 
 par(mfrow = c(1, 1))
-xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE), .1)
-plot(Ht15 ~ Ht14, data = AllPlants)
+xx <- seq(0, max(AllPlants$Plant_Height14, na.rm = TRUE), .1)
+plot(Plant_Height15 ~ Plant_Height14, data = AllPlants)
 abline(growth.lms$LM[[2]], col = 'black')
 abline(growth.lms$LM[[1]], col = 'green')
 lines(xx, predict(growth.lms$GAM[[1]], 
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'green', lty = 2)
 lines(xx, predict(growth.lms$GAM[[2]], 
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'black', lty = 2)
 
@@ -101,31 +97,31 @@ growth.lms$SumLM[[2]]
 AIC(growth.lms$LM[[1]], growth.lms$GAM[[1]])
 AIC(growth.lms$LM[[2]], growth.lms$GAM[[2]])
 
-AllGrow <- lm(Ht15 ~ Ht14, data = AllPlants)
+AllGrow <- lm(Plant_Height15 ~ Plant_Height14, data = AllPlants)
 summary(AllGrow)
 
 # Survival across treatments----------------------------------------------------------------------
 # Logistic regression first with all plants that are classed by treatment.
-AllSmall <- filter(AllPlants, Trt != 'All')
-AllBig <- filter(AllPlants, Trt == 'All')
-AllControl <- filter(AllPlants, Trt == 'Control')
-AllCR <- filter(AllPlants, Trt == 'Comp')
+AllSmall <- filter(AllPlants, Treatment != 'All')
+AllBig <- filter(AllPlants, Treatment == 'All')
+AllControl <- filter(AllPlants, Treatment == 'Control')
+AllCR <- filter(AllPlants, Treatment == 'Comp')
 
 
 # There is no way to model all of them 
 # together, but we'll see what their regressions look like separately.
-ContLinearGlm <- glm(Alive2015 ~ Ht14,
+ContLinearGlm <- glm(Survival ~ Plant_Height14,
                      data = rbind(AllControl, AllBig),
                      family = binomial())
-CRLinearGlm <- glm(Alive2015 ~ Ht14,
+CRLinearGlm <- glm(Survival ~ Plant_Height14,
                    data = rbind(AllCR, AllBig),
                    family = binomial())
 
 # Both return warnings of probabilities = 0|1. trying Quadratic fits now
-ContQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+ContQuadGlm <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                      data = rbind(AllControl, AllBig),
                      family = binomial())
-CRQuadGlm <- glm(Alive2015 ~ Ht14 + I(Ht14^2),
+CRQuadGlm <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                    data = rbind(AllCR, AllBig),
                    family = binomial())
 summary(ContLinearGlm)
@@ -136,26 +132,26 @@ summary(CRQuadGlm)
 AIC(ContLinearGlm, ContQuadGlm)
 AIC(CRLinearGlm,CRQuadGlm)
 # Plot fits to see how they look
-xx <- seq(0, max(AllPlants$Ht15, na.rm = TRUE) + 50, 1)
-plot(Alive2015 ~ Ht14, data = AllPlants,
+xx <- seq(0, max(AllPlants$Plant_Height15, na.rm = TRUE) + 50, 1)
+plot(Survival ~ Plant_Height14, data = AllPlants,
      xlim = c(0, 600))
 lines(xx, predict(ContLinearGlm,
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'black', 
       lty = 1)
 lines(xx, predict(ContQuadGlm, 
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'black',
       lty = 2)
 lines(xx, predict(CRLinearGlm,
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'green',
       lty = 1)
 lines(xx, predict(CRQuadGlm,
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'green',
       lty = 2)
@@ -171,26 +167,26 @@ legend('bottomright',
 # later. Modeled without a seedbank based on work on congeners by Shelton and Cain 2002
 
 # first, we will estimate fecundity from our sample of 10 RAs
-fec <- glm(Fruit ~ Ht,
+fec <- glm(Seeds ~ Height,
            data = RAs,
            family = quasipoisson())
 summary(fec)
 # normal poisson is very overdispersed, trying lm and splines next
-feclm <- lm(Fruit ~ Ht,
+feclm <- lm(Seeds ~ Height,
             data = RAs)
 summary(feclm)
 
-fec.gam <- gam(Fruit ~ s(Ht),
+fec.gam <- gam(Seeds ~ s(Height),
                data = RAs)
 summary(fec.gam)
 
 par(mfrow = c(1,1))
-xx <- seq(0, max(RAs$Ht), 1)
-plot(Fruit ~ Ht, data = RAs)
-lines(xx, predict(fec, data.frame(Ht = xx), type = 'response'),
+xx <- seq(0, max(RAs$Height), 1)
+plot(Seeds ~ Height, data = RAs)
+lines(xx, predict(fec, data.frame(Height = xx), type = 'response'),
       col = 1)
 abline(feclm, col = 2)
-lines(xx, predict(fec.gam, data.frame(Ht = xx), type = 'response'),
+lines(xx, predict(fec.gam, data.frame(Height = xx), type = 'response'),
       col = 3)
 legend('topleft', c('Poisson','Linear','Spline'), 
        col = c(1, 2, 3), lty = 1)
@@ -198,18 +194,18 @@ legend('topleft', c('Poisson','Linear','Spline'),
 # Rae: The spline is returning a negative intercept.
 
 #Pr(Reproductive) - Logistic regression ----------------------------------
-AllPlants$Repro <- ifelse(AllPlants$Stg15 == "RA", 1, 0)
+AllPlants$Repro <- ifelse(AllPlants$Stage15 == "RA", 1, 0)
 
-Regression.Data <- filter(AllPlants, Alive2015 != "NA")
+Regression.Data <- filter(AllPlants, Survival != "NA")
 
-Repro.Glm <- glm(Repro ~ Ht14,
+Repro.Glm <- glm(Repro ~ Plant_Height14,
                  data = Regression.Data,
                  family = binomial())
 summary(Repro.Glm)
-plot(Repro ~ Ht14,
+plot(Repro ~ Plant_Height14,
      data = Regression.Data)
-xx<-seq(0, max(AllPlants$Ht14, na.rm = TRUE), 0.1)
-lines(xx, predict(Repro.Glm, data.frame(Ht14 = xx), type = 'response'),
+xx<-seq(0, max(AllPlants$Plant_Height14, na.rm = TRUE), 0.1)
+lines(xx, predict(Repro.Glm, data.frame(Plant_Height14 = xx), type = 'response'),
       lty = 2, col = 'red')
 
 
@@ -221,15 +217,15 @@ lines(xx, predict(Repro.Glm, data.frame(Ht14 = xx), type = 'response'),
 # we could potentially see treatment effect. However, we may be able to justify this by pointing out
 # that there was no difference in growth or survival for small plants between the two censuses,
 # so maybe we're ok
-sdls <- filter(AllPlants, Stg14 == "SDL")
-Sdl.mean <- mean(sdls$Ht14, na.rm = TRUE)
-Sdl.SD <- sd(sdls$Ht14, na.rm = TRUE)
+sdls <- filter(AllPlants, Stage14 == "SDL")
+Sdl.mean <- mean(sdls$Plant_Height14, na.rm = TRUE)
+Sdl.SD <- sd(sdls$Plant_Height14, na.rm = TRUE)
 
-xx <- seq(0, max(sdls$Ht14, na.rm = TRUE), 0.5)
-hist(sdls$Ht14,
+xx <- seq(0, max(sdls$Plant_Height14, na.rm = TRUE), 0.5)
+hist(sdls$Plant_Height14,
      breaks = 1,
      border = 'white',
-     xlab = 'Ht 2014',
+     xlab = 'Height 2014',
      freq = FALSE,
      ylim = c(0, max(dnorm(xx, Sdl.mean, Sdl.SD)) + 0.05))
 lines(xx, dnorm(xx, Sdl.mean, Sdl.SD), 
@@ -237,40 +233,40 @@ lines(xx, dnorm(xx, Sdl.mean, Sdl.SD),
 
 # no treatment effect on seedling growth or survival, so I think we can justify saying no treatment
 # effect on seedling size distribution
-sdl.tab <- table(sdls$Trt, sdls$Alive2015)
+sdl.tab <- table(sdls$Treatment, sdls$Survival)
 sdl.chisq <- chisq.test(sdl.tab, correct = FALSE)
 sdl.chisq
 sdl.tab
 sdl.chisq$exp
 
-sdl.grow.aov <- aov(growth ~ Trt,
-                    data = AllPlants[AllPlants$Stg14 == "SDL", ])
+sdl.grow.aov <- aov(growth ~ Treatment,
+                    data = AllPlants[AllPlants$Stage14 == "SDL", ])
 summary(sdl.grow.aov)
-boxplot(growth ~ Trt,
-        data = AllPlants[AllPlants$Stg14 == "SDL", ])
+boxplot(growth ~ Treatment,
+        data = AllPlants[AllPlants$Stage14 == "SDL", ])
 
 # Figures for Appendix
-xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE), 0.1)
+xx <- seq(0, max(AllPlants$Plant_Height14, na.rm = TRUE), 0.1)
 par(mfrow = c(2,3), xpd = TRUE)
-plot(Ht15 ~ Ht14, data = AllPlants,
+plot(Plant_Height15 ~ Plant_Height14, data = AllPlants,
      xlab = 'Size (t)',
      ylab = 'Size (t+1)')
 lines(xx, predict(growth.lms$LM[[2]],
-                  data.frame(Ht14 = xx), 
+                  data.frame(Plant_Height14 = xx), 
                   type = 'response'),
       col = 'black',
       lty = 2)
 lines(xx, predict(growth.lms$LM[[1]], 
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'green',
       lty = 2)
 
-xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE) + 30, 0.1)
-plot(Alive2015 ~ Ht14, data = AllPlants,
+xx <- seq(0, max(AllPlants$Plant_Height14, na.rm = TRUE) + 30, 0.1)
+plot(Survival ~ Plant_Height14, data = AllPlants,
      xlab = 'Size (t)',
      ylab = 'Survival (t+1)',
-     xlim = c(0, max(AllPlants$Ht14, na.rm = TRUE) + 30))
+     xlim = c(0, max(AllPlants$Plant_Height14, na.rm = TRUE) + 30))
 lines(xx, predict.surv(xx, CRLinearGlm),
       col = 'green', lty = 1)
 lines(xx, predict.surv(xx, CRQuadGlm),
@@ -287,28 +283,28 @@ legend('bottomright', c('CR Linear',
        col = c('green', 'green',
                'black', 'black'))
 
-xx <- seq(min(RAs$Ht), max(RAs$Ht) - 5, 1)
-plot(Fruit ~ Ht, data = RAs,
+xx <- seq(min(RAs$Height), max(RAs$Height) - 5, 1)
+plot(Seeds ~ Height, data = RAs,
      xlab = 'Size (t+1)',
      ylab = 'Seeds (t+1)')
 lines(xx, predict(fec, 
-                  data.frame(Ht = xx),
+                  data.frame(Height = xx),
                   type = 'response'),
       col = 'red',
       lty = 2)
 
-xx <- seq(0, max(AllPlants$Ht14, na.rm = TRUE), .1)
+xx <- seq(0, max(AllPlants$Plant_Height14, na.rm = TRUE), .1)
 
-plot(Repro ~ Ht14, data = AllPlants,
+plot(Repro ~ Plant_Height14, data = AllPlants,
      xlab = 'Size (t)',
      ylab = 'Reproductive (t+1)')
-lines(xx, predict(Repro.Glm, data.frame(Ht14 = xx),
+lines(xx, predict(Repro.Glm, data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'red',
       lty = 2)
 
-xx <- seq(0, max(sdls$Ht14, na.rm = TRUE), 0.5)
-hist(sdls$Ht14,
+xx <- seq(0, max(sdls$Plant_Height14, na.rm = TRUE), 0.5)
+hist(sdls$Plant_Height14,
      breaks = 1,
      border = 'white',
      xlab = 'Recruit size (t)',
@@ -336,14 +332,14 @@ legend(x = 30, y = 0.2, c('Treatment','Control', 'Competitor removal',
 # # add column indicating parent plant
 # for(i in 1:length(For.Cloning$Quadrat)){
 #   if(For.Cloning$Clone[i] !=0){
-#     For.Cloning$Parent[i] <- For.Cloning$Plant[i]%>%str_sub(1,-2)
+#     For.Cloning$Parent[i] <- For.Cloning$Plant_Number[i]%>%str_sub(1,-2)
 #   }else{
 #     For.Cloning$Parent[i]<-NA
 #   }
 # }
 # 
 # For.Cloning$Parent<-as.numeric(For.Cloning$Parent)
-# For.Cloning$QuadPlant<-paste(For.Cloning$Quadrat,For.Cloning$Plant,sep="-")
+# For.Cloning$QuadPlant<-paste(For.Cloning$Quadrat,For.Cloning$Plant_Number,sep="-")
 # 
 # # calculate number of clones produced by each parent and add that to For.Cloning data frame
 # Clone.Count<-For.Cloning%>%filter(Parent!="NA")%>%group_by(Quadrat,Parent)%>%summarise(Clone.N=n())
@@ -356,51 +352,51 @@ legend(x = 30, y = 0.2, c('Treatment','Control', 'Competitor removal',
 # For.Cloning$Clonal[For.Cloning$Clone==1]<-NA #the clones themselves wouldn't be expected to be clonal...
 # 
 # # Pr(Clonal) by treatment-------------------------------
-# tab<-table(For.Cloning$Trt,For.Cloning$Clonal)
+# tab<-table(For.Cloning$Treatment,For.Cloning$Clonal)
 # chisq.test(tab)
 # tab
 # chisq.test(tab)$exp
 # # Pr(clonal) does not differ by treatment, so we will lump them all together.
-# Pr.Clonal.Reg<-glm(Clonal~Ht14,data=For.Cloning, family=binomial())
+# Pr.Clonal.Reg<-glm(Clonal~Plant_Height14,data=For.Cloning, family=binomial())
 # summary(Pr.Clonal.Reg)
 # 
-# xx<-seq(0,max(For.Cloning$Ht14,na.rm=T),1)
-# plot(Clonal~Ht14,data=For.Cloning)
-# lines(xx,predict(Pr.Clonal.Reg,data.frame(Ht14=xx),type='response'),col='red')
+# xx<-seq(0,max(For.Cloning$Plant_Height14,na.rm=T),1)
+# plot(Clonal~Plant_Height14,data=For.Cloning)
+# lines(xx,predict(Pr.Clonal.Reg,data.frame(Plant_Height14=xx),type='response'),col='red')
 # 
 # # it would appear that initial size is not a useful predictor of whether or not a plant clones, so this will be
 # # a discrete parameter
 # Pr.Clonal<-mean(For.Cloning$Clonal,na.rm=T)
 # 
 # # number of clones by size and treatment
-# Clone.Trt.N<-aov(Clone.N~Trt,data=For.Cloning)
-# summary(Clone.Trt.N)
+# Clone.Treatment.N<-aov(Clone.N~Treatment,data=For.Cloning)
+# summary(Clone.Treatment.N)
 # 
 # # Treatment has no strong effect on number of clones produced. Looking to see if size is a reasonable
 # # predictor when treatments are lumped together
 # 
 # par(mfrow=c(1,1))
-# plot(Clone.N~Ht14,data=For.Cloning,xlim=c(0,200))
-# Clone.N.Pois<-glm(Clone.N~Ht14,data=For.Cloning,family=quasipoisson())
-# Clone.N.Spline<-gam(Clone.N~s(Ht14),data=For.Cloning)
-# Clone.N.ZTPois<-vglm(Clone.N~Ht14,data=For.Cloning,family=pospoisson)
+# plot(Clone.N~Plant_Height14,data=For.Cloning,xlim=c(0,200))
+# Clone.N.Pois<-glm(Clone.N~Plant_Height14,data=For.Cloning,family=quasipoisson())
+# Clone.N.Spline<-gam(Clone.N~s(Plant_Height14),data=For.Cloning)
+# Clone.N.ZTPois<-vglm(Clone.N~Plant_Height14,data=For.Cloning,family=pospoisson)
 # summary(Clone.N.Pois)
 # summary(Clone.N.Spline)
 # summary(Clone.N.ZTPois)
-# lines(xx,predict(Clone.N.Spline,data.frame(Ht14=xx),type='response'),col='green')
-# lines(xx,predict(Clone.N.Pois,data.frame(Ht14=xx),type='response'),col='red')
-# lines(xx,predict(Clone.N.ZTPois,data.frame(Ht14=xx),type='response'),col='blue')
+# lines(xx,predict(Clone.N.Spline,data.frame(Plant_Height14=xx),type='response'),col='green')
+# lines(xx,predict(Clone.N.Pois,data.frame(Plant_Height14=xx),type='response'),col='red')
+# lines(xx,predict(Clone.N.ZTPois,data.frame(Plant_Height14=xx),type='response'),col='blue')
 # legend('topleft',c('Spline','Quasi-Poisson','Zero-truncated Poisson'),col=c('green','red','blue'),lty=1)
 # 
 # # Clone size distribution-----------------
 # Clones<-filter(For.Cloning,Clone==1)
 # 
-# cont.clone.mean<-mean(Clones$Clone.Height[Clones$Trt=="Control"])
-# cont.clone.sd<-sd(Clones$Clone.Height[Clones$Trt=="Control"])
-# comp.clone.mean<-mean(Clones$Clone.Height[Clones$Trt=="Comp"])
-# comp.clone.sd<-sd(Clones$Clone.Height[Clones$Trt=="Comp"])
-# herb.clone.mean<-mean(Clones$Clone.Height[Clones$Trt=="Herb"])
-# herb.clone.sd<-mean(Clones$Clone.Height[Clones$Trt=="Herb"])
+# cont.clone.mean<-mean(Clones$Clone.Height[Clones$Treatment=="Control"])
+# cont.clone.sd<-sd(Clones$Clone.Height[Clones$Treatment=="Control"])
+# comp.clone.mean<-mean(Clones$Clone.Height[Clones$Treatment=="Comp"])
+# comp.clone.sd<-sd(Clones$Clone.Height[Clones$Treatment=="Comp"])
+# herb.clone.mean<-mean(Clones$Clone.Height[Clones$Treatment=="Herb"])
+# herb.clone.sd<-mean(Clones$Clone.Height[Clones$Treatment=="Herb"])
 # 
 # par(mfrow=c(1,1))
 # xx<-seq(0,max(Clones$Clone.Height),1)
@@ -410,11 +406,11 @@ legend(x = 30, y = 0.2, c('Treatment','Control', 'Competitor removal',
 # lines(xx,dnorm(xx,herb.clone.mean,herb.clone.sd),col=3)
 # legend('topright',c('Control','CR','HR'),col=c(1,2,3),lty=1)
 # 
-# clone.size.aov<-aov(Clone.Height~Trt,data=Clones)
+# clone.size.aov<-aov(Clone.Height~Treatment,data=Clones)
 # summary(clone.size.aov)
 # TukeyHSD(clone.size.aov)
 # print(model.tables(clone.size.aov,'mean'))
-# boxplot(Clone.Height~Trt,data=Clones)
+# boxplot(Clone.Height~Treatment,data=Clones)
 
 
 # Discrete parameters------------------------------------
@@ -445,8 +441,8 @@ f.params <- data.frame(prob.repro.int = as.numeric(coefficients(Repro.Glm)[1]),
 
 
 # the size range must extend beyond the limits of the data
-min.size <- min(AllPlants$Ht14, na.rm = TRUE) * .6
-max.size <- max(AllPlants$Ht14, na.rm = TRUE) * 1.2
+min.size <- min(AllPlants$Plant_Height14, na.rm = TRUE) * .6
+max.size <- max(AllPlants$Plant_Height14, na.rm = TRUE) * 1.2
 S <- 500 # Number of cells in matrix  
 
 # matrix variables 

@@ -1,14 +1,14 @@
 ## four parameter survival curve
 predict.surv <- function(x, model) {
-  pred <- predict(model, data.frame(Ht14 = x),
+  pred <- predict(model, data.frame(Plant_Height14 = x),
                   type = 'response')
   return(pred)
 }
 
 # Fecundity
 SB.Go <- function(x, params, repro.model, fec.model) {
-  predict(repro.model, data.frame(Ht14 = x), type = 'response') *
-    predict(fec.model, data.frame(Ht = x), type='response') *
+  predict(repro.model, data.frame(Plant_Height14 = x), type = 'response') *
+    predict(fec.model, data.frame(Height = x), type='response') *
     params$germ 
 }
 
@@ -22,7 +22,7 @@ grow.prob<-function(size2, size1,
                     model) {
   
   sd.mod <- sd(residuals(model))
-  Gdata <- data.frame(Ht14 = size1)
+  Gdata <- data.frame(Plant_Height14 = size1)
   size2.pred <- predict(model,
                         newdata = Gdata,
                         type = 'response')

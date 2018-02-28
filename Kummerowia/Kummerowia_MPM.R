@@ -6,18 +6,15 @@ library(dplyr)
 library(ggplot2)
 
 #import data into R studio
-ks15 <- read.csv("Kummerowia/kstra2015.2 AG.csv") %>%
-  filter(Treatment != 'Herb')
-ks14 <- read.csv("Kummerowia/kummerowia AG.csv") %>%
-  filter(Treatment != 'Herb')
-
+ks15 <- read.csv("Kummerowia/KS_15_Clean.csv") 
+ks14 <- read.csv("Kummerowia/KS_14_Clean.csv") 
 survival <- ks15 %>%
   group_by(Treatment) %>%
-  summarise(Survival = mean(Alive, na.rm = TRUE))
+  summarise(Survival = mean(Survival, na.rm = TRUE))
 
 params <- ks14 %>%
   group_by(Treatment) %>%
-  summarise(Seeds = mean(f, na.rm=TRUE)) %>%
+  summarise(Seeds = mean(Seeds, na.rm=TRUE)) %>%
   full_join(survival, ., by = 'Treatment') %>%
   as.data.frame()
 
@@ -106,11 +103,11 @@ for(j in 1:nreps)
   
   Survival1 <- bootdata15 %>%
     group_by(Treatment) %>%
-    summarise(Survival = mean(Alive, na.rm = TRUE))
+    summarise(Survival = mean(Survival, na.rm = TRUE))
 
   params1 <- bootdata14 %>%
     group_by(Treatment) %>%
-    summarise(Seeds = mean(f, na.rm = TRUE)) %>%
+    summarise(Seeds = mean(Seeds, na.rm = TRUE)) %>%
     full_join(Survival1, ., by = 'Treatment') %>%
     as.data.frame()
   

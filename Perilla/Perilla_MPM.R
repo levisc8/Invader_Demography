@@ -2,9 +2,8 @@ rm(list = ls())
 library(dplyr)
 library(ggplot2)
 
-ks <- read.csv("Perilla/Perilla4R2013 AG.csv",
-               stringsAsFactors = FALSE) %>%
-  filter(Treatment != 'Herb')
+ks <- read.csv("Perilla/PF_Clean.csv",
+               stringsAsFactors = FALSE)
 
 cont <- filter(ks, Treatment == "Control")
 cr <- filter(ks, Treatment == "Comp")
@@ -13,7 +12,7 @@ cr <- filter(ks, Treatment == "Comp")
 
 params <- ks %>%
   group_by(Treatment) %>%
-  summarise(Survival = mean(Alive, na.rm = TRUE),
+  summarise(Survival = mean(Survival, na.rm = TRUE),
             Seeds = mean(Seeds, na.rm = TRUE)) %>%
   as.data.frame()
 
@@ -92,7 +91,7 @@ for(j in seq_len(nreps)) {
   
   params1 <- bootdata %>%
     group_by(Treatment) %>%
-    summarise(Survival = mean(Alive, na.rm = TRUE),
+    summarise(Survival = mean(Survival, na.rm = TRUE),
               Seeds = mean(Seeds, na.rm = TRUE)) %>%
     as.data.frame()
   
@@ -160,7 +159,7 @@ upper <- c(boot_s_cr[975], boot_s_c[975],
 
 results <- tibble(values, lower, upper) 
 
-results$Trt <- c('Control', 'CR')
+results$Treatment <- c('Control', 'CR')
 results$Var <- factor(c('paste(italic(s))', 
                         'paste(italic(s))',
                         'paste(italic(f))',
@@ -173,16 +172,16 @@ results$Var <- factor(c('paste(italic(s))',
                       ordered = TRUE)
 
 ggplot(data = results,
-       aes(x = Trt)) +
+       aes(x = Treatment)) +
   geom_point(aes(y = values,
-                 color = Trt),
+                 color = Treatment),
              size = 4.5) + 
   facet_wrap(~Var,
              scales = 'free',
              labeller = label_parsed) + 
   geom_linerange(aes(ymin = lower,
                      ymax = upper,
-                     color = Trt),
+                     color = Treatment),
                  size = 1.25) + 
   theme(panel.background = element_blank(),
         panel.grid = element_blank(),

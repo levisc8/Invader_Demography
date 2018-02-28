@@ -31,16 +31,16 @@ library(mgcv)
 source('Euonymus/IPM/R/IPM_Functions_Euonymus.R')
 
 # load the data
-RAs<-read.csv("Euonymus/IPM/Data/RA4R.csv")
-AllPlants1 <- read.csv("Euonymus/IPM/Data/Euoala4R.csv") %>% 
-  filter(Trt != 'Herb')
-AllPlants1$incr<-AllPlants1$Ht15-AllPlants1$Ht14
+RAs <- read.csv("Euonymus/IPM/Data/RA_Clean.csv")
+AllPlants1 <- read.csv("Euonymus/IPM/Data/EA_Clean.csv") 
 
-AllSmall <- filter(AllPlants1, Trt != 'All')
-ControlGrowData <- filter(AllPlants1, Trt == 'Control' | 
-                            Trt == 'All')
-CrGrowData <- filter(AllPlants1, Trt == 'Comp' |
-                       Trt == 'All')
+AllPlants1$incr<-AllPlants1$Plant_Height15-AllPlants1$Plant_Height14
+
+AllSmall <- filter(AllPlants1, Treatment != 'All')
+ControlGrowData <- filter(AllPlants1, Treatment == 'Control' | 
+                            Treatment == 'All')
+CrGrowData <- filter(AllPlants1, Treatment == 'Comp' |
+                       Treatment == 'All')
 
 # Growth---------------------------------------------------------------------------------------
 # trying a linear fit. First, model with all data < 200 cm (because anything larger was not 
@@ -48,43 +48,43 @@ CrGrowData <- filter(AllPlants1, Trt == 'Comp' |
 # term to determine significance. If it is significant, then construct separate models
 # for each treatment by combining large plants in with the small ones.
 
-AllLM<- lm(Ht15 ~ Ht14 * Trt, data = AllSmall)
+AllLM<- lm(Plant_Height15 ~ Plant_Height14 * Treatment, data = AllSmall)
 summary(AllLM)
 
 # Same as above, so separate and do LMs
-ControlLM <- lm(Ht15 ~ Ht14, data = ControlGrowData)
+ControlLM <- lm(Plant_Height15 ~ Plant_Height14, data = ControlGrowData)
 summary(ControlLM)
 
-CRLM <- lm(Ht15 ~ Ht14, data = CrGrowData)
+CRLM <- lm(Plant_Height15 ~ Plant_Height14, data = CrGrowData)
 summary(CRLM)
 
 
 # Going to try a spline fit as well since these relationships don't
 # really look linear.
 
-xx <- seq(0, max(AllPlants1$Ht14, na.rm = TRUE) + 50, 1)
+xx <- seq(0, max(AllPlants1$Plant_Height14, na.rm = TRUE) + 50, 1)
 
-ControlGam <- gam(Ht15 ~ s(Ht14), data = ControlGrowData)
-CRGam <- gam(Ht15 ~ s(Ht14), data = CrGrowData)
+ControlGam <- gam(Plant_Height15 ~ s(Plant_Height14), data = ControlGrowData)
+CRGam <- gam(Plant_Height15 ~ s(Plant_Height14), data = CrGrowData)
 summary(ControlGam)
 summary(CRGam)
 
-ControlGamPred <- predict(ControlGam, data.frame(Ht14 = xx), type = 'response')
-CrGamPred <- predict(CRGam, data.frame(Ht14 = xx), type = 'response')
+ControlGamPred <- predict(ControlGam, data.frame(Plant_Height14 = xx), type = 'response')
+CrGamPred <- predict(CRGam, data.frame(Plant_Height14 = xx), type = 'response')
 
 
 # plot results
-plot(Ht15 ~ Ht14, data = AllPlants1, type = 'n')
-points(CrGrowData$Ht14[CrGrowData$Ht14 < 100],
-       CrGrowData$Ht15[CrGrowData$Ht14 < 100], 
+plot(Plant_Height15 ~ Plant_Height14, data = AllPlants1, type = 'n')
+points(CrGrowData$Plant_Height14[CrGrowData$Plant_Height14 < 100],
+       CrGrowData$Plant_Height15[CrGrowData$Plant_Height14 < 100], 
        col = 'green',
        pch = 4)
-points(ControlGrowData$Ht14[ControlGrowData$Ht14 < 100],
-       ControlGrowData$Ht15[ControlGrowData$Ht14 < 100],
+points(ControlGrowData$Plant_Height14[ControlGrowData$Plant_Height14 < 100],
+       ControlGrowData$Plant_Height15[ControlGrowData$Plant_Height14 < 100],
        col = 'blue',
        pch = 3)
-points(ControlGrowData$Ht14[ControlGrowData$Ht14 > 100],
-       ControlGrowData$Ht15[ControlGrowData$Ht14 > 100],
+points(ControlGrowData$Plant_Height14[ControlGrowData$Plant_Height14 > 100],
+       ControlGrowData$Plant_Height15[ControlGrowData$Plant_Height14 > 100],
        col = 1,
        pch = 1)
 lines(xx, ControlGamPred, col = 'blue')
@@ -106,10 +106,10 @@ AIC(CRLM, CRGam)
 
 
 # View logistic regressions for each treatment to evaluate treatment differencesb 
-AllSurvGLM <- glm(Alive15 ~ Ht14 * Trt, 
+AllSurvGLM <- glm(Survival ~ Plant_Height14 * Treatment, 
                   data = AllSmall, 
                   family = binomial())
-AllSurvQuadGLM <- glm(Alive15 ~ Ht14 * Trt + I(Ht14^2) * Trt,
+AllSurvQuadGLM <- glm(Survival ~ Plant_Height14 * Treatment + I(Plant_Height14^2) * Treatment,
                       data = AllSmall,
                       family = binomial)
 
@@ -121,50 +121,50 @@ summary(AllSurvQuadGLM)
 # is included. The AIC score for the non-polynomial model is lower,
 # so i will use the results from that model and keep the treatments 
 # separate
-Sample.Sizes <- AllPlants1 %>% group_by(Site,Trt) %>% summarise(n = n())
+Sample.Sizes <- AllPlants1 %>% group_by(Site,Treatment) %>% summarise(n = n())
 Sample.Sizes
 
 # Create separate models for each treatment
-ContSurv <- glm(Alive15 ~ Ht14, 
+ContSurv <- glm(Survival ~ Plant_Height14, 
                 data = ControlGrowData,
                 family = binomial())
-CompSurv <- glm(Alive15 ~ Ht14,
+CompSurv <- glm(Survival ~ Plant_Height14,
                 data = CrGrowData,
                 family = binomial())
 
 
-xx <- seq(0, max(AllPlants1$Ht14) + 20, 1)
-plot(jitter(Alive15, amount = 0.05) ~ Ht14, 
+xx <- seq(0, max(AllPlants1$Plant_Height14) + 20, 1)
+plot(jitter(Survival, amount = 0.05) ~ Plant_Height14, 
      data = AllPlants1,
      xlab = 'Height 2014',
      ylab = 'Survival')
 lines(xx, predict(ContSurv,
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'black',
       lty = 2)
 lines(xx, predict(CompSurv,
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'green', lty = 2)
 
 
 # These models both predict survival probabilities of 1! But we know plants die,
 # so I'll try fitting quadratic models next
-ContQuadSurv <- glm(Alive15 ~ Ht14 + I(Ht14^2),
+ContQuadSurv <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                     data = ControlGrowData,
                     family = binomial())
-CompQuadSurv <- glm(Alive15 ~ Ht14 + I(Ht14^2),
+CompQuadSurv <- glm(Survival ~ Plant_Height14 + I(Plant_Height14^2),
                     data = CrGrowData,
                     family = binomial())
 
 lines(xx, predict(ContQuadSurv,
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'black',
       lty = 1)
 lines(xx, predict(CompQuadSurv,
-                  data.frame(Ht14 = xx),
+                  data.frame(Plant_Height14 = xx),
                   type = 'response'),
       col = 'green',
       lty = 1)
@@ -189,7 +189,7 @@ legend('right',
 
 library(brms)
 
-BrmSurv_Cont <- brm(Alive15 ~ Ht14, 
+BrmSurv_Cont <- brm(Survival ~ Plant_Height14, 
                      data = ControlGrowData,
                      family = 'bernoulli',
                      iter = 4000,
@@ -200,7 +200,7 @@ BrmSurv_Cont <- brm(Alive15 ~ Ht14,
                                     max_treedepth = 15)) %>%
   add_waic()
 
-BrmSurvQuad_Cont <- brm(Alive15 ~ Ht14 + I(Ht14^2), 
+BrmSurvQuad_Cont <- brm(Survival ~ Plant_Height14 + I(Plant_Height14^2), 
                           data = ControlGrowData,
                           family = 'bernoulli',
                           iter = 4000,
@@ -211,7 +211,7 @@ BrmSurvQuad_Cont <- brm(Alive15 ~ Ht14 + I(Ht14^2),
                                          max_treedepth = 15)) %>%
   add_waic()
 
-BrmSurv_CR <- brm(Alive15 ~ Ht14, 
+BrmSurv_CR <- brm(Survival ~ Plant_Height14, 
                      data = CrGrowData,
                      family = 'bernoulli',
                      iter = 4000,
@@ -222,7 +222,7 @@ BrmSurv_CR <- brm(Alive15 ~ Ht14,
                                     max_treedepth = 15)) %>%
   add_waic()
 
-BrmSurvQuad_CR <- brm(Alive15 ~ Ht14 + I(Ht14^2), 
+BrmSurvQuad_CR <- brm(Survival ~ Plant_Height14 + I(Plant_Height14^2), 
                           data = CrGrowData,
                           family = 'bernoulli',
                           iter = 4000,
@@ -256,15 +256,15 @@ summary(BrmSurvQuad_CR)
 # plot the survival curve
 par(mfrow = c(1,1))
 xx<-seq(0,400, 1)
-plot(Alive15 ~ Ht14, data = AllPlants1)
-lines(xx, predict(BrmSurv_Cont, data.frame(Ht14 = xx))[,1],
+plot(Survival ~ Plant_Height14, data = AllPlants1)
+lines(xx, predict(BrmSurv_Cont, data.frame(Plant_Height14 = xx))[,1],
       col = 'black')
-lines(xx, predict(BrmSurvQuad_Cont, data.frame(Ht14 = xx))[,1],
+lines(xx, predict(BrmSurvQuad_Cont, data.frame(Plant_Height14 = xx))[,1],
       col = 'black',
       lty = 2)
-lines(xx, predict(BrmSurv_CR, data.frame(Ht14 = xx))[,1],
+lines(xx, predict(BrmSurv_CR, data.frame(Plant_Height14 = xx))[,1],
       col = 'green')
-lines(xx, predict(BrmSurvQuad_CR, data.frame(Ht14 = xx))[,1],
+lines(xx, predict(BrmSurvQuad_CR, data.frame(Plant_Height14 = xx))[,1],
       col = 'green',
       lty = 2)
 
@@ -332,24 +332,24 @@ lines(xx, predict(fec.gam, data.frame(Ht = xx),
 anova(fec, fec.gam, test = 'Chi') # keep poisson
 anova(fec, feclm, test = 'Chi')
 #Pr(Reproductive) - Logistic regression ----------------------------------
-AllPlants1$Repro <- ifelse(AllPlants1$Stg15 == "RA", 1, 0)
+AllPlants1$Repro <- ifelse(AllPlants1$Stage15 == "RA", 1, 0)
 
-Regression.Data <- filter(AllPlants1, Alive15 != "NA")
+Regression.Data <- filter(AllPlants1, Survival != "NA")
 
-Repro.Glm <- glm(Repro ~ Ht15,
+Repro.Glm <- glm(Repro ~ Plant_Height15,
                  data = Regression.Data,
                  family = binomial())
 summary(Repro.Glm)
-plot(Repro ~ Ht15,
+plot(Repro ~ Plant_Height15,
      data = Regression.Data)
-xx <- seq(0, max(AllPlants1$Ht15, na.rm = TRUE), 0.1)
+xx <- seq(0, max(AllPlants1$Plant_Height15, na.rm = TRUE), 0.1)
 lines(xx, predict(Repro.Glm,
-                  data.frame(Ht15 = xx),
+                  data.frame(Plant_Height15 = xx),
                   type = 'response'),
       lty = 2, col = 'red')
 AllPlants1$Fruits15 <- exp(coefficients(fecquasi)[1] + 
-                            coefficients(fecquasi)[2] *AllPlants1$Ht15)
-AllPlants1$Fruits15[AllPlants1$Stg15 != "RA"] <- NA
+                            coefficients(fecquasi)[2] *AllPlants1$Plant_Height15)
+AllPlants1$Fruits15[AllPlants1$Stage15 != "RA"] <- NA
 summary(AllPlants1$Fruits15)
 
 
@@ -361,13 +361,13 @@ summary(AllPlants1$Fruits15)
 # we could potentially see treatment effect. However, we may be able to justify this by pointing out
 # that there was no difference in growth or survival for small plants between the two censuses,
 # so maybe we're ok
-sdls <- filter(AllPlants1, Stg14 == "SDL")
-hist(sdls$Ht14)
-Sdl.mean <- mean(sdls$Ht14, na.rm = TRUE)
-Sdl.SD <- sd(sdls$Ht14, na.rm = TRUE)
+sdls <- filter(AllPlants1, Stage14 == "SDL")
+hist(sdls$Plant_Height14)
+Sdl.mean <- mean(sdls$Plant_Height14, na.rm = TRUE)
+Sdl.SD <- sd(sdls$Plant_Height14, na.rm = TRUE)
 
-sdls$Trt <- droplevels(sdls$Trt)
-sdl.tab <- table(sdls$Trt, sdls$Alive15)
+sdls$Treatment <- droplevels(sdls$Treatment)
+sdl.tab <- table(sdls$Treatment, sdls$Survival)
 sdl.chisq <- chisq.test(sdl.tab, correct = FALSE)
 sdl.chisq
 sdl.tab
@@ -376,17 +376,17 @@ sdl.chisq$exp
 # Create figure panel for each regression
 par(mfrow = c(2, 2), 
     mar = c(5,6,4,2) + 0.2)
-xx<-seq(0, max(AllPlants1$Ht14, na.rm = TRUE) + 50, 1)
-plot(Ht15 ~ Ht14,
+xx<-seq(0, max(AllPlants1$Plant_Height14, na.rm = TRUE) + 50, 1)
+plot(Plant_Height15 ~ Plant_Height14,
      data = AllPlants1, 
      xlab = 'Size (t)', 
      ylab = 'Size (t+1)',
      cex.lab = 1.8)
 size2MeanCont <- predict(ControlGam,
-                         data.frame(Ht14 = xx), 
+                         data.frame(Plant_Height14 = xx), 
                          type = 'response')
 size2MeanComp <- predict(CRGam,
-                         data.frame(Ht14 = xx),
+                         data.frame(Plant_Height14 = xx),
                          type = 'response')
 lines(xx, size2MeanCont, col = 'black', lty = 2)
 lines(xx, size2MeanComp, col = 'green', lty = 2)
@@ -395,16 +395,16 @@ legend('bottomright',
        col = c('black', 'green'),
        lty = c(2, 2))
 
-plot(Alive15 ~ Ht14, data = AllPlants1,
+plot(Survival ~ Plant_Height14, data = AllPlants1,
      xlab = 'Size (t)',
      ylab = 'Survival (t+1)',
      cex.lab = 1.8)
 lines(xx, predict(BrmSurvQuad_Cont, 
-                  data.frame(Ht14 = xx))[,1],
+                  data.frame(Plant_Height14 = xx))[,1],
       col = 'black',
       lty = 2)
 lines(xx, predict(BrmSurvQuad_CR, 
-                  data.frame(Ht14 = xx))[,1],
+                  data.frame(Plant_Height14 = xx))[,1],
       col = 'green',
       lty = 2)
 legend('bottomright',
@@ -425,13 +425,13 @@ lines(xx, predict(fecquasi,
       col = 'red',
       lty = 2)
 
-plot(Repro ~ Ht15,data = Regression.Data,
+plot(Repro ~ Plant_Height15,data = Regression.Data,
      xlab = 'Size (t+1)',
      ylab = 'Pr( Reproductive) (t+1)',
      cex.lab = 1.8)
-xx<-seq(0, max(AllPlants1$Ht15, na.rm=TRUE), 0.1)
+xx<-seq(0, max(AllPlants1$Plant_Height15, na.rm=TRUE), 0.1)
 lines(xx, predict(Repro.Glm, 
-                  data.frame(Ht15 = xx),
+                  data.frame(Plant_Height15 = xx),
                   type = 'response'),
       lty = 2, 
       col = 'red')
@@ -460,8 +460,8 @@ f.params<-data.frame(prob.repro.int=as.numeric(coefficients(Repro.Glm)[1]),
 
 # Build F Matrix-----------------------------------
 # the size range must extend beyond the limits of the data
-min.size <- min(AllPlants1$Ht14, na.rm = TRUE) * .8
-max.size <- max(AllPlants1$Ht14, na.rm = TRUE) * 1.2
+min.size <- min(AllPlants1$Plant_Height14, na.rm = TRUE) * .8
+max.size <- max(AllPlants1$Plant_Height14, na.rm = TRUE) * 1.2
 S <- 500 # Number of cells in matrix  
 
 # matrix variables 

@@ -4,16 +4,14 @@ library(dplyr)
 library(ggplot2)
 
 ##Import data
-ks=read.csv("Thlaspi/ThlaspiD.csv",
-            stringsAsFactors = FALSE) %>%
-  filter(Treatment == 'Control' |
-           Treatment == 'Comp')
+ks <- read.csv("Thlaspi/TP_Clean.csv",
+               stringsAsFactors = FALSE)
 
 params <- ks %>%
   group_by(Treatment) %>%
-  summarise(Survival = mean(Alive, na.rm = TRUE),
+  summarise(Survival = mean(Survival, na.rm = TRUE),
             Fruit = mean(Fruit, na.rm = TRUE),
-            nAlive = sum(Alive, na.rm = TRUE)) %>%
+            nAlive = sum(Survival, na.rm = TRUE)) %>%
   as.data.frame()
 
 
@@ -93,9 +91,9 @@ for(j in 1:nreps) {
   
   params1 <- bootdata %>% 
     group_by(Treatment) %>%
-    summarise(Survival = mean(Alive, na.rm = TRUE),
+    summarise(Survival = mean(Survival, na.rm = TRUE),
               Fruit = mean(Fruit, na.rm = TRUE),
-              nAlive = sum(Alive, na.rm = TRUE)) %>%
+              nAlive = sum(Survival, na.rm = TRUE)) %>%
     as.data.frame()
   
 

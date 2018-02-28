@@ -5,22 +5,20 @@ library(dplyr)
 library(ggplot2)
 
 #import data into R studio
-ks <- read.csv("Carduus/tenative.carduus.model.file.csv") %>%
-   filter(Treatment != 'Herbivore')
-
-ks$Seeds <- ks$Inflor15 * 88.5
+ks <- read.csv("Carduus/CN_Clean.csv") 
+ks$Seeds <- ks$Flower_Number * 88.5
 
 # check for density dependence
 ddTest <- ks %>% 
   group_by(Treatment, Quad) %>% 
   summarise(N = n(),
-            Sb = mean(Sbetween, na.rm = TRUE),
+            Sb = mean(Survival, na.rm = TRUE),
             Seeds = mean(Seeds, na.rm = TRUE))
 
 params <- ks %>% 
   group_by(Treatment) %>%
   summarise(N = n(),
-            Sb = mean(Sbetween, na.rm = TRUE),
+            Sb = mean(Survival, na.rm = TRUE),
             Seeds = mean(Seeds, na.rm = TRUE))
 
 ##Control
@@ -108,7 +106,7 @@ for(j in seq_len(nreps)) {
   params1 <- bootdata %>% 
     group_by(Treatment) %>%
     summarise(N = length(Treatment),
-              Sb = mean(Sbetween, na.rm = TRUE),
+              Sb = mean(Survival, na.rm = TRUE),
               Seeds = mean(Seeds, na.rm = TRUE))
   
   ##Replaces all NaNs from summary function with observed parameter means

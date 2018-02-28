@@ -5,41 +5,59 @@ rm(list = ls())
 #import data into R studio
 library(dplyr)
 library(ggplot2)
-ks <- read.csv("Alliaria/GM4R.csv",
-               stringsAsFactors = FALSE) %>%
-  filter(Treatment != 'Herb')
 
-# Calculate number of plots per treatment
-Plot.N <- ks %>%
-  group_by(Treatment,Density,Burn) %>% 
-  summarise(plot.n = length(unique(Plot)))
+ks <- read.csv('Alliaria/GM_Clean.csv',
+                stringsAsFactors = FALSE)
+# 
+# The testing for density dependence was done separately in 
+# Clean_Demography_Data.R. However, the code used to do it is
+# also presented here.
 
-# calculate seedlings per plot to test for density dependence
-sdlPerPlot <- ks %>% 
-  group_by(Treatment, Density, Plot) %>%
-  summarise(N.SDL = n(),
-            N.RA = sum(RA, na.rm = TRUE),
-            s2 = N.RA/N.SDL,
-            Fec = mean(Seeds,na.rm = TRUE))
+# 
+# # Calculate number of plots per treatment
+# Plot.N <- ks %>%
+#   group_by(Treatment,Density,Burn) %>%
+#   summarise(plot.n = length(unique(Plot)))
+# 
+# # calculate seedlings per plot to test for density dependence
+# sdlPerPlot <- ks %>%
+#   group_by(Treatment, Density, Plot) %>%
+#   summarise(N.SDL = n(),
+#             N.RA = sum(RA, na.rm = TRUE),
+#             s2 = N.RA/N.SDL,
+#             Fec = mean(Seeds,na.rm = TRUE))
+# 
+# # visually examine relationship
+# plot(s2 ~ N.SDL, data = sdlPerPlot)
+# plot(Fec ~ N.RA, data = sdlPerPlot)
+# 
+# # # cutting off plots above 200 seedlings/plot
+# idx <- sdlPerPlot$Plot[sdlPerPlot$N.SDL < 200]
+# # 
+# 
+# Fec <- ks %>% 
+#   filter(Plot %in% idx) %>% 
+#   group_by(Treatment) %>% 
+#   summarise(Fec = mean(Seeds, na.rm = TRUE))
+# 
+# paramsD <- ks[ks$Plot %in% idx, ] %>%
+#   group_by(Treatment) %>%
+#   summarise(plot.n = length(unique(Plot)),
+#             N.SDL = n(),
+#             N.RA = sum(RA, na.rm = TRUE),
+#             s2 = N.RA/N.SDL)
 
-# visually examine relationship
-plot(s2 ~ N.SDL, data = sdlPerPlot)
-plot(Fec ~ N.RA, data = sdlPerPlot)
 
-# cutting off plots above 200 seedlings/plot
-idx <- sdlPerPlot$Plot[sdlPerPlot$N.SDL < 200]
-
-paramsD <- ks[ks$Plot %in% idx, ] %>%
-  group_by(Treatment) %>% 
+paramsD <- ks %>%
+  group_by(Treatment) %>%
   summarise(plot.n = length(unique(Plot)),
             N.SDL = n(),
             N.RA = sum(RA, na.rm = TRUE),
-            s2 = N.RA/N.SDL) 
+            s2 = N.RA/N.SDL)
 
 Fec <- ks %>% 
   group_by(Treatment) %>% 
   summarise(Fec = mean(Seeds, na.rm = TRUE))
-
 
 
 paramsD[paramsD$Treatment == 'Comp', 'Fec'] <- Fec[Fec$Treatment == 'Comp',
@@ -113,8 +131,8 @@ boot_l_cr <- rep(NA, nreps)
 C.RAs <- filter(ks, Treatment == 'Control' & RA == 1)
 CR.RAs <- filter(ks, Treatment == 'Comp' & RA == 1)
 
-CPlants <- filter(ks, Treatment == 'Control' & Plot %in% idx)
-CRPlants <- filter(ks, Treatment == 'Comp' & Plot %in% idx)
+CPlants <- filter(ks, Treatment == 'Control')
+CRPlants <- filter(ks, Treatment == 'Comp')
 
 n.c.ra <- dim(C.RAs)[1]
 n.cr.ra <- dim(CR.RAs)[1]
@@ -127,38 +145,40 @@ for(j in 1:nreps) {
   
   #x3 is a column that picks n integers between the numbers 1 and n (because we have n plants in the data set).  
   #replace=TRUE means that we are sampling with replacement (once we choose a number, we can choose it again).
-  xCP <- sample(1:n.c.plants, n.c.plants,
-                replace = T)
-  xCRP <- sample(1:n.cr.plants, n.cr.plants,
-                 replace = T)
-  xCRA <- sample(1:n.c.ra, n.c.ra,
+  xCP <- sample(1:n.c.plants, 
+                n.c.plants,
+                replace = TRUE)
+  xCRP <- sample(1:n.cr.plants, 
+                 n.cr.plants,
                  replace = TRUE)
-  xCRRA <- sample(1:n.cr.ra, n.cr.ra,
+  xCRA <- sample(1:n.c.ra, 
+                 n.c.ra,
+                 replace = TRUE)
+  xCRRA <- sample(1:n.cr.ra, 
+                  n.cr.ra,
                   replace = TRUE)
   
   bootSurvData <- rbind(CPlants[xCP, ],
                         CRPlants[xCRP, ])
   bootFecData <- rbind(C.RAs[xCRA, ],
                        CR.RAs[xCRRA, ])
-  paramsD1 <- bootSurvData %>% group_by(Treatment) %>% summarise(
-    N.SDL = n(),
-    N.RA = sum(RA, na.rm = T),
-    s2 = N.RA/N.SDL
-  )
+  
+  paramsD1 <- bootSurvData %>% 
+    group_by(Treatment) %>% 
+    summarise(N.SDL = n(),
+              N.RA = sum(RA, na.rm = TRUE),
+              s2 = N.RA/N.SDL)
   
   Fec1 <- bootFecData %>% 
     group_by(Treatment) %>% 
     summarise(Fec = mean(Seeds,
-                         na.rm = TRUE)
-  )
+                         na.rm = TRUE))
   
-  paramsD1[paramsD1$Treatment == 'Comp',
-           'Fec'] <- Fec1[Fec1$Treatment == 'Comp',
-                         'Fec']
+  paramsD1[paramsD1$Treatment == 'Comp','Fec'] <- 
+    Fec1[Fec1$Treatment == 'Comp','Fec']
   
-  paramsD1[paramsD1$Treatment == 'Control',
-           'Fec'] <- Fec1[Fec1$Treatment == 'Control',
-                         'Fec']
+  paramsD1[paramsD1$Treatment == 'Control', 'Fec'] <- 
+    Fec1[Fec1$Treatment == 'Control', 'Fec']
   
   # replace with observed means if no vital rate cannot be calculated from bootstrap
   # sample
@@ -173,15 +193,15 @@ for(j in 1:nreps) {
 
   ##Control
   s1_c <- 1
-  s2_c <- paramsD1[paramsD1$Treatment == "Control","s2"] %>% as.numeric
-  f_c <- paramsD1[paramsD1$Treatment == "Control","Fec"] %>% as.numeric
+  s2_c <- paramsD1[paramsD1$Treatment == "Control", "s2"] %>% as.numeric
+  f_c <- paramsD1[paramsD1$Treatment == "Control", "Fec"] %>% as.numeric
   boot_s2_c[j] <- s2_c
   boot_f_c[j] <- f_c
   
   ##Comp Rem
   s1_cr <- 1
-  s2_cr <- paramsD1[paramsD1$Treatment == "Comp","s2"] %>% as.numeric
-  f_cr <- paramsD1[paramsD1$Treatment == "Comp","Fec"] %>% as.numeric
+  s2_cr <- paramsD1[paramsD1$Treatment == "Comp", "s2"] %>% as.numeric
+  f_cr <- paramsD1[paramsD1$Treatment == "Comp", "Fec"] %>% as.numeric
   boot_s2_cr[j] <- s2_cr
   boot_f_cr[j] <- f_cr
   
@@ -200,8 +220,8 @@ for(j in 1:nreps) {
                                 c("SB","Rosette","RA")))
   
   A_cr <- matrix(c(1-G2, 0, f_cr*v*(1-G1),
-                G2*s1_cr, 0, f_cr*G1*s1_cr,
-                0, s2_cr, 0),
+                   G2*s1_cr, 0, f_cr*G1*s1_cr,
+                   0, s2_cr, 0),
               nrow = 3,
               byrow = TRUE, 
               dimnames = list(c("SB","Rosette","RA"),

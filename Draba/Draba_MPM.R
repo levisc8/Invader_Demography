@@ -1,21 +1,21 @@
 ##Clear environment
 rm(list = ls()) 
 ##Import data
-ks <- read.csv("Draba/Draba4R.csv")
+ks <- read.csv("Draba/DV_Clean.csv")
 
-ks$Seeds <- ks$fruits * 17.2 
+ks$Seeds <- ks$Fruits * 17.2 
 
 #subset plants into treatments
 
-c <- subset(ks, treatment == "Control")
-cr <- subset(ks, treatment == "Comp")
+c <- subset(ks, Treatment == "Control")
+cr <- subset(ks, Treatment == "Comp")
 
 
 library(dplyr)
 library(ggplot2)
 params <-  ks %>%
-  group_by(treatment) %>%
-  summarise(Survival = mean(Alive, na.rm = TRUE),
+  group_by(Treatment) %>%
+  summarise(Survival = mean(Survival, na.rm = TRUE),
             Seeds = mean(Seeds, na.rm = TRUE))
 
 params <- as.data.frame(params)
@@ -103,8 +103,8 @@ for(i in 1:nreps) {
   bootdata <- rbind(bootc,bootcr)
   
   params1 <- bootdata %>%
-    group_by(treatment) %>%
-    summarise(Survival = mean(Alive, na.rm = TRUE),
+    group_by(Treatment) %>%
+    summarise(Survival = mean(Survival, na.rm = TRUE),
               Seeds = mean(Seeds, na.rm = TRUE))
   
   params1 <- as.data.frame(params1)
