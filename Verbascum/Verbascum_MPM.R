@@ -32,8 +32,14 @@ f_cr <- params[params$Treatment == "Comp","Seeds"]
 #v=seed viability
 #e=proportion of seeds that don't germinate immediately and enter seedbank
 #Ssb=probability that a seed that enters the seed bank will survive to t+1
+
+GermData <- read.csv('Germination/Clean_Germ.csv',
+                 stringsAsFactors = FALSE) %>%
+  filter(Species == 'Verbascum')
+
+
 Gsb <- 0.0025
-v <- 0.51111
+v <- mean(GermData$Surface_Germ_Prop)
 Ssb <- 0.91
 Gi <- 0.0083
 e <- 1 - Gi
@@ -144,7 +150,7 @@ for(j in seq_len(nreps)) {
   
   Gi <- 0.0083
   Gsb <- 0.0025
-  v <- 0.51111
+  v <- mean(GermData$Surface_Germ_Prop)
   Ssb <- 0.91 # Lincoln nebraska site Bernside 1996
   e <- 1-Gi
   

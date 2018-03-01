@@ -75,7 +75,8 @@ sdls <- filter(AllPlants, Stage14 == "SDL")
 Sdl.mean <- mean(sdls$Plant_Height14, na.rm = TRUE)
 Sdl.SD <- sd(sdls$Plant_Height14, na.rm = TRUE)
 
-# Establishment Pr()
+# Establishment Pr. Hardcoded here, but calculated from data 
+# in Ligustrum_IPM.R. See that file or data paper for details
 germ.prob <- 0.5067 
 
 # Using this as baseline estimate, but will substitute

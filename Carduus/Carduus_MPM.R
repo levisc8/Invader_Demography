@@ -10,7 +10,7 @@ ks$Seeds <- ks$Flower_Number * 88.5
 
 # check for density dependence
 ddTest <- ks %>% 
-  group_by(Treatment, Quad) %>% 
+  group_by(Treatment, Plot) %>% 
   summarise(N = n(),
             Sb = mean(Survival, na.rm = TRUE),
             Seeds = mean(Seeds, na.rm = TRUE))

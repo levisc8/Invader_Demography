@@ -425,7 +425,11 @@ legend(x = 30, y = 0.2, c('Treatment','Control', 'Competitor removal',
 # at the most sensible value since we don't have much by way of recruitment info in 
 # 2015
 
-germ.prob <- 0.5067 
+GermData <- read.csv('Germination/Clean_Germ.csv',
+                     stringsAsFactors = FALSE) %>%
+  filter(Species == 'Ligustrum')
+
+germ.prob <- mean(c(GermData$Buried_Germ_Prop, GermData$Surface_Germ_Prop))
 
 # Using this as baseline estimate, but will substitute
 # from 0.01 - 1 in bootstrapping loop to estimate sensitivity

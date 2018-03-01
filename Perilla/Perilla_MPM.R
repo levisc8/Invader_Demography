@@ -25,8 +25,11 @@ f_cr <- params[params$Treatment == "Comp", "Seeds"]
 s_c <- params[params$Treatment == "Control", "Survival"]
 f_c <- params[params$Treatment == "Control", "Seeds"]
 
+GermData <- read.csv('Germination/Clean_Germ.csv', 
+                     stringsAsFactors = FALSE) %>%
+  filter(Species == 'Perilla')
 
-G0 <- mean(c(0.22, 0.489))
+G0 <- mean(c(0.22, mean(GermData$Surface_Germ_Prop)))
 
 ##This species is being modeled as an annual with no seed bank
 ##so there isn't really a matrix for it. 
@@ -126,7 +129,7 @@ for(j in seq_len(nreps)) {
   boot_s_c[j] <- s_c
   boot_f_c[j] <- f_c
 
-  G0 <- mean(c(0.22, 0.489))
+  G0 <- mean(c(0.22, mean(GermData$Surface_Germ_Prop)))
   
   ##This species is being modeled as an annual with no seed bank
   ##so there isn't really a matrix for it. 

@@ -24,7 +24,13 @@ f_c <- params[params$Treatment=="Control", "Seeds"]
 s_cr <- params[params$Treatment == "Comp", "Survival"]
 f_cr <- params[params$Treatment == "Comp", "Seeds"]
 
-V <- 0.6622*0.92 #seed viability
+GermData <- read.csv('Germination/Clean_Germ.csv',
+                     stringsAsFactors = FALSE) %>%
+  filter(Species == 'Kummerowia')
+
+
+
+V <- mean(GermData$Surface_Germ_Prop) * 0.92 #seed viability
 G0 <- 0.92 #proportion of viable seeds that germinate immediately (mean of above and buried seeds, 2014/15 germ exp)
 G1 <- 0.04 #proportion of viable seeds that germinate after one year in Seed bank
 G2 <- 0.04 #proportion of viable seeds that germinate after two years in Seed bank
@@ -129,7 +135,7 @@ for(j in 1:nreps)
   boot_s_cr[j] <- s_cr
   boot_f_cr[j] <- f_cr
   
-  V <- 0.6622*0.92 #seed viability
+  V <- mean(GermData$Surface_Germ_Prop) * 0.92 #seed viability
   G0 <- 0.92 #proportion of viable seeds that germinate immediately (mean of above and buried seeds, 2014/15 germ exp)
   G1 <- 0.04 #proportion of viable seeds that germinate after one year in Seed bank
   G2 <- 0.04 #proportion of viable seeds that germinate after two years in Seed bank
