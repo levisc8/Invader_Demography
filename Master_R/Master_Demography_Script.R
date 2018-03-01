@@ -7,6 +7,34 @@ library(dplyr)
 
 data(tyson)
 
+# Function to restore a relatively vanilla environment each time a 
+# model script is sourced. 
+.detachAllPackages <- function(keep = NULL) {
+  
+  KeepPackages <- c("package:stats",
+                    "package:graphics",
+                    "package:grDevices",
+                    "package:utils",
+                    "package:datasets",
+                    "package:methods",
+                    "package:base", 
+                    keep)
+  
+  AllPackages <- search()[ifelse(unlist(gregexpr("package:",
+                                                 search())) == 1 ,
+                                 TRUE,
+                                 FALSE)]
+  
+  PackageList <- setdiff(AllPackages, KeepPackages)
+  
+  if(length(PackageList) > 0) {
+    lapply(PackageList,  
+           detach, 
+           character.only = TRUE)
+  }
+  
+}
+
 # Update CR Biomass with fully reproducible script using raw, plot-level data.
 # last iteration done by hand in excel was a mess and this will be much better
 source('CR_Biomass/Biomass_Cleaning.R')
@@ -45,6 +73,10 @@ if(min(CompN_lambda_CI) > max(ContN_lambda_CI) |
 .DemoTable$ESCR[1] <- AA_LRR
 .DemoTable$ESCR_2[1] <- AA_LRR2
 # Alliaria-----------------
+.detachAllPackages(keep = c('package:dplyr',  
+                           'package:FunPhylo',
+                           'package:ggplot2'))
+
 source('Alliaria/Alliaria_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -58,6 +90,10 @@ if(results$lower[6] > results$upper[5] |
 .DemoTable$ESCR_2[2] <- GM_LRR2
 
 # Carduus------------------
+.detachAllPackages(keep = c('package:dplyr', 
+                           'package:FunPhylo', 
+                           'package:ggplot2'))
+
 source('Carduus/Carduus_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -71,6 +107,10 @@ if(results$lower[6] > results$upper[5] |
 .DemoTable$ESCR_2[3] <- CN_LRR2
 
 # Draba-------------------
+.detachAllPackages(keep = c('package:dplyr',  
+                           'package:FunPhylo', 
+                           'package:ggplot2'))
+
 source('Draba/Draba_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -103,6 +143,10 @@ if(results$LoCI[2] > results$UpCI[1] |
 .DemoTable$ESCR_2[5] <- EA_LRR2
 
 # Kummerowia ------------------
+.detachAllPackages(keep = c('package:dplyr',    
+                           'package:FunPhylo', 
+                           'package:ggplot2'))
+
 source('Kummerowia/Kummerowia_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -116,6 +160,10 @@ if(results$lower[6] > results$upper[5] |
 .DemoTable$ESCR_2[6] <- KS_LRR2
 
 # Lepidium---------------------
+.detachAllPackages(keep = c('package:dplyr',   
+                           'package:FunPhylo', 
+                           'package:ggplot2'))
+
 source('Lepidium/Lepidium_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -129,7 +177,11 @@ if(results$lower[6] > results$upper[5] |
 .DemoTable$ESCR_2[7] <- LepCam_LRR2
 
 # Lespedeza------------------
-source('Lespedeza/MatModel/Lespedeza_MPM.R')
+.detachAllPackages(keep = c('package:dplyr',  
+                           'package:FunPhylo', 
+                           'package:ggplot2'))
+
+source('Lespedeza/Lespedeza_MPM.R')
 if(results$LoCI[38] > results$UpCI[37] |
    results$UpCI[38] < results$LoCI[37]) {
   LesCun_LRR <- LesCun_LRR2 <- log(results$values[38] + 0.5) - log(results$values[37] + 0.5)
@@ -175,6 +227,10 @@ if(results$LoCI[2] > results$UpCI[1] |
 .DemoTable$ESCR_2[10] <- LM_LRR2
 
 # Perilla-------------------------
+.detachAllPackages(keep = c('package:dplyr', 
+                           'package:FunPhylo',
+                           'package:ggplot2'))
+
 source('Perilla/Perilla_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -188,6 +244,10 @@ if(results$lower[6] > results$upper[5] |
 .DemoTable$ESCR_2[11] <- PF_LRR2
 
 # Potentilla------------------------
+.detachAllPackages(keep = c('package:dplyr',
+                           'package:FunPhylo',
+                           'package:ggplot2'))
+
 source('Potentilla/Potentilla_MPM.R')
 if(results$lower[16] > results$upper[15] |
    results$upper[16] < results$lower[15]) {
@@ -201,6 +261,10 @@ if(results$lower[16] > results$upper[15] |
 .DemoTable$ESCR_2[12] <- PR_LRR2
 
 # Thlaspi ---------------------
+.detachAllPackages(keep = c('package:dplyr', 
+                           'package:FunPhylo',
+                           'package:ggplot2'))
+
 source('Thlaspi/Thlaspi_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -214,6 +278,10 @@ if(results$lower[6] > results$upper[5] |
 .DemoTable$ESCR_2[13] <- TP_LRR2
 
 # Verbascum-------------------
+.detachAllPackages(keep = c('package:dplyr',
+                           'package:FunPhylo',  
+                           'package:ggplot2'))
+
 source('Verbascum/Verbascum_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
@@ -226,7 +294,12 @@ if(results$lower[6] > results$upper[5] |
 .DemoTable$ESCR[14] <- VT_LRR
 .DemoTable$ESCR_2[14] <- VT_LRR2
 
-.DemoTable <- setNames(.DemoTable, c('Species', 'ESCR2', 'ESCR', 'CRBM', 'Habitat'))
+.DemoTable <- setNames(.DemoTable, c('Species', 
+                                     'ESCR2',
+                                     'ESCR',
+                                     'CRBM',
+                                     'Habitat'))
+
 # Move the hidden object into the tyson data object and save it!
 tyson$demo.data <- .DemoTable
 devtools::use_data(tyson,
