@@ -33,8 +33,8 @@ for(i in 1:dim(Biomass)[1]){
                           paste0(Biomass$Tag[i],' - T'))
 }
 
-save(Biomass, file = 'CR_Biomass/Cleaned/All_Values.rda')
-write.csv(Biomass, 'CR_Biomass/Cleaned/All_Values.csv',
+save(Biomass, file = 'CR_Biomass/Cleaned/TRC_Comp_Removal_Biomass.rda')
+write.csv(Biomass, 'CR_Biomass/Cleaned/TRC_Comp_Removal_Biomass.csv',
           row.names = FALSE)
 
 # Create a table of plot sizes so we can standardize total biomass removed
@@ -146,7 +146,7 @@ Means <- Means %>%
   arrange(Species)
 
 # Save outputs
-save(Means, file = 'CR_Biomass/Cleaned/Biomass_Means.rda')
-write.csv(Means, 'CR_Biomass/Cleaned/Biomass_means.csv',
+save(Means, file = 'CR_Biomass/Cleaned/TRC_Biomass_Means.rda')
+write.csv(Means, 'CR_Biomass/Cleaned/TRC_Biomass_means.csv',
           row.names = FALSE)
 
