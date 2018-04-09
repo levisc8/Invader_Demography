@@ -147,6 +147,6 @@ Means <- Means %>%
 
 # Save outputs
 save(Means, file = 'CR_Biomass/Cleaned/TRC_Biomass_Means.rda')
-write.csv(Means, 'CR_Biomass/Cleaned/TRC_Biomass_means.csv',
+write.csv(Means, 'CR_Biomass/Cleaned/TRC_Biomass_Means.csv',
           row.names = FALSE)
 

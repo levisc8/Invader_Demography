@@ -152,8 +152,8 @@ ggplot(data = LigObtVRData,
 
 ggsave(filename = 'Ligustrum_Vital_Rate_Coefficients.png',
        path = 'Ligustrum/IPM/Figures',
-       height = 8,
-       width = 10,
+       height = 9,
+       width = 11,
        unit = 'in')
 
 

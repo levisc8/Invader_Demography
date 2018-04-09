@@ -78,11 +78,11 @@ for(i in 1:dim(PopData)[1]) {
 # Select relevant columns and then filter out the seedling counts
 # by quadrat.
 MatData <- PopData %>%
-  select(Plant_Number, Plot, Quadrat, 
+  select(Plant_Number, Block, Plot, 
          Treatment, StageMatMod, StageMatModNext, 
          Survival, Reproductive, Seeds) %>%
   filter(!is.na(Plant_Number)) %>%
-  setNames(c('Plant_Number', 'Plot', 'Quad', 'Trt',
+  setNames(c('Plant_Number', 'Block', 'Quad', 'Trt',
              'Stage','StageNext',
              'Survival', 'Reproductive', 'Seeds'))
 MatData$Seeds[MatData$Reproductive == 0] <- NA

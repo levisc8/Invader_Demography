@@ -1,21 +1,15 @@
-#####################################################################################
 ### Euonymus Exploration and IPM ######################################
-#####################################################################################
-# notes from 1.12-13.17
-# Assumptions checked against Merow et al 2014 Advancing population 
-# ecology with integral projection models: a practical guide, Methods in 
-# Ecol and Evo
 
-# 1. Explore data behavior.
+# Notes
+
+# 1. Fit growth models
 #   a. I think we should remove the two adults that grew and shrank ~200cm. I checked the raw
 #      data and that is not an entry error, so I think it is a field recording error. I am not
 #      sure how to correct this otherwise, and it's very weird 
-# 2. Fit growth models
-#   a. Spline fit, see Rees et al 2014
-# 3. Fit survival models
-#   a.Again, combine for survival. I think the weirdness with Bunker HR is an aberration
-#     and not representative of the actual treatment effect
-# 4. fit fecundity models
+#   b. Spline fit
+# 2. Fit survival models
+#   a. Using brms logistic regressions w/ quadratic term
+# 3. fit fecundity models
 #   a. Combined for all sites
 # 
 # rm(list = ls()) 

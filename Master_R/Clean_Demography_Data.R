@@ -113,9 +113,9 @@ KS15Raw <- read.csv('Uncleaned_Data/Kummerowia/kstra2015.2 AG.csv') %>%
   filter(Treatment != 'Herb')
 
 KS15Clean <- KS15Raw %>%
-  select(Treatment, Plot, Plant, Leaves, Ht, Alive, Seeds, Notes) %>%
+  select(Treatment, Plot, Plant, Alive, Notes) %>%
   setNames(c('Treatment', 'Plot', 'Plant_Number', 
-             'Leaf_Number', 'Final_Height', 'Survival', 'Seeds', 'Notes')) %T>%
+             'Survival','Notes')) %T>%
   write.csv('Kummerowia/KS_15_Clean.csv',
             row.names = FALSE)
 
@@ -158,7 +158,7 @@ LCClean <- LCRaw %>%
            Stage2012, Size2012, Stage2013,
            Size2013, Survival2013, Resprout2013,
            Fec2013, Seeds2013)) %>%
-  setNames(c('Treatment', 'Plot', 'Quadrat', 'Plant_Number',
+  setNames(c('Treatment', 'Block', 'Plot', 'Plant_Number',
              'Stage12', 'Size12', 'Stage13',
              'Size13', 'Survival', 'Resprout',
              'Reproductive', 'Seeds')) %T>%

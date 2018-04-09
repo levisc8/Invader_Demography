@@ -74,8 +74,8 @@ if(min(CompN_lambda_CI) > max(ContN_lambda_CI) |
 .DemoTable$ESCR_2[1] <- AA_LRR2
 # Alliaria-----------------
 .detachAllPackages(keep = c('package:dplyr',  
-                           'package:FunPhylo',
-                           'package:ggplot2'))
+                            'package:FunPhylo',
+                            'package:ggplot2'))
 
 source('Alliaria/Alliaria_MPM.R')
 if(results$lower[6] > results$upper[5] |
@@ -91,8 +91,8 @@ if(results$lower[6] > results$upper[5] |
 
 # Carduus------------------
 .detachAllPackages(keep = c('package:dplyr', 
-                           'package:FunPhylo', 
-                           'package:ggplot2'))
+                            'package:FunPhylo', 
+                            'package:ggplot2'))
 
 source('Carduus/Carduus_MPM.R')
 if(results$lower[6] > results$upper[5] |
@@ -108,8 +108,8 @@ if(results$lower[6] > results$upper[5] |
 
 # Draba-------------------
 .detachAllPackages(keep = c('package:dplyr',  
-                           'package:FunPhylo', 
-                           'package:ggplot2'))
+                            'package:FunPhylo', 
+                            'package:ggplot2'))
 
 source('Draba/Draba_MPM.R')
 if(results$lower[6] > results$upper[5] |
@@ -144,8 +144,8 @@ if(results$LoCI[2] > results$UpCI[1] |
 
 # Kummerowia ------------------
 .detachAllPackages(keep = c('package:dplyr',    
-                           'package:FunPhylo', 
-                           'package:ggplot2'))
+                            'package:FunPhylo', 
+                            'package:ggplot2'))
 
 source('Kummerowia/Kummerowia_MPM.R')
 if(results$lower[6] > results$upper[5] |
@@ -161,8 +161,8 @@ if(results$lower[6] > results$upper[5] |
 
 # Lepidium---------------------
 .detachAllPackages(keep = c('package:dplyr',   
-                           'package:FunPhylo', 
-                           'package:ggplot2'))
+                            'package:FunPhylo', 
+                            'package:ggplot2'))
 
 source('Lepidium/Lepidium_MPM.R')
 if(results$lower[6] > results$upper[5] |
@@ -178,8 +178,8 @@ if(results$lower[6] > results$upper[5] |
 
 # Lespedeza------------------
 .detachAllPackages(keep = c('package:dplyr',  
-                           'package:FunPhylo', 
-                           'package:ggplot2'))
+                            'package:FunPhylo', 
+                            'package:ggplot2'))
 
 source('Lespedeza/Lespedeza_MPM.R')
 if(results$LoCI[38] > results$UpCI[37] |
@@ -228,8 +228,8 @@ if(results$LoCI[2] > results$UpCI[1] |
 
 # Perilla-------------------------
 .detachAllPackages(keep = c('package:dplyr', 
-                           'package:FunPhylo',
-                           'package:ggplot2'))
+                            'package:FunPhylo',
+                            'package:ggplot2'))
 
 source('Perilla/Perilla_MPM.R')
 if(results$lower[6] > results$upper[5] |
@@ -245,8 +245,8 @@ if(results$lower[6] > results$upper[5] |
 
 # Potentilla------------------------
 .detachAllPackages(keep = c('package:dplyr',
-                           'package:FunPhylo',
-                           'package:ggplot2'))
+                            'package:FunPhylo',
+                            'package:ggplot2'))
 
 source('Potentilla/Potentilla_MPM.R')
 if(results$lower[16] > results$upper[15] |
@@ -262,8 +262,8 @@ if(results$lower[16] > results$upper[15] |
 
 # Thlaspi ---------------------
 .detachAllPackages(keep = c('package:dplyr', 
-                           'package:FunPhylo',
-                           'package:ggplot2'))
+                            'package:FunPhylo',
+                            'package:ggplot2'))
 
 source('Thlaspi/Thlaspi_MPM.R')
 if(results$lower[6] > results$upper[5] |
@@ -279,8 +279,8 @@ if(results$lower[6] > results$upper[5] |
 
 # Verbascum-------------------
 .detachAllPackages(keep = c('package:dplyr',
-                           'package:FunPhylo',  
-                           'package:ggplot2'))
+                            'package:FunPhylo',  
+                            'package:ggplot2'))
 
 source('Verbascum/Verbascum_MPM.R')
 if(results$lower[6] > results$upper[5] |
