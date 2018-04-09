@@ -1,18 +1,20 @@
 ##Clear environment
 rm(list = ls()) 
+
+library(dplyr)
+library(ggplot2)
+
 ##Import data
-ks <- read.csv("Draba/DV_Clean.csv")
+ks <- read.csv("Draba/DV_Clean.csv",
+               stringsAsFactors = FALSE)
 
 ks$Seeds <- ks$Fruits * 17.2 
 
 #subset plants into treatments
 
-c <- subset(ks, Treatment == "Control")
-cr <- subset(ks, Treatment == "Comp")
+cont <- filter(ks, Treatment == "Control")
+cr <- filter(ks, Treatment == "Comp")
 
-
-library(dplyr)
-library(ggplot2)
 params <-  ks %>%
   group_by(Treatment) %>%
   summarise(Survival = mean(Survival, na.rm = TRUE),
@@ -88,17 +90,17 @@ boot_f_cr <- rep(NA, nreps)
 boot_l_c <- rep(NA, nreps)
 boot_l_cr <- rep(NA, nreps)
 
-nc <- length(c[ ,1])
+nc <- length(cont[ ,1])
 ncr <- length(cr[ ,1])
 
 
 #start the loop
-for(i in 1:nreps) {
+for(i in seq_len(nreps)) {
   
   x1 <- sample(1:nc, nc, replace = TRUE)
   x2 <- sample(1:ncr, ncr, replace = TRUE)
  
-  bootc <- c[x1, ]
+  bootc <- cont[x1, ]
   bootcr <- cr[x2, ]
   bootdata <- rbind(bootc,bootcr)
   
@@ -130,10 +132,7 @@ for(i in 1:nreps) {
  
   boot_f_c[i] <- f_c
   boot_f_cr[i] <- f_cr
-  
-  v <- 0.613 #seed viability
-  G0 <- 0.057 #proportion of viable seeds that germinate immediately
-  
+
   A_cont <- matrix(c(0, v3 * (1-G), 0, 0, 0,
                      0, 0, v2 * (1-G), 0, 0,
                      0, 0, 0, v1 * (1-G), 0,
