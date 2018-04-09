@@ -43,10 +43,10 @@ library(mgcv)
 source('Ligustrum/IPM/R/IPM_Functions_Ligustrum.r') 
 
 # load the data and do some basic restructuring
-RAs<-read.csv("Ligustrum/IPM/Data/LO_RA_Clean.csv")
+RAs <- read.csv("Ligustrum/IPM/Data/LO_RA_Clean.csv")
 # str(RAs)
-AllPlants<-read.csv("Ligustrum/IPM/Data/LO_Clean.csv",
-                    stringsAsFactors = FALSE) 
+AllPlants <- read.csv("Ligustrum/IPM/Data/LO_Clean.csv",
+                      stringsAsFactors = FALSE) 
 
 AllPlants$Plant_Number <- as.numeric(AllPlants$Plant_Number)
 # str(AllPlants)
