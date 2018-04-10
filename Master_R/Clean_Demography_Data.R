@@ -257,8 +257,8 @@ PRCleaned <- PRRaw %>%
          Fruits15, Alive15, Notes15) %>%
   setNames(c('Treatment', 'Plot', 'Plant_Number',
              'Leaf_Number14', 'Longest_Leaf14', 'Stage14',
-             'Fruit14', 'Notes14', 'Stage15', 'Leaf_Number15','
-             Longest_Leaf15', 'Fruit15', 'Survival', 'Notes15')) %T>%
+             'Fruit14', 'Notes14', 'Stage15', 'Leaf_Number15',
+             'Longest_Leaf15', 'Fruit15', 'Survival', 'Notes15')) %T>%
   write.csv('Potentilla/PR_Clean.csv',
             row.names = FALSE)
 
