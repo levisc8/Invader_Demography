@@ -790,7 +790,7 @@ ggplot(data = results, aes(x = Trt)) +
   scale_x_discrete('')
 
 ggsave(filename = 'Lespedeza_VR_Panel.png',
-       path = 'Lespedeza/MatModel',
+       path = 'Lespedeza',
        height = 6,
        width = 9,
        unit = 'in')

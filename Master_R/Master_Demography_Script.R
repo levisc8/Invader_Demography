@@ -300,6 +300,8 @@ if(results$lower[6] > results$upper[5] |
                                      'CRBM',
                                      'Habitat'))
 
+save(.DemoTable, file = 'Master_R/Cleaned_Demographic_Model_Output.rda')
+
 # Move the hidden object into the tyson data object and save it!
 tyson$demo.data <- .DemoTable
 devtools::use_data(tyson,
