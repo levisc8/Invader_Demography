@@ -190,6 +190,39 @@ upper <- c(boot_s_c[975], boot_s_cr[975],
 
 results <- tibble(values, lower, upper) 
 
+
+results$text <- NA
+results$y <- NA
+
+if(results$upper[1] < results$lower[2] |
+   results$upper[2] < results$lower[1]) {
+  results$text[1:2] <- '***'
+} else {
+  results$text[1:2] <- 'NS'
+}
+
+results$y[1:2] <- .99 * max(results$upper[1:2])
+
+if(results$upper[3] < results$lower[4] |
+   results$upper[4] < results$lower[3]) {
+  results$text[3:4] <- '***'
+} else {
+  results$text[3:4] <- 'NS'
+}
+
+results$y[3:4] <- .99 * max(results$upper[3:4])
+
+
+if(results$upper[5] < results$lower[6] |
+   results$upper[6] < results$lower[5]) {
+  results$text[5:6] <- '***'
+} else {
+  results$text[5:6] <- 'NS'
+}
+results$y[5:6] <- .99 * max(results$upper[5:6])
+
+
+
 results$Trt <- c("Control","CR")
 results$Var <- factor(c('paste(italic(s[j]))', 
                         'paste(italic(s[j]))',
@@ -232,7 +265,10 @@ ggplot(data = results,
   scale_y_continuous('') + 
   scale_color_manual('Treatment',
                      breaks = c('Control', 'CR'),
-                     values = c('black', 'green'))
+                     values = c('black', 'green')) + 
+  geom_text(x = 1.5,
+            y = results$y,
+            label = results$text)
 
 
 ggsave(filename = 'Carduus_VR_Panel.png',
