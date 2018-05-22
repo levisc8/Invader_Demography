@@ -13,6 +13,20 @@ GMRaw <- read.csv("Uncleaned_Data/Alliaria/GM4R.csv",
                   stringsAsFactors = FALSE) %>%
   filter(Treatment != 'Herb')
 
+GMRaw$Seeds <- NA
+
+GMFec <- read.csv('Uncleaned_Data/Alliaria/GM_Fec_Data.csv',
+                  stringsAsFactors = FALSE) %>%
+  select(-Plant.Number) %>%
+  setNames(c('Plant_Number', 'Stem_Height', 'Seeds'))
+
+FecModel <- glm(Seeds ~ Stem_Height, 
+                data = GMFec,
+                family = poisson())
+
+GMRaw$Seeds <- exp(coef(FecModel)[1] + coef(FecModel)[2] * GMRaw$Stem.Ht)
+
+
 # Calculate number of plots per treatment
 Plot.N <- GMRaw %>%
   group_by(Treatment,Density,Burn) %>% 
@@ -35,8 +49,13 @@ GMClean <- GMRaw %>%
   write.csv('Alliaria/GM_Clean.csv',
             row.names = FALSE) 
 
+GMFec %>%
+  write.csv('Alliaria/GM_Fec_Clean.csv',
+            row.names = FALSE)
+
+
 save(GMClean, file = 'Alliaria/GM_Clean.RData')
-  
+save(GMFec, file = 'Alliaria/GM_Fec_Clean.RData')  
 
 # Now, Carduus
 rm(list = ls())
