@@ -25,7 +25,8 @@ N_Plots <- lapply(RawFiles, function(x) {
   x %>%
     filter(Treatment == 'Control' |
              Treatment == 'Cont' |
-             Treatment == 'ContN') %>%
+             Treatment == 'ContN' |
+             Treatment == 'Cont') %>%
     summarise(N = length(unique(Plot))) %>%
     unlist()
   
