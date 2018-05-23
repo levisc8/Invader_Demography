@@ -86,7 +86,8 @@ save(CNClean, file = 'Carduus/CN_Clean.RData')
 rm(list = ls())
 DVRaw <- read.csv('Uncleaned_Data/Draba/Draba4R.csv',
                   stringsAsFactors = FALSE) %>%
-  filter(treatment != 'Herb')
+  filter(treatment == 'Control' |
+           treatment == 'Comp')
 
 DVClean <- DVRaw %>%
   setNames(c('Treatment', 'Plot', 'Plant', 'Survival', 'Fruits')) %T>%
@@ -295,7 +296,8 @@ save(PR_SDLClean, file = 'Potentilla/PR_SDL_Clean.RData')
 rm(list = ls())
 TPRaw <- read.csv('Uncleaned_Data/Thlaspi/ThlaspiD.csv',
                   stringsAsFactors = FALSE) %>%
-  filter(Treatment != 'Herb')
+  filter(Treatment == 'Control' | 
+           Treatment == 'Comp')
 
 TPClean <- TPRaw %>%
   select(Treatment:Fruit) %>%
