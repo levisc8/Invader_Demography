@@ -25,8 +25,4 @@ GermCleaned <- GermRaw %>%
   
 save(GermCleaned, file = 'Germination/Clean_Germ.RData')
 
-## Comments for usage during testing.
-# Vertha viability was calculated as 0.511 in our experiment. pass!
-# Kummerowia - pass!
-# Perilla - pass!
 
