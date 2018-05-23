@@ -25,10 +25,10 @@ $$
 C(y,x) = c_{d}(y)h_{n}(x)
 $$
 $$
-B(t+1) = v_{s}s_{b}B(T) + vg_{b{}} \int_L^U[f_{p}(x)f_{s}(x)]n(x,t) \mathrm{d}x 
+B(t+1) = v_{s}s_{b}B(T) + vg_{b} \int_L^U[f_{p}(x)f_{s}(x)]n(x,t) \mathrm{d}x 
 $$
 
-Control Treatment  Parameters
+**Control Treatment  Parameters**
 
 $$
 Logit(s(x)) = 0.944 + 0.063x 
@@ -36,6 +36,12 @@ $$
 $$
 g(y,x) = 1.05x  
 $$
+
+$$
+sd(g(y,x)) = 13.46257
+$$
+
+
 $$ 
 log(f_s(x)) = 6.86 + 0.019y 
 $$
@@ -52,6 +58,9 @@ $$
 c_d(y) = Normal(\mu = 2.97, \sigma = 1.63)
 $$
 
+$$L = 0.45$$
+$$U = 231$$
+
 
 **Competitor Removal Treatment Parameters**
 
@@ -61,6 +70,11 @@ $$
 $$
 g(y,x) = 1.04x 
 $$
+
+$$
+sd(g(y,x)) = 9.772983
+$$
+
 $$
 log(f_s(x)) = 6.86 + 0.019y 
 $$
@@ -77,21 +91,34 @@ $$
 c_d(y) = Normal(\mu = 2.96, \sigma = 1.65) 
 $$
 
+$$L = 0.27$$
+$$U = 231$$
+**Constants**
+$$v = 0.025$$
+$$g = 0.14583$$
+**Discretization Rules**
+
+Quadrature routine: midpoint rule
+
+Number of Meshpoints: 50
 
 ### Euonymus alatus
 
-_Eqs 1-3 adapted from [Kuss et al. 2008 ](https://pdfs.semanticscholar.org/59dc/056c6c597db340ab352bb7df38269793b88f.pdf)_
+_Eqs 1-4 adapted from [Kuss et al. 2008 ](https://pdfs.semanticscholar.org/59dc/056c6c597db340ab352bb7df38269793b88f.pdf)_
 
 $$
-n(y, t + 1) = \int_L^U [P(y,x)]n(x,t) \mathrm{d}x + \int_L^U [F(y,x)]n(x, t-1) \mathrm{d}x 
+n(y, t + 1) = \int_L^U [P(y,x)]n(x,t) \mathrm{d}x + \int_L^U [F(y,x)]n(x, t-1) \mathrm{d}x + \int_L^U [F(y,x)]n(x, t-2) \mathrm{d}x 
 $$ 
 $$
 P(y,x) = s(x)g(y,x) 
 $$
 $$
-F(y,x) = E_{p_{i}}f_{p}(x,t-1)f_{s}(x, t-1)f_{d}(y,t+1)
+F(y,x)n(x, t-1) = E_{p_{1}}f_{p}(x,t-1)f_{s}(x, t-1)f_{d}(y,t+1)n(x, t-1)
 $$
-I think I need to add a $ +E_{p_2}f_p(x,t-2)...$ here. Thoughts?
+$$
+F(y,x)n(x, t-2) = E_{p_{2}}f_{p}(x,t-2)f_{s}(x, t-2)f_{d}(y,t+1)n(x, t-2)
+$$
+
 
 
 
@@ -101,6 +128,9 @@ Logit(s(x)) = -1.3459 + 0.31055x + -0.00013x^2
 $$
 $$
 g(y,x) = 82.295 + f_g(x) \text{ where } f_g(x) \text{ is a standard smooth function of }x
+$$
+$$
+sd(g(y,x)) = 37.34628
 $$
 $$
 Log(f_s(x)) = 1.178 + 0.0157y 
@@ -120,6 +150,9 @@ $$
 $$
 g(y,x) = 82.551 + f_g(x) \text{ where } f_g(x) \text{ is a standard smooth function of }x
 $$
+$$
+sd(g(y,x)) = 37.61039
+$$
 $$ 
 Log(f_s(x)) = 1.178 + 0.0157y 
 $$
@@ -130,7 +163,19 @@ $$
 f_d(y) = Normal(\mu = 7.545, \sigma = 2.7695)
 $$
 
+**Constants**
 
+$$E_{p_{1}} = 0.1588 \text{       (Brand et al. 2012)}$$
+$$E_{p_{2}} = 0.00224 \text{       (Brand et al. 2012)}$$
+
+$$L = 2.96$$
+$$U = 405.6$$
+
+**Discretization Rules** 
+
+Quadrature Routine: midpoint rule
+
+Number of Meshpoints: 500
 
 ### Ligustrum obtusifolium
 
@@ -153,6 +198,10 @@ $$
 $$ 
 g(y,x) = 5.781 + 0.988x
 $$
+
+$$
+sd(g(y,x)) = 20.55699
+$$
 $$ 
 Logit(f_p(x)) = -11.489 + 0.08368x
 $$
@@ -163,12 +212,15 @@ $$
 f_d(y) = Normal(\mu = 5.6655, \sigma = 2.0734)
 $$
 
-Competitor Remvoal Treatment Parameters
+**Competitor Remvoal Treatment Parameters**
 $$ 
 Logit(s(x)) = 0.0209 + + 0.0831x + -0.00012999x^2
 $$
 $$ 
 g(y,x) = 7.229 + 0.988x
+$$
+$$
+sd(g(y,x)) = 21.72262
 $$
 $$ 
 Logit(f_p(x)) = -11.489 + 0.08368x
@@ -179,6 +231,21 @@ $$
 $$ 
 f_d(y) = Normal(\mu = 5.6655, \sigma = 2.0734)
 $$
+
+
+**Constants**
+
+$$L = 1.2$$
+$$U = 624$$
+$$E_{p} = 0.15\text{, but see Figure 8B}$$
+$$g_{i} = 0.5067$$
+
+**Discretization Rules**
+
+Quadrature routine: midpoint rule
+
+Number of Meshpoints: 500
+
 
 ### Lonicera maackii 
 $$ 
@@ -188,7 +255,7 @@ $$
 P(y,x) = s(x)g(y,x) 
 $$
 $$
-F(y,x) = E_p g_i f_p(x)f_s(x)f_d(y)
+F(y,x) = E_p f_p(x)f_s(x)f_d(y)
 $$
 
 **Control Treatment Parameters**
@@ -198,6 +265,9 @@ Logit(s(x)) = -2.830987 + 0.403509x + -0.000421x^2
 $$
 $$
 g(y,x) = 16.884 + 0.9972x
+$$
+$$
+sd(g(y,x)) = 32.74774
 $$
 $$ 
 Logit(f_p(x)) = -10.4478 + 0.0485x
@@ -218,6 +288,9 @@ $$
 $$
 g(y,x) = 14.6068 + 0.9964x
 $$
+$$
+sd(g(y,x)) = 28.01974
+$$
 $$ 
 Logit(f_p(x)) = -10.4478 + 0.0485x
 $$
@@ -227,3 +300,15 @@ $$
 $$ 
 f_d(y) = Normal(\mu = 3.118, \sigma = 1.215)
 $$
+
+**Constants**
+
+$$E_{p} = 0.003563$$
+$$L = 1.26$$
+$$U = 482.9$$
+
+**Discretization rules**
+
+Quadrature routine: midpoint rule
+
+Number of Meshpoints: 500
