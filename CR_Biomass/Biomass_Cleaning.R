@@ -18,7 +18,7 @@ Biomass <- read.csv('CR_Biomass/Raw/Biomass4R.csv',
   mutate(Site2 = lapply(Site, FUN = function(x) stringr::str_split(x, " ")[[1]][1]) %>% 
            unlist() %>%
            tolower()) %>%
-  filter(!Site2 %in% tolower(natives))
+  filter(!Site2 %in% c(tolower(natives), ""))
 
 # Correct a stupid typo in raw data
 Biomass$Site2[Biomass$Site2 == 'enonymus'] <- 'euonymus'
@@ -33,8 +33,17 @@ for(i in 1:dim(Biomass)[1]){
                           paste0(Biomass$Tag[i],' - T'))
 }
 
-save(Biomass, file = 'CR_Biomass/Cleaned/TRC_Comp_Removal_Biomass.rda')
-write.csv(Biomass, 'CR_Biomass/Cleaned/TRC_Comp_Removal_Biomass.csv',
+Raw_Biomass <- Biomass %>%
+  group_by(Site, Rep, ID) %>%
+  summarise(Date = first(Date),
+            Plot = first(Plot),
+            Tag = first(Tag),
+            Mbio = sum(Mbio, na.rm = TRUE)) %>%
+  filter(ID != ' - P') %>%
+  ungroup()
+
+save(Raw_Biomass, file = 'CR_Biomass/Cleaned/TRC_Comp_Removal_Biomass.rda')
+write.csv(Raw_Biomass, 'CR_Biomass/Cleaned/TRC_Comp_Removal_Biomass.csv',
           row.names = FALSE)
 
 # Create a table of plot sizes so we can standardize total biomass removed
