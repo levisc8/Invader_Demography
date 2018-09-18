@@ -239,8 +239,11 @@ LMClean <- LMRaw %>%
   setNames(c('Site', 'Plot', 'Treatment', 
              'Plant_Height12', 'Plant_Height13', 'Stage12',
              'Stage13', 'Fruit', 'Survival', 
-             'Resprout', 'Reproductive')) %T>%
-  write.csv('Lonicera/IPM/Data/LM_Clean.csv',
+             'Resprout', 'Reproductive')) 
+
+LMClean$Reproductive[is.na(LMClean$Stage13)] <- NA_integer_
+  
+write.csv(LMClean, 'Lonicera/IPM/Data/LM_Clean.csv',
             row.names = FALSE)
 
 save(LMClean, file = 'Lonicera/IPM/Data/LM_Clean.RData')
