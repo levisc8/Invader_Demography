@@ -77,8 +77,17 @@ CNClean <- CNRaw %>%
              'Plant_Number', 'Leaf_N_May14', 
              'Plant_Diameter14', 'Notes', 'Leaf_N_Apr15', 
              'Plant_Diameter15', 'Survival',
-             'Flower_Number')) %T>% 
-  write.csv('Carduus/CN_Clean.csv',
+             'Flower_Number')) 
+
+for(i in seq_len(dim(CNClean)[1])) {
+  
+  if(CNClean$Survival[i] == 0 |
+     is.na(CNClean$Survival[i])) {
+    CNClean$Leaf_N_Apr15[i] <- NA_integer_
+  }
+}
+
+write.csv(CNClean, 'Carduus/CN_Clean.csv',
             row.names = FALSE)
 save(CNClean, file = 'Carduus/CN_Clean.RData')
 
@@ -110,8 +119,17 @@ EAClean <- EARaw %>%
   setNames(c('Site', 'Plot', 'Treatment',
              'Plant_Number', 'Stage14', 'Plant_Height14',
              'DBH14', 'Notes_2014', 'Stage15', 'Plant_Height15',
-             'DBH15', 'DBH15_2', 'Survival', 'Notes_2015')) %T>% 
-  write.csv('Euonymus/IPM/Data/EA_Clean.csv',
+             'DBH15', 'DBH15_2', 'Survival', 'Notes_2015'))
+
+for(i in seq_len(dim(EAClean)[1])) {
+  
+  if(EAClean$Survival[i] == 0 |
+     is.na(EAClean$Survival[i])) {
+    EAClean$Stage15[i] <- NA_character_
+  }
+}
+ 
+write.csv(EAClean, 'Euonymus/IPM/Data/EA_Clean.csv',
             row.names = FALSE)
 
 save(EAClean, file = 'Euonymus/IPM/Data/EA_Clean.RData')
@@ -181,8 +199,18 @@ LCClean <- LCRaw %>%
   setNames(c('Treatment', 'Block', 'Plot', 'Plant_Number',
              'Stage12', 'Size12', 'Stage13',
              'Size13', 'Survival', 'Resprout',
-             'Reproductive', 'Seeds')) %T>%
-  write.csv('Lespedeza/LesCun_Clean.csv', 
+             'Reproductive', 'Seeds'))
+
+for(i in seq_len(dim(LCClean)[1])) {
+  
+  if(LCClean$Reproductive[i] == 0 |
+     is.na(LCClean$Reproductive[i])) {
+    LCClean$Seeds[i] <- NA_real_
+  }
+}
+
+
+write.csv(LCClean, 'Lespedeza/LesCun_Clean.csv', 
             row.names = FALSE)
 
 save(LCClean, file = 'Lespedeza/LesCun_Clean.RData')
@@ -202,9 +230,18 @@ LOClean <- LORaw %>%
            Fruits2015)) %>%
   setNames(c('Treatment', 'Plot', 'Plant_Number', 'Stage14',
              'Plant_Height14', 'DBH14', 'Notes_14', 'Stage15',
-             'Plant_Height15', 'DBH15', 'Survival', 'Seeds')) %T>% 
-  write.csv('Ligustrum/IPM/Data/LO_Clean.csv',
-            row.names = FALSE)
+             'Plant_Height15', 'DBH15', 'Survival', 'Seeds'))
+
+for(i in seq_len(dim(LOClean)[1])) {
+  
+  if(LOClean$Survival[i] == 0 |
+     is.na(LOClean$Survival[i])) {
+    LOClean$Stage15[i] <- NA_character_
+  }
+} 
+
+write.csv(LOClean, 'Ligustrum/IPM/Data/LO_Clean.csv',
+          row.names = FALSE)
 
 save(LOClean, file = 'Ligustrum/IPM/Data/LO_Clean.RData')
 
@@ -212,7 +249,8 @@ LO_RARaw <- read.csv('Uncleaned_Data/Ligustrum/RA4R.csv')
 
 LO_RAClean <- LO_RARaw %>%
   setNames(c('Plant', 'Height', 'Seeds')) %T>%
-  write.csv('Ligustrum/IPM/Data/LO_RA_Clean.csv')
+  write.csv('Ligustrum/IPM/Data/LO_RA_Clean.csv',
+            row.names = FALSE)
 
 save(LO_RAClean, file = 'Ligustrum/IPM/Data/LO_RA_Clean.RData')
 
@@ -256,11 +294,19 @@ PFRaw <- read.csv('Uncleaned_Data/Perilla/Perilla4R2013 AG.csv') %>%
 
 PFClean <- PFRaw %>%
   select(c(Treatment:Height1, Alive, Fruits, Seeds, Comments)) %>%
-  setNames(c('Treatment', 'Plot', 'SubQuad', 
+  setNames(c('Treatment', 'Plot', 'Subquad', 
              'Height', 'Survival', 'Fruit',
-             'Seeds', 'Notes')) %T>%
-  write.csv('Perilla/PF_Clean.csv',
-            row.names = FALSE)
+             'Seeds', 'Notes')) 
+
+for(i in seq_len(dim(PFClean)[1])) {
+  if(PFClean$Survival[i] == 0) {
+    PFClean$Fruit[i] <- PFClean$Seeds[i] <- NA_real_
+  }
+  
+}
+
+write.csv(PFClean, 'Perilla/PF_Clean.csv',
+          row.names = FALSE)
 
 save(PFClean, file = 'Perilla/PF_Clean.RData')
 
@@ -290,7 +336,8 @@ save(PRCleaned, file = 'Potentilla/PR_Clean.RData')
 PR_SDLClean <- PR_SDLRaw %>%
   select(-Subquad) %>%
   setNames(c('Plot', 'Treatment', 'Survival')) %T>%
-  write.csv('Potentilla/PR_SDL_Clean.csv')
+  write.csv('Potentilla/PR_SDL_Clean.csv',
+            row.names = FALSE)
 
 save(PR_SDLClean, file = 'Potentilla/PR_SDL_Clean.RData')
 

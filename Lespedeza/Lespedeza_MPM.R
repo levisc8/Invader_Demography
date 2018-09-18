@@ -1,6 +1,5 @@
 # Lespedeza Matrix Model for manuscript -------------
-# Hopefully this is a bit more rigorous
-# than my last pass at this
+
 # Begin: 12/4/17
 
 # Quick notes: I can only use 2012-2013 transition to parameterize
@@ -18,8 +17,7 @@ PopData <- read.csv('Lespedeza/LesCun_Clean.csv',
 
 # Delineating stage classes for adults at 250, 251-1000, 1000 > cm.
 # This provides adequate sample sizes to capture demographic differences
-# between size classes. It's not an IPM, but our data is a little too
-# quirky for me to feel comfortable parameterizing one with it.
+# between size classes.
 
 PopData$StageMatMod <- NA
 
