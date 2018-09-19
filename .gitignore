@@ -10,3 +10,5 @@
 *.doc
 *.html
 *.docx
+Data_For_Upload/*
+Master_R/move_files_to_zip_folder.R
