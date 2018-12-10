@@ -1,0 +1,66 @@
+---
+output: html_document 
+---
+
+
+Review Checklist
+
+1. missing lonicera data
+    + **Done**
+    
+2. missing ailanthus code
+    + sent request to Rae 10/12/18
+
+
+3. add gps coords for all sites
+    + google maps? Not sure where else to find these at this point
+    + **Done**, used google maps
+    
+4. 2nd sampling date
+    + raw data files; Use Table 1!
+    
+5. Code issues
+    + height <- c(plant_height, Ht, Stem.Ht, height)
+    + plant <- plant_number
+    + Clean up IPM code comments
+        + remove gmailr lines 
+        + remove comments on tentative decisions
+        + add some comments the MPM boot-loops
+        + remove rm(list = ls())
+        + Re-set file paths so that figures/data/what not are produced in data_for_upload/ rather than Invader_demography folder
+        + move IPM figures code to appropriate scripts
+        + add IPM boot strap output to data set 
+        
+6. Reviewer's minor comments on manuscript itself
+    + Reviewer 2: 
+        + fonts/indentation in Class I descriptors
+            + **Done**
+        + Line 109-111 quibble w/ phrasing re: IPM on annuals
+            + **Done**
+        + Line 344: change to EA_RA_Clean.csv?
+            + **Done**
+        + Check Fig 5, apparently it looks to be excluded?
+            + Updated caption, **Done**
+    + Reviewer 1:
+        + Add lambda = 1 line to all relevant figures
+        + phrasing in line 28: successful?
+            + **Done**
+        + coords for Shaw, see #3
+            + **Done**
+        + biweekly disambiguation (lines 184, 205, 250, 335, 433)
+            + **Done**
+        + Lines 223-224: error for glm? poisson?
+            + **Done**
+        + Line 117-120: more info on the thinning!
+            + **Done**
+        + sd() and N for seeds per infloresence (264)
+            + **Done**
+        + Line 270: add stage names to matrices
+        + 455: Rename parameter to p2_Sdl?
+            + **No idea what they're talking about here - ignore**
+        + Reformat dates to ISO 8601 (YYYY-MM_DD)
+        + File name in supp mat does not match line 809
+            + Clean_Germ <- TRC_Cleaned_Germination! **Done**
+        
+        
+        

@@ -1,11 +1,12 @@
 # Script to take raw data files with potentially extraneous data 
 # and filter it down to necessary information
 
-rm(list = ls(all = TRUE))
+# rm(list = ls(all = TRUE))
 graphics.off()
 library(dplyr)
 library(stringr)
 library(magrittr)
+library(fs)
 
 # Ailanthus is already on Dryad, so whoever wants it can get it.
 # Starting with Alliaria
@@ -18,9 +19,9 @@ GMRaw$Seeds <- NA
 GMFec <- read.csv('Uncleaned_Data/Alliaria/GM_Fec_Data.csv',
                   stringsAsFactors = FALSE) %>%
   select(-Plant.Number) %>%
-  setNames(c('Plant_Number', 'Stem_Height', 'Seeds'))
+  setNames(c('Plant', 'Height', 'Seeds'))
 
-FecModel <- glm(Seeds ~ Stem_Height, 
+FecModel <- glm(Seeds ~ Height, 
                 data = GMFec,
                 family = poisson())
 
@@ -45,7 +46,19 @@ idx <- sdlPerPlot$Plot[sdlPerPlot$N.SDL < 200]
 
 GMClean <- GMRaw %>%
   filter(Plot %in% idx) %>%
-  select(-Density) %T>% 
+  select(-Density) %>%
+  setNames(c(
+    'Treatment',
+    'Burn',
+    'Plot',
+    'Subquad',
+    'Plant',
+    'SDLto6NRA',
+    'SDLtoFall',
+    'Height',
+    'Seeds',
+    'RA'
+  ))%T>% 
   write.csv('Alliaria/GM_Clean.csv',
             row.names = FALSE) 
 
@@ -57,8 +70,12 @@ GMFec %>%
 save(GMClean, file = 'Alliaria/GM_Clean.RData')
 save(GMFec, file = 'Alliaria/GM_Fec_Clean.RData')  
 
+fs::file_copy(c('Alliaria/GM_Clean.csv', 'Alliaria/GM_Fec_Clean.csv'),
+              rep('Data_For_Upload/Alliaria_MPM/',2), 
+              overwrite = TRUE)
+
 # Now, Carduus
-rm(list = ls())
+# rm(list = ls())
 CNRaw <- read.csv('Uncleaned_Data/Carduus/tenative.carduus.model.file.csv',
                   stringsAsFactors = FALSE) %>%
   filter(Treatment != 'Herbivore')
@@ -74,16 +91,16 @@ CNClean <- CNRaw %>%
             Alive615, 
             Notes.1)) %>%
   setNames(c('Treatment', 'Plot', 'Subquad', 
-             'Plant_Number', 'Leaf_N_May14', 
-             'Plant_Diameter14', 'Notes', 'Leaf_N_Apr15', 
-             'Plant_Diameter15', 'Survival',
-             'Flower_Number')) 
+             'Plant', 'Leaf', 
+             'Diameter', 'Notes', 'LeafNext', 
+             'DiameterNext', 'Survival',
+             'Fruits')) 
 
 for(i in seq_len(dim(CNClean)[1])) {
   
   if(CNClean$Survival[i] == 0 |
      is.na(CNClean$Survival[i])) {
-    CNClean$Leaf_N_Apr15[i] <- NA_integer_
+    CNClean$LeafNext[i] <- NA_integer_
   }
 }
 
@@ -91,8 +108,12 @@ write.csv(CNClean, 'Carduus/CN_Clean.csv',
             row.names = FALSE)
 save(CNClean, file = 'Carduus/CN_Clean.RData')
 
+fs::file_copy('Carduus/CN_Clean.csv',
+              'Data_For_Upload/Carduus_MPM/',
+              overwrite = TRUE)
+
 # Draba
-rm(list = ls())
+# rm(list = ls())
 DVRaw <- read.csv('Uncleaned_Data/Draba/Draba4R.csv',
                   stringsAsFactors = FALSE) %>%
   filter(treatment == 'Control' |
@@ -105,8 +126,12 @@ DVClean <- DVRaw %>%
 
 save(DVClean, file = 'Draba/DV_Clean.RData')
 
+fs::file_copy('Draba/DV_Clean.csv',
+              'Data_For_Upload/Draba_MPM/',
+              overwrite = TRUE)
+
 # Euonymus - first population data
-rm(list = ls())
+# rm(list = ls())
 EARaw <- read.csv('Uncleaned_Data/Euonymus/Euoala4R.csv', 
                   stringsAsFactors = FALSE) %>%
   filter(Trt != 'Herb')
@@ -116,16 +141,25 @@ EAClean <- EARaw %>%
             circumference.of.stem.at.canopy.base..cm.,
             C.Ht15, Cwid15, Clen15, Fruits15, 
             Therb14)) %>%
-  setNames(c('Site', 'Plot', 'Treatment',
-             'Plant_Number', 'Stage14', 'Plant_Height14',
-             'DBH14', 'Notes_2014', 'Stage15', 'Plant_Height15',
-             'DBH15', 'DBH15_2', 'Survival', 'Notes_2015'))
+  setNames(c('Site', 
+             'Plot', 
+             'Treatment',
+             'Plant',
+             'Stage',
+             'Height',
+             'DBH',
+             'Notes',
+             'StageNext',
+             'HeightNext',
+             'DBHNext', 'DBHNext_2',
+             'Survival',
+             'NotesNext'))
 
 for(i in seq_len(dim(EAClean)[1])) {
   
   if(EAClean$Survival[i] == 0 |
      is.na(EAClean$Survival[i])) {
-    EAClean$Stage15[i] <- NA_character_
+    EAClean$StageNext[i] <- NA_character_
   }
 }
  
@@ -138,13 +172,25 @@ save(EAClean, file = 'Euonymus/IPM/Data/EA_Clean.RData')
 EA_RARaw <- read.csv('Uncleaned_Data/Euonymus/RA4R.csv')
 
 EA_RAClean <- EA_RARaw %>%
-  select(-(Cht:Cwd)) %T>% 
+  select(-(Cht:Cwd)) %>%
+  setNames(c(
+    'Plant',
+    'Height',
+    'Fruit'
+    )) %T>% 
   write.csv('Euonymus/IPM/Data/EA_RA_Clean.csv', 
             row.names = FALSE)
+
 save(EA_RAClean, file = 'Euonymus/IPM/Data/EA_RA_Clean.RData')
 
+fs::file_copy(c('Euonymus/IPM/Data/EA_RA_Clean.csv', 
+                'Euonymus/IPM/Data/EA_Clean.csv'),
+              'Data_For_Upload/Euonymus_IPM/',
+              overwrite = TRUE)
+
+
 # Kummerowia
-rm(list = ls())
+# rm(list = ls())
 KS14Raw <- read.csv('Uncleaned_Data/Kummerowia/kummerowia AG.csv') %>%
   filter(Treatment != 'Herb')
 KS15Raw <- read.csv('Uncleaned_Data/Kummerowia/kstra2015.2 AG.csv') %>%
@@ -152,37 +198,45 @@ KS15Raw <- read.csv('Uncleaned_Data/Kummerowia/kstra2015.2 AG.csv') %>%
 
 KS15Clean <- KS15Raw %>%
   select(Treatment, Plot, Plant, Alive, Notes) %>%
-  setNames(c('Treatment', 'Plot', 'Plant_Number', 
+  setNames(c('Treatment', 'Plot', 'Plant', 
              'Survival','Notes')) %T>%
   write.csv('Kummerowia/KS_15_Clean.csv',
             row.names = FALSE)
 
 KS14Clean <- KS14Raw %>%
   select(-X) %>%
-  setNames(c('Treatment', 'Plot', 'Plant_Number', 'Survival', 'Seeds')) %T>%
+  setNames(c('Treatment', 'Plot', 'Plant', 'Survival', 'Seeds')) %T>%
   write.csv('Kummerowia/KS_14_Clean.csv',
             row.names = FALSE)
 
 save(KS15Clean, file = 'Kummerowia/KS_15_Clean.RData')
 save(KS14Clean, file = 'Kummerowia/KS_14_Clean.RData')
 
+fs::file_copy(paste('Kummerowia/KS_',14:15,'_Clean.csv', sep = ""),
+              rep('Data_For_Upload/Kummerowia_MPM/',2),
+              overwrite = TRUE)
+
 # Lepidium
-rm(list = ls())
+# rm(list = ls())
 LCRaw <- read.csv('Uncleaned_Data/Lepidium/lep4R.csv') %>%
   filter(treatment != 'Herb')
 
 LCClean <- LCRaw %>%
   select(-Seeds) %>%
-  setNames(c('Treatment', 'Plot', 'Plant_Number',
-             'Survival', 'Fruits')) %T>% 
+  setNames(c('Treatment', 'Plot', 'Plant',
+             'Survival', 'Fruit')) %T>% 
   write.csv('Lepidium/LepCam_Clean.csv',
             row.names = FALSE)
 
 save(LCClean, file = 'Lepidium/LepCam_Clean.RData')
 
+fs::file_copy('Lepidium/LepCam_Clean.csv',
+              'Data_For_Upload/LepCam_Clean.csv',
+              overwrite = TRUE)
+
 
 # Lespedeza
-rm(list = ls())
+# rm(list = ls())
 
 LCRaw <- read.csv('Uncleaned_Data/Lespedeza/Lespedeza4R.csv', 
                   stringsAsFactors = FALSE) %>%
@@ -196,9 +250,9 @@ LCClean <- LCRaw %>%
            Stage2012, Size2012, Stage2013,
            Size2013, Survival2013, Resprout2013,
            Fec2013, Seeds2013)) %>%
-  setNames(c('Treatment', 'Block', 'Plot', 'Plant_Number',
-             'Stage12', 'Size12', 'Stage13',
-             'Size13', 'Survival', 'Resprout',
+  setNames(c('Treatment', 'Block', 'Plot', 'Number',
+             'Stage', 'Size', 'StageNext',
+             'SizeNext', 'Survival', 'Resprout',
              'Reproductive', 'Seeds'))
 
 for(i in seq_len(dim(LCClean)[1])) {
@@ -214,9 +268,13 @@ write.csv(LCClean, 'Lespedeza/LesCun_Clean.csv',
             row.names = FALSE)
 
 save(LCClean, file = 'Lespedeza/LesCun_Clean.RData')
+
+fs::file_copy('Lespedeza/LesCun_Clean.csv',
+              'Data_For_Upload/Lespedeza_MPM/',
+              overwrite = TRUE)
   
 # Ligustrum
-rm(list = ls())
+# rm(list = ls())
 
 LORaw <- read.csv('Uncleaned_Data/Ligustrum/Ligobt4R-8.8.15.csv') %>%
   filter(Trt != 'Herb') %>%
@@ -228,15 +286,15 @@ LOClean <- LORaw %>%
            Notes, Stg15, Ht15,
            Sum.DBH15, Alive2015, 
            Fruits2015)) %>%
-  setNames(c('Treatment', 'Plot', 'Plant_Number', 'Stage14',
-             'Plant_Height14', 'DBH14', 'Notes_14', 'Stage15',
-             'Plant_Height15', 'DBH15', 'Survival', 'Seeds'))
+  setNames(c('Treatment', 'Plot', 'Plant', 'Stage',
+             'Height', 'DBH', 'Notes', 'StageNext',
+             'HeightNext', 'DBHNext', 'Survival', 'Seeds'))
 
 for(i in seq_len(dim(LOClean)[1])) {
   
   if(LOClean$Survival[i] == 0 |
      is.na(LOClean$Survival[i])) {
-    LOClean$Stage15[i] <- NA_character_
+    LOClean$StageNext[i] <- NA_character_
   }
 } 
 
@@ -254,8 +312,12 @@ LO_RAClean <- LO_RARaw %>%
 
 save(LO_RAClean, file = 'Ligustrum/IPM/Data/LO_RA_Clean.RData')
 
+fs::file_copy(c('Ligustrum/IPM/Data/LO_Clean.csv', 'Ligustrum/IPM/Data/LO_RA_Clean.csv') ,
+              rep('Data_For_Upload/Ligustrum_IPM/', 2),
+              overwrite = TRUE)
+
 # Lonicera
-rm(list = ls())
+# rm(list = ls())
 LMRaw <- read.csv('Uncleaned_Data/Lonicera/lonmaa1213.csv',
                   stringsAsFactors = FALSE) %>%
   filter(Trt_Burn2013 == 'ContN' |
@@ -275,20 +337,24 @@ LMClean <- LMRaw %>%
            Resprout2013,
            Fec2013)) %>%
   setNames(c('Site', 'Plot', 'Treatment', 
-             'Plant_Height12', 'Plant_Height13', 'Stage12',
-             'Stage13', 'Fruit', 'Survival', 
+             'Height', 'HeightNext', 'Stage',
+             'StageNext', 'Fruit', 'Survival', 
              'Resprout', 'Reproductive')) 
 
-LMClean$Reproductive[is.na(LMClean$Stage13)] <- NA_integer_
+LMClean$Reproductive[is.na(LMClean$StageNext)] <- NA_integer_
   
 write.csv(LMClean, 'Lonicera/IPM/Data/LM_Clean.csv',
             row.names = FALSE)
 
 save(LMClean, file = 'Lonicera/IPM/Data/LM_Clean.RData')
 
+fs::file_copy('Lonicera/IPM/Data/LM_Clean.csv',
+              'Data_For_Upload/Lonicera_IPM/',
+              overwrite = TRUE)
+
 
 # Perilla
-rm(list = ls())
+# rm(list = ls())
 PFRaw <- read.csv('Uncleaned_Data/Perilla/Perilla4R2013 AG.csv') %>%
   filter(Treatment != 'Herb')
 
@@ -310,8 +376,12 @@ write.csv(PFClean, 'Perilla/PF_Clean.csv',
 
 save(PFClean, file = 'Perilla/PF_Clean.RData')
 
+fs::file_copy('Perilla/PF_Clean.csv',
+              'Data_For_Upload/Perilla_MPM/',
+              overwrite = TRUE)
+
 # Potentilla
-rm(list = ls())
+# rm(list = ls())
 PRRaw <- read.csv('Uncleaned_Data/Potentilla/potrec20154R AG.csv',
                   stringsAsFactors = FALSE) %>%
   filter(Treatment != 'Herb')
@@ -324,10 +394,10 @@ PRCleaned <- PRRaw %>%
          LL14, Stg14, Fruits14, Notes,
          Stg15, Lf15, LL15,
          Fruits15, Alive15, Notes15) %>%
-  setNames(c('Treatment', 'Plot', 'Plant_Number',
-             'Leaf_Number14', 'Longest_Leaf14', 'Stage14',
-             'Fruit14', 'Notes14', 'Stage15', 'Leaf_Number15',
-             'Longest_Leaf15', 'Fruit15', 'Survival', 'Notes15')) %T>%
+  setNames(c('Treatment', 'Plot', 'Plant',
+             'Leaf', 'LongestLeaf', 'Stage',
+             'Fruit', 'Notes', 'StageNext', 'LeafNext',
+             'LongestLeafNext', 'FruitNext', 'Survival', 'NotesNext')) %T>%
   write.csv('Potentilla/PR_Clean.csv',
             row.names = FALSE)
 
@@ -341,9 +411,12 @@ PR_SDLClean <- PR_SDLRaw %>%
 
 save(PR_SDLClean, file = 'Potentilla/PR_SDL_Clean.RData')
 
+fs::file_copy(c('Potentilla/PR_Clean.csv', 'Potentilla/PR_SDL_Clean.csv'),
+              rep('Data_For_Upload/Potentilla_MPM/', 2),
+              overwrite = TRUE)
 
 # Thlaspi
-rm(list = ls())
+# rm(list = ls())
 TPRaw <- read.csv('Uncleaned_Data/Thlaspi/ThlaspiD.csv',
                   stringsAsFactors = FALSE) %>%
   filter(Treatment == 'Control' | 
@@ -357,17 +430,25 @@ TPClean <- TPRaw %>%
 
 save(TPClean, file = 'Thlaspi/TP_Clean.RData')
 
+
+fs::file_copy('Thlaspi/TP_Clean.csv',
+              'Data_For_Upload/Thlaspi_MPM/',
+              overwrite = TRUE)
 # Verbascum
-rm(list = ls())
+# rm(list = ls())
 VTRaw <- read.csv('Uncleaned_Data/Verbascum/Herbdemo4R.csv',
                   stringsAsFactors = FALSE)
 
 VTClean <- VTRaw %>%
   select(c(treatment, plot, plant, diameter, notes,
            Alive15, Seeds, Notes15)) %>%
-  setNames(c('Treatment', 'Plot', 'Plant_Number', 'Diameter',
-             'Notes14', 'Survival', 'Seeds', 'Notes15')) %T>%
+  setNames(c('Treatment', 'Plot', 'Plant', 'Diameter',
+             'Notes', 'Survival', 'Seeds', 'NotesNext')) %T>%
   write.csv('Verbascum/VT_Clean.csv', 
             row.names = FALSE)
 
 save(VTClean, file = 'Verbascum/VT_Clean.RData')
+
+fs::file_copy('Verbascum/VT_Clean.csv',
+              'Data_For_Upload/Verbascum_MPM/',
+              overwrite = TRUE)
