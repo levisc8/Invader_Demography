@@ -5,7 +5,7 @@ library(fs)
 library(dplyr)
 
 # Read in all of the raw data files
-speciesRegex <- c('Ailanthus4R|GM_Clean|CN_Clean|DV_Clean|EA_Clean|KS_14_Clean|LepCam_Clean|LesCun_Clean|LO_Clean|LM_Clean|PF_Clean|PR_Clean|TP_Clean|VT_Clean')
+speciesRegex <- c('Ailanthus_Clean|Alliaria_Clean|Carduus_Clean|Draba_Clean|Euonymus_Clean|Kummerowia_14_Clean|Lepidium_Clean|Lespedeza_Clean|Ligustrum_Clean|Lonicera_Clean|Perilla_Clean|Potentilla_Clean|Thlaspi_Clean|Verbascum_Clean')
 
 FilePaths <- dir_ls(recursive = TRUE,
                     regexp = speciesRegex) %>%
@@ -18,8 +18,12 @@ RawFiles <- lapply(FilePaths, function(x) read.csv(x, stringsAsFactors = FALSE))
 # Check names for consistency
 Names <- lapply(RawFiles, names)
 
-# Fix ailanthus
-names(RawFiles[[1]])[3] <- 'Treatment'
+# Stop if Plot isn't found in all of them
+test <- lapply(Names, function(x) any(grepl('Plot', x))) %>%
+  unlist() %>% 
+  all() %>%
+stopifnot()
+
 
 N_Plots <- lapply(RawFiles, function(x) {
   x %>%
@@ -49,6 +53,5 @@ All_Plots <- lapply(RawFiles, function(x) {
     unlist()
   
 })
-
 
 unlist(All_Plots) %>% sum()

@@ -1,7 +1,7 @@
 # Script to compile all demographic models into a single place.
 # This will then be used to modify the tyson.Rdata object in FunPhylo
 
-rm(list = ls(all = TRUE)) 
+rm(list = ls(all.names = TRUE)) 
 library(FunPhylo)
 library(dplyr)
 
@@ -53,12 +53,8 @@ source('CR_Biomass/Biomass_Cleaning.R')
 
 # Going alphabetically through species. First up is Ailanthus
 # Ailanthus--------------------
-source('Ailanthus/IPM/R/AilanthusIPM.ContN.R')
-source('Ailanthus/IPM/R/AilanthusIPM.CompN.R')
+source('Ailanthus_IPM/Ailanthus_Figures.R') # Contains bootstrapping for both!
 
-# Boot strap IPMs. Code courtesy of Raelene M Crandall
-source('Ailanthus/IPM/R/AilanthusIPM_ContN_Bootstrapping.R')
-source('Ailanthus/IPM/R/AilanthusIPM_CompN_Bootstrapping.R')
 
 # Test if confidence intervals overlap. If not, effect size is LLR,
 # if so, effect size is 0
@@ -77,7 +73,7 @@ if(min(CompN_lambda_CI) > max(ContN_lambda_CI) |
                             'package:FunPhylo',
                             'package:ggplot2'))
 
-source('Alliaria/Alliaria_MPM.R')
+source('Alliaria_MPM/Alliaria_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   GM_LRR <- GM_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
@@ -94,7 +90,7 @@ if(results$lower[6] > results$upper[5] |
                             'package:FunPhylo', 
                             'package:ggplot2'))
 
-source('Carduus/Carduus_MPM.R')
+source('Carduus_MPM/Carduus_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   CN_LRR <- CN_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
@@ -111,7 +107,7 @@ if(results$lower[6] > results$upper[5] |
                             'package:FunPhylo', 
                             'package:ggplot2'))
 
-source('Draba/Draba_MPM.R')
+source('Draba_MPM/Draba_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   DV_LRR <- DV_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
@@ -127,8 +123,9 @@ if(results$lower[6] > results$upper[5] |
 # but one can run it locally too using the code below. For now, I skip that
 # and use the .Rdata file with outputs for this
 
-# source('Euonymus/IPM/EuoAla_RS_Folder/Euonymus_BootStrap_IPM.R')
-load('Euonymus/IPM/Data/BootStrap_Summary_Data.RData')
+# source('Euonymus_IPM/Euonymus_BootStrap_IPM.R')
+PlotData <- read.csv('Euonymus_IPM/Euonymus_Summarized_Output.csv',
+                     stringsAsFactors = FALSE)
 results <- filter(PlotData, Variable == 'Lambda')
 
 if(results$LoCI[2] > results$UpCI[1] |
@@ -147,7 +144,7 @@ if(results$LoCI[2] > results$UpCI[1] |
                             'package:FunPhylo', 
                             'package:ggplot2'))
 
-source('Kummerowia/Kummerowia_MPM.R')
+source('Kummerowia_MPM/Kummerowia_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   KS_LRR <- KS_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
@@ -164,7 +161,7 @@ if(results$lower[6] > results$upper[5] |
                             'package:FunPhylo', 
                             'package:ggplot2'))
 
-source('Lepidium/Lepidium_MPM.R')
+source('Lepidium_MPM/Lepidium_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   LepCam_LRR <- LepCam_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
@@ -181,7 +178,7 @@ if(results$lower[6] > results$upper[5] |
                             'package:FunPhylo', 
                             'package:ggplot2'))
 
-source('Lespedeza/Lespedeza_MPM.R')
+source('Lespedeza_MPM/Lespedeza_MPM.R')
 if(results$LoCI[38] > results$UpCI[37] |
    results$UpCI[38] < results$LoCI[37]) {
   LesCun_LRR <- LesCun_LRR2 <- log(results$values[38] + 0.5) - log(results$values[37] + 0.5)
@@ -195,7 +192,7 @@ if(results$LoCI[38] > results$UpCI[37] |
 
 # Ligustrum------------------
 # Same as for Euonymus
-results <- read.csv('Ligustrum/IPM/Data/Bootstrapping_Output_Ligustrum.csv',
+results <- read.csv('Ligustrum_IPM/Ligustrum_Bootstrap_Output.csv',
                     stringsAsFactors = FALSE)
 if(any(results$lambda_comp_Quad_lo > results$lambda_cont_Quad_up) |
    any(results$lambda_comp_Quad_up < results$lambda_cont_Quad_lo)) {
@@ -211,7 +208,8 @@ if(any(results$lambda_comp_Quad_lo > results$lambda_cont_Quad_up) |
 .DemoTable$ESCR_2[9] <- LO_LRR2
 
 # Lonicera-------------------
-load('Lonicera/IPM/Data/Lonicera_Vital_Rate_Summary.RData')
+PlotData <- read.csv('Lonicera_IPM/Lonicera_Summarized_Output.csv',
+                     stringsAsFactors = FALSE) 
 results <- filter(PlotData, Variable == 'Lambda' &
                     SurvModel == 'Quad')
 
@@ -231,7 +229,7 @@ if(results$LoCI[2] > results$UpCI[1] |
                             'package:FunPhylo',
                             'package:ggplot2'))
 
-source('Perilla/Perilla_MPM.R')
+source('Perilla_MPM/Perilla_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   PF_LRR <- PF_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
@@ -248,7 +246,7 @@ if(results$lower[6] > results$upper[5] |
                             'package:FunPhylo',
                             'package:ggplot2'))
 
-source('Potentilla/Potentilla_MPM.R')
+source('Potentilla_MPM/Potentilla_MPM.R')
 if(results$lower[16] > results$upper[15] |
    results$upper[16] < results$lower[15]) {
   PR_LRR <- PR_LRR2 <- log(results$values[16] + 0.5) - log(results$values[15] + 0.5)
@@ -265,7 +263,7 @@ if(results$lower[16] > results$upper[15] |
                             'package:FunPhylo',
                             'package:ggplot2'))
 
-source('Thlaspi/Thlaspi_MPM.R')
+source('Thlaspi_MPM/Thlaspi_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   TP_LRR <- TP_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
@@ -282,7 +280,7 @@ if(results$lower[6] > results$upper[5] |
                             'package:FunPhylo',  
                             'package:ggplot2'))
 
-source('Verbascum/Verbascum_MPM.R')
+source('Verbascum_MPM/Verbascum_MPM.R')
 if(results$lower[6] > results$upper[5] |
    results$upper[6] < results$lower[5]) {
   VT_LRR <- VT_LRR2 <- log(results$values[6] + 0.5) - log(results$values[5] + 0.5)
