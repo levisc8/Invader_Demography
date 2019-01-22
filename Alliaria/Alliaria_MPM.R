@@ -1,55 +1,31 @@
 
-##Clear everything
-rm(list = ls()) 
+# rm(list = ls()) 
 
 #import data into R studio
 library(dplyr)
 library(ggplot2)
 
-ks <- read.csv('Alliaria/GM_Clean.csv',
+f_data <- read.csv('Alliaria_MPM/Alliaria_Fec_Clean.csv',
+                   stringsAsFactors = FALSE)
+
+# Model to relate seed number to height for a sub-sample of plants in our plots
+# This was used to calculate the number of seeds for plants where only stem
+# height was measured. 
+
+f_mod <- glm(Seeds ~ Height, data = f_data, family = poisson())
+
+
+ks <- read.csv('Alliaria_MPM/Alliaria_Clean.csv',
                 stringsAsFactors = FALSE)
-# 
-# The testing for density dependence was done separately in 
-# Clean_Demography_Data.R. However, the code used to do it is
-# also presented here. Note that the Density column was removed
-# in the cleaning process, but the raw data can still be accessed
-# in the abovementioned script.
 
-# 
-# # Calculate number of plots per treatment
-# Plot.N <- ks %>%
-#   group_by(Treatment,Density,Burn) %>%
-#   summarise(plot.n = length(unique(Plot)))
-# 
-# # calculate seedlings per plot to test for density dependence
-# sdlPerPlot <- ks %>%
-#   group_by(Treatment, Density, Plot) %>%
-#   summarise(N.SDL = n(),
-#             N.RA = sum(RA, na.rm = TRUE),
-#             s2 = N.RA/N.SDL,
-#             Fec = mean(Seeds,na.rm = TRUE))
-# 
-# # visually examine relationship
-# plot(s2 ~ N.SDL, data = sdlPerPlot)
-# plot(Fec ~ N.RA, data = sdlPerPlot)
-# 
-# # # cutting off plots above 200 seedlings/plot
-# idx <- sdlPerPlot$Plot[sdlPerPlot$N.SDL < 200]
-# # 
-# 
-# Fec <- ks %>% 
-#   filter(Plot %in% idx) %>% 
-#   group_by(Treatment) %>% 
-#   summarise(Fec = mean(Seeds, na.rm = TRUE))
-# 
-# paramsD <- ks[ks$Plot %in% idx, ] %>%
-#   group_by(Treatment) %>%
-#   summarise(plot.n = length(unique(Plot)),
-#             N.SDL = n(),
-#             N.RA = sum(RA, na.rm = TRUE),
-#             s2 = N.RA/N.SDL)
+# This step has already been run, but is here to demonstrate precisely
+# how this column was calculated
 
+# ks$Seeds <- predict(f_mod, 
+#                     newdata = data.frame(Height = ks$Height),
+#                     type = 'response')
 
+# Calculate vital rates by treatment
 paramsD <- ks %>%
   group_by(Treatment) %>%
   summarise(plot.n = length(unique(Plot)),
@@ -84,6 +60,7 @@ G1 <- 0.5503
 G2 <- 0.3171
 v <- 0.8228
 
+# The matrix  and eigenvalues
 A_cont <- matrix(c(1 - G2, 0, f_c * v * (1 - G1),
                    G2 * s1_c, 0, f_c * G1 * s1_c,
                    0, s2_c, 0),
@@ -113,13 +90,15 @@ lmax <- lmax[1]
 lambda_cr <- Re(ev$values[lmax])
 lambda_cr
 
-values=c(s2_c,s2_cr,
-         f_c, f_cr,
-         lambda_cont,lambda_cr)
+values <- c(s2_c,s2_cr,
+            f_c, f_cr,
+            lambda_cont,lambda_cr)
 
 
 ####################################################
 #Bootstrapping code
+
+# Set up vectors to hold boot strapped vital rates
 
 nreps <- 1000
 
@@ -130,12 +109,14 @@ boot_f_cr <- rep(NA, nreps)
 boot_l_c <- rep(NA, nreps)
 boot_l_cr <- rep(NA, nreps)
 
+# Split data into distinct data frames
 C.RAs <- filter(ks, Treatment == 'Control' & RA == 1)
 CR.RAs <- filter(ks, Treatment == 'Comp' & RA == 1)
 
 CPlants <- filter(ks, Treatment == 'Control')
 CRPlants <- filter(ks, Treatment == 'Comp')
 
+# Compute number of plants for resampling (see next comment)
 n.c.ra <- dim(C.RAs)[1]
 n.cr.ra <- dim(CR.RAs)[1]
 n.c.plants <- dim(CPlants)[1]
@@ -145,8 +126,10 @@ n.cr.plants <- dim(CRPlants)[1]
 #start the loop
 for(j in 1:nreps) {
   
-  #x3 is a column that picks n integers between the numbers 1 and n (because we have n plants in the data set).  
-  #replace=TRUE means that we are sampling with replacement (once we choose a number, we can choose it again).
+  # xTrt is a vector that picks n integers between the numbers 1 and n (because we 
+  # have n plants in the data set).  
+  # replace=TRUE means that we are sampling with replacement (once we choose a 
+  # number, we can choose it again).
   xCP <- sample(1:n.c.plants, 
                 n.c.plants,
                 replace = TRUE)
@@ -165,6 +148,7 @@ for(j in 1:nreps) {
   bootFecData <- rbind(C.RAs[xCRA, ],
                        CR.RAs[xCRRA, ])
   
+  # boot strapped vital rates by treatment
   paramsD1 <- bootSurvData %>% 
     group_by(Treatment) %>% 
     summarise(N.SDL = n(),
@@ -182,8 +166,10 @@ for(j in 1:nreps) {
   paramsD1[paramsD1$Treatment == 'Control', 'Fec'] <- 
     Fec1[Fec1$Treatment == 'Control', 'Fec']
   
-  # replace with observed means if no vital rate cannot be calculated from bootstrap
-  # sample
+  # replace with observed means if no vital rate can be calculated from bootstrap
+  # sample. This occurs if the boot strapping sampler happens to, for example, 
+  # only pick dead RAs leading to NaNs in the fecundity values
+  
   for(i in 1:dim(paramsD1)[1]){
     for(x in 1:dim(paramsD1)[2]){
       if(is.na(paramsD1[i, x])){
@@ -269,12 +255,17 @@ results <- tibble(values, lower, upper)
 results$text <- NA
 results$y <- NA
 
+# Insert significance codes. This is a bit convoluted, but it works
 if(results$upper[1] < results$lower[2] |
    results$upper[2] < results$lower[1]) {
   results$text[1:2] <- '***'
 } else {
   results$text[1:2] <- 'NS'
 }
+
+# This looks weird, but it just calculates where to put the significance code
+# on the plot's y-axis. In this case, I put them along the top of each plot 
+# just inside the plot margin.
 
 results$y[1:2] <- .99 * max(results$upper[1:2])
 
@@ -296,7 +287,7 @@ if(results$upper[5] < results$lower[6] |
 }
 results$y[5:6] <- .99 * max(results$upper[5:6])
 
-
+# Create pretty plot label expressions
 results$Trt <- c('Control', 'CR')
 results$Var <- factor(c('paste(italic(s))', 
                         'paste(italic(s))',
@@ -345,7 +336,7 @@ ggplot(data = results,
             label = results$text)
 
 ggsave(filename = 'Alliaria_VR_Panel.png',
-       path = 'Alliaria',
+       path = 'Alliaria_MPM/',
        height = 5,
        width = 8,
        unit = 'in')

@@ -184,7 +184,8 @@ ggsave(filename = 'Ligustrum_Vital_Rate_Coefficients.png',
 
 # # Insert observed values into bootstrap output
 # source('Euonymus/IPM/R/Euonymus_IPM.R')
-# 
+
+
 # EuoAlaData$obs[1] <- lambda_Cont_obs
 # EuoAlaData$obs[2] <- lambda_CR_obs
 # EuoAlaData$obs[3] <- Sdl.mean

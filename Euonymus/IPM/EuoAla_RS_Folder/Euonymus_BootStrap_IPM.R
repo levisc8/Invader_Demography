@@ -1,66 +1,73 @@
+# I presume that those attempting to reproduce this have downloaded the archive
+# and created an Rstudio project with it. Thus, file paths are relative to the 
+# top level folder
+
 # Euonymus IPM with bootstrapping. This script is intended to run
 # on iDiv's RStudio server and/or the EVE cluster at iDiv/UFZ. It will
 # likely not run as is on a local machine. I've also eliminated a lot
 # the models that were fitted for comparison as those can be found
 # in R/Euonymus_Exporation_and_IPM.R
-
-rm(list = ls()) 
-graphics.off()
+# 
+# rm(list = ls()) 
+# graphics.off()
 
 library(dplyr)
 library(magrittr)
 library(stringr)
 library(mgcv)
 library(brms)
+library(tidyr)
+library(ggplot2)
 # setwd('~/EuoAla_RS_Folder')
-setwd('Euonymus/IPM/EuoAla_RS_Folder')
 
-source('IPM_Functions_Euonymus.R')  
+source('Euonymus_IPM/IPM_Functions_Euonymus.R')  
 
 
 # load the data
-RAs<-read.csv("EA_RA_Clean.csv")
-AllPlants1 <- read.csv("EA_Clean.csv") 
+RAs<-read.csv("Euonymus_IPM/Euonymus_RA_Clean.csv")
+AllPlants1 <- read.csv("Euonymus_IPM/Euonymus_Clean.csv") 
 
-AllPlants1$incr<-AllPlants1$Plant_Height15-AllPlants1$Plant_Height14
+AllPlants1$incr<-AllPlants1$HeightNext-AllPlants1$Height
 
 # Generate data sets for CR and control treatments
 
 AllSmall <- filter(AllPlants1, Treatment != 'All')
-ControlGrowData <- filter(AllPlants1, Treatment == 'Control' | 
+
+ControlGrowData <- filter(AllPlants1, 
+                          Treatment == 'Control' | 
                             Treatment == 'All')
-CrGrowData <- filter(AllPlants1, Treatment == 'Comp' |
+CrGrowData <- filter(AllPlants1, 
+                     Treatment == 'Comp' |
                        Treatment == 'All')
 
 # Growth---------------------------------------------------------------------------------------
 # Prior investigation indicated that a GAM provided a better description 
 # of the growth dynamics
 
-ControlGam <- gam(Plant_Height15 ~ s(Plant_Height14), data = ControlGrowData)
-CRGam <- gam(Plant_Height15 ~ s(Plant_Height14), data = CrGrowData)
+ControlGam <- gam(HeightNext ~ s(Height), data = ControlGrowData)
+CRGam <- gam(HeightNext ~ s(Height), data = CrGrowData)
 
 # Survival across treatments----------------------------------------------------------------------
-# As with above, model selection procedures have been omitted in favor of brevity.
-# Those procedures can similarly be found in the script intended for smaller machines
+# As with above, model selection procedures have been omitted in favor of brevity
 
-BrmSurvQuad_Cont <- brm(Survival ~ Plant_Height14 + I(Plant_Height14^2), 
-                          data = ControlGrowData,
-                          family = 'bernoulli',
-                          iter = 6000,
-                          warmup = 2000,
-                          cores = getOption('mc.cores', 4L),
-                          control = list(adapt_delta = 0.97,
-                                         max_treedepth = 15)) 
+BrmSurvQuad_Cont <- brm(Survival ~ Height + I(Height^2), 
+                        data = ControlGrowData,
+                        family = 'bernoulli',
+                        iter = 6000,
+                        warmup = 2000,
+                        cores = getOption('mc.cores', 4L),
+                        control = list(adapt_delta = 0.97,
+                                       max_treedepth = 15)) 
 
-BrmSurvQuad_CR <- brm(Survival ~ Plant_Height14 + I(Plant_Height14^2), 
-                          data = CrGrowData,
-                          family = 'bernoulli',
-                          iter = 6000,
-                          warmup = 2000,
-                          cores = getOption('mc.cores', 4L),
-                          control = list(adapt_delta = 0.97,
-                                         max_treedepth = 15)) 
- 
+BrmSurvQuad_CR <- brm(Survival ~ Height + I(Height^2), 
+                      data = CrGrowData,
+                      family = 'bernoulli',
+                      iter = 6000,
+                      warmup = 2000,
+                      cores = getOption('mc.cores', 4L),
+                      control = list(adapt_delta = 0.97,
+                                     max_treedepth = 15)) 
+
 # Store paremeters and chains for later     
 SurvParamsCont <- fixef(BrmSurvQuad_Cont)[ ,1] %>%
   setNames(c('Int', 'Lin', 'Quad'))
@@ -68,50 +75,61 @@ SurvParamsCont <- fixef(BrmSurvQuad_Cont)[ ,1] %>%
 SurvParamsCR <- fixef(BrmSurvQuad_CR)[ ,1] %>%
   setNames(c('Int', 'Lin', 'Quad'))
 
-thin <- seq(1, 6000, length.out = 1000) %>% round()
+thin <- seq(2001, 6000, length.out = 1000) %>% round()
 
-CrSurvChains <- BrmSurvQuad_CR$fit@sim$samples[[1]][1:3] %>%
+CrSurvChains <- BrmSurvQuad_CR$fit@sim$samples[[1]][1:4] %>%
   data.frame() %>%
+  setNames(c('Intercept', 'LinearTerm','QuadraticTerm', 'LogProb')) %>%
+  mutate(Treatment = 'CR') %>%
   .[thin, ]
 
-ContSurvChains <- BrmSurvQuad_Cont$fit@sim$samples[[1]][1:3] %>%
+ContSurvChains <- BrmSurvQuad_Cont$fit@sim$samples[[1]][1:4] %>%
   data.frame() %>%
+  setNames(c('Intercept', 'LinearTerm','QuadraticTerm', 'LogProb')) %>%
+  mutate(Treatment = 'Control') %>%
   .[thin, ]
+
+survChains <- rbind(CrSurvChains, ContSurvChains) %>% 
+  select(Treatment, Intercept, LinearTerm, QuadraticTerm, LogProb) %T>%
+  write.csv(file = 'Euonymus_IPM/Euonymus_Surv_Chains.csv', row.names = FALSE) 
+
+save(survChains, file = 'Euonymus_IPM/Euonymus_Surv_Chains.rda')
 
 # Fecundity-------------------------------------------------------------------------------
 # first, we will estimate fecundity from our sample of 18 RAs
 #subsetting out two outliers with small Hts but lots of fruits
-RAs2 <- filter(RAs, Fruit < 2500 & Ht < max(RAs$Ht))
+RAs2 <- filter(RAs, Fruit < 2500 & Height < max(RAs$Height))
 
 # quasipoisson
-fecquasi <- glm(Fruit ~ Ht,
+fecquasi <- glm(Fruit ~ Height,
                 data = RAs2,
                 family = quasipoisson())
 summary(fecquasi)
 
 #Pr(Reproductive) - Logistic regression ----------------------------------
-AllPlants1$Repro <- ifelse(AllPlants1$Stage15 == "RA", 1, 0)
+AllPlants1$Repro <- ifelse(AllPlants1$StageNext == "RA", 1, 0)
 
 Regression.Data <- filter(AllPlants1, Survival != "NA")
 
-Repro.Glm <- glm(Repro ~ Plant_Height15,
+Repro.Glm <- glm(Repro ~ HeightNext,
                  data = Regression.Data,
                  family = binomial())
 
 AllPlants1$Fruits15 <- exp(coefficients(fecquasi)[1] + 
-                            coefficients(fecquasi)[2] *AllPlants1$Plant_Height15)
-AllPlants1$Fruits15[AllPlants1$Stage15 != "RA"] <- NA
+                             coefficients(fecquasi)[2] *AllPlants1$HeightNext)
+AllPlants1$Fruits15[AllPlants1$StageNext != "RA"] <- NA
 summary(AllPlants1$Fruits15)
 
 # Recruit size distribution----------------------------------------------------------------------
-sdls <- filter(AllPlants1, Stage14 == "SDL")
-Sdl.mean <- mean(sdls$Plant_Height14, na.rm = TRUE)
-Sdl.SD <- sd(sdls$Plant_Height14, na.rm = TRUE)
+sdls <- filter(AllPlants1, Stage == "SDL")
+Sdl.mean <- mean(sdls$Height, na.rm = TRUE)
+Sdl.SD <- sd(sdls$Height, na.rm = TRUE)
 
 # Discrete parameters------------------------------------
 
-# Establishment probability from Brand et al 2012. I'm taking the average of all cultivars from both 
-# time replications. seed bank germination is the difference between cumulative germination in years 2 and 3
+# Establishment probability from Brand et al 2012. I'm taking the average 
+# of all cultivars from both  time replications. seed bank germination is the 
+# difference between cumulative germination in years 2 and 3
 # i.e. cumulative germ yr3 - cumulative germ yr 2. 
 
 G2 <- mean(c(34.8,.3,.3,28.5))/100
@@ -132,8 +150,8 @@ f.params<-data.frame(prob.repro.int=as.numeric(coefficients(Repro.Glm)[1]),
 
 # Build P Matrix and F Vectors-----------------------------------
 # the size range must extend beyond the limits of the data
-min.size <- min(AllPlants1$Plant_Height14, na.rm = TRUE) * .8
-max.size <- max(AllPlants1$Plant_Height14, na.rm = TRUE) * 1.2
+min.size <- min(AllPlants1$Height, na.rm = TRUE) * .8
+max.size <- max(AllPlants1$Height, na.rm = TRUE) * 1.2
 S <- 500 # Number of cells in matrix  
 
 # matrix variables 
@@ -160,16 +178,16 @@ SB3.Emerge <- rep(0, S)
 Discrete.Corner <- matrix(c(0, 0, 1, 0), 
                           nrow = 2, byrow = TRUE)
 
-# I'm also going to try correcting for eviction using a different
-# method that Maria Paniw recommended. This re-scales all of the columns
-# based on the column sums.
-
+# discretize the growth kernel
 Gmat_Cont_2 <- h * outer(Y, Y, 
                          FUN = grow.prob,
                          model = ControlGam)
 Gmat_CR_2 <- h * outer(Y, Y,
                        FUN = grow.prob,
                        model = CRGam)
+
+# This re-scales all of the columns based on the column sums to correct for 
+# evicted indidivduals (Williams et al 2012)
 
 Gmat_Cont_2 <- Gmat_Cont_2/matrix(as.vector(apply(Gmat_Cont_2,
                                                   2,
@@ -187,8 +205,8 @@ Gmat_CR_2 <- Gmat_CR_2/matrix(as.vector(apply(Gmat_CR_2,
 
 
 # combine growth and survival into P matrix------------------------------------
-# 5b. Create a matrix with survival probabilities on the diagonal,
-# use matrix multiplication to combine it with the growth matrix
+# Each entry in the survival vector must be multiplied by the same column in the 
+# the growth matrix
 
 S_Cont <- predict.surv(Y, BrmSurvQuad_Cont)
 S_CR <- predict.surv(Y, BrmSurvQuad_CR)
@@ -215,25 +233,15 @@ lambda_CR_obs <- max(Re(eigen_CR$values))
 
 # Bootstrapping --------------------
 # Now, we need to bootstrap everything (hooray!!!).
-# I doubt there will be significant differences, but you never
-# know. 
 
 # Initialize data storage areas and underlying data sets.
-# I am not sure if it makes sense to boot strap the seed production
-# data set because we have so few individuals. Re-building
-# a regression from the values we predicted above doesn't make
-# much sense to me either. Finally, I have no idea how to store
-# a GAM in a way that makes sense, so I won't store those
-# parameters for now. However, this should be fairly
-# quick to re-run, so hopefully we can add that in
-# when I've had a chance to explore it some more. 
-
-
 
 CRData <- filter(AllPlants1, Treatment == 'Comp')
 ContData <- filter(AllPlants1, Treatment == 'Control')
 BigData <- filter(AllPlants1, Treatment == 'All')
 
+# Compute number of individuals in each data set so that we can resample them 
+# with replacement in the for loop
 nCR <- dim(CRData)[1]
 nCont <- dim(ContData)[1]
 nBig <- dim(BigData)[1]
@@ -246,23 +254,28 @@ OutputValues <- list(RepSlope = rep(NA, nBootSamples),
                      Lambda_Cont = rep(NA, nBootSamples),
                      Lambda_CR = rep(NA, nBootSamples))
 
-for(i in seq_len(nBootSamples)) {
 
+for(i in seq_len(nBootSamples)) {
+  
   # Set up vectors and resample data sets and survival parameter posterior
+  # This creates an integer vector by sampling with replacement. When used to 
+  # index the raw data sets, it acts as a bootstrapper
+  
   CrSampler <- sample(1:nCR, nCR, replace = TRUE)
   ContSampler <- sample(1:nCont, nCont, replace = TRUE)
   BigSampler <- sample(1:nBig, nBig, replace = TRUE)
   SurvSampler <- sample(1:1000, 1)
   
+  # The actual bootstrapping
   BootCRData <- CRData[CrSampler, ]
   BootContData <- ContData[ContSampler, ]
   BootBigData <- BigData[BigSampler, ]
   
   # Growth models with bootstrapped data sets
-  BootCrGAM <- gam(Plant_Height15 ~ s(Plant_Height14), data = rbind(BootCRData,
-                                                BootBigData))
-  BootControlGAM <- gam(Plant_Height15 ~ s(Plant_Height14), data = rbind(BootContData,
-                                                  BootBigData))
+  BootCrGAM <- gam(HeightNext ~ s(Height), data = rbind(BootCRData,
+                                                        BootBigData))
+  BootControlGAM <- gam(HeightNext ~ s(Height), data = rbind(BootContData,
+                                                             BootBigData))
   
   # Resample the posterior distributions for survival parameters
   BootCRSurvParams <- CrSurvChains[SurvSampler, ] %>% unlist()
@@ -272,14 +285,14 @@ for(i in seq_len(nBootSamples)) {
   AllBootData <- rbind(BootCRData, BootContData, BootBigData)
   BootReproData <- filter(AllBootData, Survival != 'NA')
   
-  BootReproGLM <- glm(Repro ~ Plant_Height15,
+  BootReproGLM <- glm(Repro ~ HeightNext,
                       data = BootReproData,
                       family = binomial())
   
-  # Seedling sizes
-  BootSdls <- filter(AllBootData, Stage14 == 'SDL')
-  BootSdlMean <- mean(BootSdls$Plant_Height14, na.rm = TRUE)
-  BootSdlSD <- sd(BootSdls$Plant_Height14, na.rm = TRUE)
+  # Seedling size distribution
+  BootSdls <- filter(AllBootData, Stage == 'SDL')
+  BootSdlMean <- mean(BootSdls$Height, na.rm = TRUE)
+  BootSdlSD <- sd(BootSdls$Height, na.rm = TRUE)
   
   
   # Create fecundity vectors and corner
@@ -352,7 +365,8 @@ for(i in seq_len(nBootSamples)) {
   OutputValues$RepInt[i] <- boot.f.params$prob.repro.int
   OutputValues$RecMean[i] <- BootSdlMean
   OutputValues$RecSD[i] <- BootSdlSD
-
+  
+  # cheap version of a progress bar 
   if(i %% 100 == 0) {
     message(i/10, '% of data crunched\n')
   }
@@ -362,15 +376,112 @@ OutputData <- as.data.frame(OutputValues)
 
 write.csv(OutputData, 'BootStrap_Output_Euonymus.csv', row.names = FALSE)
 
-library(gmailr)
-sig <- source("gmailr_signature.R")
+# Build figures. This reshaping is ugly, but leads to prettier figures
 
-draft <- mime() %>%
-  to(c("levisc8@gmail.com")) %>%
-  from("samlevin.rstudio@gmail.com") %>%
-  subject("Bootstrapping complete") %>%
-  text_body(paste("Script complete, check RS Server for results",
-                  sig$value, sep = '\n\n')) %>%
-  send_message()
+EuoAlaData <- OutputData %>%
+  gather(key = 'Variable', value = 'Value') %>%
+  mutate(Trt = vapply(.$Variable,
+                      FUN = function(x) str_split(x, '_')[[1]][2],
+                      FUN.VALUE = '')) %>%
+  group_by(Variable, Trt) %>%
+  arrange(desc(Value)) %>%
+  summarise(obs = NA,
+            UpCI = Value[25],
+            LoCI = Value[975])
 
+EuoAlaData$obs[1] <- lambda_Cont_obs
+EuoAlaData$obs[2] <- lambda_CR_obs
+EuoAlaData$obs[3] <- Sdl.mean
+EuoAlaData$obs[4] <- Sdl.SD
+EuoAlaData$obs[5] <- f.params$prob.repro.int
+EuoAlaData$obs[6] <- f.params$prob.repro.slope
+
+SurvCIsCR <- fixef(BrmSurvQuad_CR)[ ,-2]
+SurvCIsCont <- fixef(BrmSurvQuad_Cont)[ ,-2]
+
+EuoAlaData$Variable <- c('Lambda', 'Lambda',
+                         'Recruit Size Mean',
+                         'Recruit Size SD',
+                         'Repro Intercept',
+                         'Repro Slope')
+
+
+SurvSummary <- tibble(Variable = rep(c('Surv Intercept',
+                                       'Surv Linear Term',
+                                       'Surv Quadratic Term'), 2),
+                      Trt = c(rep('Cont', 3),
+                              rep('CR', 3)),
+                      obs = c(SurvCIsCont[ ,1],
+                              SurvCIsCR[ ,1]),
+                      UpCI = c(SurvCIsCont[ ,3],
+                               SurvCIsCR[ ,3]),
+                      LoCI = c(SurvCIsCont[ ,2],
+                               SurvCIsCR[ ,2]))
+
+
+PlotData <- rbind.data.frame(SurvSummary,
+                             EuoAlaData,
+                             stringsAsFactors = FALSE)
+write.csv(PlotData, 'Euonymus_Summarized_Output.csv', row.names = FALSE)
+
+PlotData$Trt[is.na(PlotData$Trt)] <- 'Pooled'
+PlotData$Trt[PlotData$Trt == 'Cont'] <- 'Control'
+PlotData$Variable[PlotData$Variable == 'Recruit Size Mean'] <- "paste(mu, ' Recruit Size Mean' )"
+PlotData$Variable[PlotData$Variable == 'Recruit Size SD'] <- "paste(sigma, ' Recruit Size SD')"
+PlotData$Variable[PlotData$Variable == 'Repro Intercept'] <- "paste( italic(f[p](x)), ' Intercept')"
+PlotData$Variable[PlotData$Variable == 'Repro Slope'] <- "paste(italic(f[p](x)), ' Slope')"
+PlotData$Variable[PlotData$Variable == 'Surv Intercept'] <- "paste(italic(s(x)),' Intercept')"
+PlotData$Variable[PlotData$Variable == 'Surv Linear Term'] <- "paste(italic(s(x)),' Linear Term')"
+PlotData$Variable[PlotData$Variable == 'Surv Quadratic Term'] <- "paste(italic(s(x)),' Quadratic Term')"
+PlotData$Variable[PlotData$Variable == 'Lambda'] <- 'lambda'
+
+
+VR_Plot <- ggplot(data = PlotData,
+                  aes(x = Trt)) + 
+  geom_point(aes(y = obs, 
+                 color = Trt),
+             size = 4.5) + 
+  geom_linerange(aes(ymin = LoCI,
+                     ymax = UpCI,
+                     color = Trt),
+                 size = 1.25) + 
+  facet_wrap(~Variable,
+             scales = 'free',
+             labeller = label_parsed) +  
+  theme(panel.background = element_blank(), # Set up plot thematic elements
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = c(0.85, 0.1), # legend in bottom right corner
+        legend.title = element_text(size = 22), # make legend text bigger
+        legend.text = element_text(size = 18),
+        legend.background = element_blank(),
+        axis.title.y = element_text(size = 22,
+                                    margin = margin(t = 0, # pad the axis title with a bit of whitespace
+                                                    r = 20,
+                                                    b = 0,
+                                                    l = 0)),
+        axis.title.x = element_text(size = 22,
+                                    margin = margin(t = 20,
+                                                    r = 0,
+                                                    b = 10,
+                                                    l = 0)),
+        axis.line = element_line(colour = 'black', # make axis lines a bit bolder
+                                 size = 2),
+        axis.ticks = element_line(size = 1.2),
+        axis.text = element_text(size = 16),
+        strip.text = element_text(size = 18),
+        strip.background = element_rect(fill = 'white')) +
+  scale_y_continuous('Observed Value + Confidence Intervals') + 
+  scale_x_discrete('Treatment (if applicable)') +
+  scale_color_manual('Treatment',
+                     breaks = c('Control', 'CR', "Pooled"),
+                     values = c('black', 'green', 'blue'))
+
+VR_Plot    
+
+ggsave(filename = 'Euonymus_Vital_Rate_Coefficients.png',
+       path = '../Figures',
+       height = 8,
+       width = 10,
+       unit = 'in')
 

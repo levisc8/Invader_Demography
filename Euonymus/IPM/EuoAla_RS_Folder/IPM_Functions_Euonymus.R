@@ -1,7 +1,7 @@
 ## four parameter survival curve
 predict.surv <- function(x, model) {
   
-  linear_p <- predict(model, data.frame(Plant_Height14 = x))[ ,1]
+  linear_p <- predict(model, data.frame(Height = x))[ ,1]
   
   return(linear_p)
 }
@@ -40,7 +40,7 @@ SB.Emerge<-function(x,params) {
 grow.prob.trunc<-function(size2,size1,model,lower.size.bound,upper.size.bound){
   sse <- sum(resid(model)^2)
   sdhat <- sqrt(sse/df.residual(model))
-  Gdata <- data.frame(Plant_Height14 = size1)
+  Gdata <- data.frame(Height = size1)
   size2.pred <- predict(model, newdata = Gdata, type ='response')
   return(dtrunc(size2,
                 spec = 'norm',
@@ -54,7 +54,7 @@ grow.prob.trunc<-function(size2,size1,model,lower.size.bound,upper.size.bound){
 grow.prob<-function(size2,size1,model){
   sse <- sum(resid(model)^2)
   sdhat <- sqrt(sse/df.residual(model))
-  Gdata <- data.frame(Plant_Height14 = size1)
+  Gdata <- data.frame(Height = size1)
   size2.pred <- predict(model, newdata = Gdata, type ='response')
   return(dnorm(size2,
                mean = size2.pred,
