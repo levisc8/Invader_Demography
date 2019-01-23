@@ -49,8 +49,8 @@ for(i in seq_len(dim(ContOutput)[2])) {
 
 AllParams <- rbind(ContCleaned, CRCleaned)
 
-# write.csv(AllParams, file = 'Ailanthus_IPM/Ailanthus_IPM_Summary.csv',
-#           row.names = FALSE)
+write.csv(AllParams, file = 'Ailanthus_IPM/Ailanthus_Summarized_Output.csv',
+          row.names = FALSE)
 
 # Now, some ugly brute force renaming of variables so plot labels look pretty
 

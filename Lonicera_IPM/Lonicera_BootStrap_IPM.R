@@ -452,13 +452,13 @@ AllValues <- read.csv('Lonicera_IPM/Lonicera_Bootstrap_Output.csv',
 
 AllData <- AllValues %>%
   gather(key = 'Variable', value = 'Value', -Boot_Obs) %>%
-  mutate(Trt = vapply(.$Variable,
+  mutate(Treatment = vapply(.$Variable,
                       FUN = function(x) str_split(x, '_')[[1]][2],
                       FUN.VALUE = ''),
          SurvModel = vapply(.$Variable,
                             FUN = function(x) str_split(x, '_')[[1]][3],
                             FUN.VALUE = '')) %>%
-  group_by(Variable, Trt, SurvModel) %>%
+  group_by(Variable, Treatment, SurvModel) %>%
   arrange(desc(Value)) %>%
   summarise(obs = Value[Boot_Obs == 'Observed'],
             UpCI = Value[25],
@@ -470,7 +470,7 @@ AllData <- AllValues %>%
 
 SurvData <- tibble(Variable = rep(c('SurvInt', 'SurvSlope',
                                       'SurvInt', 'SurvSlope', 'SurvSlope2'), 2),
-                       Trt = c(rep('Cont', 5),
+                       Treatment = c(rep('Cont', 5),
                                rep('CR', 5)),
                        SurvModel = c(rep('Lin', 2),
                                      rep('Quad', 3),
@@ -492,8 +492,8 @@ write.csv(PlotData, file = 'Lonicera_IPM/Lonicera_Summarized_Output.csv',
           row.names = FALSE)
 
 # Make labels for facet_wrap()
-PlotData$Trt[is.na(PlotData$Trt)] <- 'Pooled'
-PlotData$Trt[PlotData$Trt == 'Cont'] <- 'Control'
+PlotData$Treatment[is.na(PlotData$Treatment)] <- 'Pooled'
+PlotData$Treatment[PlotData$Treatment == 'Cont'] <- 'Control'
 PlotData$Variable[PlotData$Variable == 'GrowInt'] <- "paste(italic(g(y,x)), ' Intercept')"
 PlotData$Variable[PlotData$Variable == 'GrowSlope'] <- "paste(italic(g(y,x)), ' Slope')"
 PlotData$Variable[PlotData$Variable == 'RecMean'] <- "paste(mu, ' Recruit Size Mean' )"
@@ -511,13 +511,13 @@ PlotData$Variable[PlotData$Variable == 'Lambda'] <- 'lambda'
 PlotData2 <- filter(PlotData, is.na(SurvModel))
 
 LM_SurvIns_Plot <- ggplot(data = PlotData2,
-                          aes(x = Trt)) + 
+                          aes(x = Treatment)) + 
   geom_point(aes(y = obs, 
-                 color = Trt),
+                 color = Treatment),
              size = 4.5) + 
   geom_linerange(aes(ymin = LoCI,
                      ymax = UpCI,
-                     color = Trt),
+                     color = Treatment),
                  size = 1.25) + 
   facet_wrap(~Variable,
              scales = 'free',
@@ -563,7 +563,7 @@ ggsave(filename = 'Lonicera_Survival_Insensitive_Vital_Rates.png',
 # Create two dummy rows to occupy the right side of the 
 # x-axis for SurvSlope^2
 DummyRows <- tibble(Variable = rep("paste(italic(s(x)),' Quadratic Term')", 2),
-                    Trt = rep(NA, 2),
+                    Treatment = rep(NA, 2),
                     SurvModel = rep(NA, 2),
                     obs = rep(NA, 2),
                     UpCI = rep(NA_real_, 2),
@@ -571,7 +571,7 @@ DummyRows <- tibble(Variable = rep("paste(italic(s(x)),' Quadratic Term')", 2),
 
 PlotData1 <- filter(PlotData, !is.na(SurvModel)) %>%
   rbind(., DummyRows) %>%
-  mutate(Dummy = paste(.$Trt, .$SurvModel, sep = '-')) 
+  mutate(Dummy = paste(.$Treatment, .$SurvModel, sep = '-')) 
 PlotData1$Dummy <- gsub('NA-NA', 'Legend', PlotData1$Dummy) 
 PlotData1$SurvModel[PlotData1$SurvModel == 'Lin'] <- 'Linear'
 PlotData1$SurvModel[PlotData1$SurvModel == 'Quad'] <- 'Quadratic'
@@ -587,11 +587,11 @@ PlotData1 %>%
          aes(x = Dummy)) + 
   geom_point(aes(y = obs, 
                  shape = SurvModel,
-                 color = Trt),
+                 color = Treatment),
              size = 4.5) + 
   geom_linerange(aes(ymax = UpCI,
                      ymin = LoCI,
-                     color = Trt),
+                     color = Treatment),
                  size = 1.25) +
   geom_hline(data = PlotData1,
              aes(yintercept = yints),

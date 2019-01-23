@@ -389,7 +389,7 @@ write.csv(OutputData, 'BootStrap_Output_Euonymus.csv', row.names = FALSE)
 
 EuoAlaData <- OutputData %>%
   gather(key = 'Variable', value = 'Value') %>%
-  mutate(Trt = vapply(.$Variable,
+  mutate(Treatment = vapply(.$Variable,
                       FUN = function(x) str_split(x, '_')[[1]][2],
                       FUN.VALUE = '')) %>%
   group_by(Variable, Trt) %>%
@@ -418,7 +418,7 @@ EuoAlaData$Variable <- c('Lambda', 'Lambda',
 SurvSummary <- tibble(Variable = rep(c('Surv Intercept',
                                        'Surv Linear Term',
                                        'Surv Quadratic Term'), 2),
-                      Trt = c(rep('Cont', 3),
+                      Treatment = c(rep('Cont', 3),
                               rep('CR', 3)),
                       obs = c(SurvCIsCont[ ,1],
                               SurvCIsCR[ ,1]),
@@ -446,13 +446,13 @@ PlotData$Variable[PlotData$Variable == 'Lambda'] <- 'lambda'
 
 
 VR_Plot <- ggplot(data = PlotData,
-                  aes(x = Trt)) + 
+                  aes(x = Treatment)) + 
   geom_point(aes(y = obs, 
-                 color = Trt),
+                 color = Treatment),
              size = 4.5) + 
   geom_linerange(aes(ymin = LoCI,
                      ymax = UpCI,
-                     color = Trt),
+                     color = Treatment),
                  size = 1.25) + 
   facet_wrap(~Variable,
              scales = 'free',

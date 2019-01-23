@@ -481,13 +481,13 @@ AllLambdas <- read.csv('Ligustrum_IPM/Ligustrum_All_Lambdas.csv',
 OutputValues <- read.csv('Ligustrum_IPM/Ligustrum_Bootstrap_Output.csv',
                          stringsAsFactors = FALSE) %>%
   gather(key = 'Variable', value = 'Value', -Obs_Boot) %>%
-  mutate(Trt = vapply(.$Variable, 
+  mutate(Treatment = vapply(.$Variable, 
                       FUN = function(x) str_split(x, "_")[[1]][2],
                       FUN.VALUE = ''),
          SurvModel = vapply(.$Variable,
                             FUN = function(x) str_split(x, '_')[[1]][3],
                             FUN.VALUE = '')) %>%
-  group_by(Variable, Trt) %>%
+  group_by(Variable, Treatment) %>%
   arrange(desc(Value)) %>%
   summarise(Obs = Value[Obs_Boot == 'Observed'],
             UpCI = Value[26],
@@ -572,8 +572,8 @@ OutputValues$Variable[OutputValues$Variable == 'SurvSelope2'] <- 'SurvSlope2'
 
 
 # Start renaming parameters so figure titles look pretty
-OutputValues$Trt[is.na(OutputValues$Trt)] <- 'Pooled'
-OutputValues$Trt[OutputValues$Trt == 'Cont'] <- 'Control'
+OutputValues$Treatment[is.na(OutputValues$Treatment)] <- 'Pooled'
+OutputValues$Treatment[OutputValues$Treatment == 'Cont'] <- 'Control'
 OutputValues$Variable[OutputValues$Variable == 'RecMean'] <- "paste(mu, ' Recruit Size Mean' )"
 OutputValues$Variable[OutputValues$Variable == 'RecSD'] <- "paste(sigma, ' Recruit Size SD')"
 OutputValues$Variable[OutputValues$Variable == 'RepInt'] <- "paste( italic(f[p](x)), ' Intercept')"
@@ -587,13 +587,13 @@ OutputValues$Variable[OutputValues$Variable == 'GrowSlope'] <- "paste(italic(g(y
 
 
 ggplot(data = OutputValues,
-       aes(x = Trt)) + 
+       aes(x = Treatment)) + 
   geom_point(aes(y = Obs, 
-                 color = Trt),
+                 color = Treatment),
              size = 4.5) + 
   geom_linerange(aes(ymin = LoCI,
                      ymax = UpCI,
-                     color = Trt),
+                     color = Treatment),
                  size = 1.25) + 
   facet_wrap(~Variable,
              scales = 'free',
