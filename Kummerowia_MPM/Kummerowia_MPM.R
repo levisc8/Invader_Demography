@@ -6,8 +6,8 @@ library(dplyr)
 library(ggplot2)
 
 #import data into R studio
-ks15 <- read.csv("Kummerowia_MPM/Kummerowia_15_Clean.csv") 
-ks14 <- read.csv("Kummerowia_MPM/Kummerowia_14_Clean.csv") 
+ks15 <- read.csv("Kummerowia_MPM/Kummerowia_15_Census_Clean.csv") 
+ks14 <- read.csv("Kummerowia_MPM/Kummerowia_14_Census_Clean.csv") 
 
 # Parameter values are coming from different years due to some quirks in the 
 # way the sampling played out. See the manuscript for more details.

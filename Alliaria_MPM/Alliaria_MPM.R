@@ -5,7 +5,7 @@
 library(dplyr)
 library(ggplot2)
 
-ks <- read.csv('Alliaria_MPM/Alliaria_Clean.csv',
+ks <- read.csv('Alliaria_MPM/Alliaria_Census_Clean.csv',
                 stringsAsFactors = FALSE)
 
 # Calculate vital rates by treatment

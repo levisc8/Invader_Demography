@@ -4,7 +4,7 @@ library(dplyr)
 library(ggplot2)
 
 # import data into R studio
-ks <- read.csv("Potentilla_MPM/Potentilla_Clean.csv",
+ks <- read.csv("Potentilla_MPM/Potentilla_Census_Clean.csv",
                stringsAsFactors = FALSE) 
 # We found an average of 87.3 seeds/fruit in the field
 ks$Seeds <- ks$Fruit * 87.3

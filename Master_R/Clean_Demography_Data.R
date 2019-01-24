@@ -82,21 +82,21 @@ AASdlClean <- AASDLRaw %>%
     'Year',
     'SDL_Count'
   )) %T>%
-  write.csv('Ailanthus_IPM/Ailanthus_Seedlings_Clean.csv',
+  write.csv('Ailanthus_IPM/Ailanthus_SDL_Clean.csv',
             row.names = FALSE)
 
-save(AASdlClean, file = 'Ailanthus_IPM//Ailanthus_Seedlings_Clean.rda')
+save(AASdlClean, file = 'Ailanthus_IPM/Ailanthus_SDL_Clean.rda')
 
-write.csv(AAClean, 'Ailanthus_IPM//Ailanthus_Clean.csv',
+write.csv(AAClean, 'Ailanthus_IPM/Ailanthus_Census_Clean.csv',
           row.names = FALSE)
 
-save(AAClean, file = 'Ailanthus_IPM/Ailanthus_Clean.rda')
+save(AAClean, file = 'Ailanthus_IPM/Ailanthus_Census_Clean.rda')
 
 
 write.csv(AAGermClean, 'Ailanthus_IPM/Ailanthus_Germ_Clean.csv',
           row.names = FALSE)
 
-save(AAGermClean, file = 'Ailanthus_IPM//Ailanthus_Germ_Clean.rda')
+save(AAGermClean, file = 'Ailanthus_IPM/Ailanthus_Germ_Clean.rda')
 
 
 # Alliaria
@@ -149,7 +149,7 @@ GMClean <- GMRaw %>%
     'Seeds',
     'RA'
   ))%T>% 
-  write.csv('Alliaria_MPM/Alliaria_Clean.csv',
+  write.csv('Alliaria_MPM/Alliaria_Census_Clean.csv',
             row.names = FALSE) 
 
 GMFec %>%
@@ -157,7 +157,7 @@ GMFec %>%
             row.names = FALSE)
 
 
-save(GMClean, file = 'Alliaria_MPM/Alliaria_Clean.rda')
+save(GMClean, file = 'Alliaria_MPM/Alliaria_Census_Clean.rda')
 save(GMFec, file = 'Alliaria_MPM/Alliaria_Fec_Clean.rda')  
 
 
@@ -191,9 +191,9 @@ for(i in seq_len(dim(CNClean)[1])) {
   }
 }
 
-write.csv(CNClean, 'Carduus_MPM/Carduus_Clean.csv',
+write.csv(CNClean, 'Carduus_MPM/Carduus_Census_Clean.csv',
             row.names = FALSE)
-save(CNClean, file = 'Carduus_MPM/Carduus_Clean.rda')
+save(CNClean, file = 'Carduus_MPM/Carduus_Census_Clean.rda')
 
 
 # Draba
@@ -205,10 +205,10 @@ DVRaw <- read.csv('Uncleaned_Data/Draba/Draba4R.csv',
 
 DVClean <- DVRaw %>%
   setNames(c('Treatment', 'Plot', 'Plant', 'Survival', 'Fruit')) %T>%
-  write.csv('Draba_MPM/Draba_Clean.csv',
+  write.csv('Draba_MPM/Draba_Census_Clean.csv',
             row.names = FALSE)
 
-save(DVClean, file = 'Draba_MPM/Draba_Clean.rda')
+save(DVClean, file = 'Draba_MPM/Draba_Census_Clean.rda')
 
 
 # Euonymus - first population data
@@ -244,10 +244,10 @@ for(i in seq_len(dim(EAClean)[1])) {
   }
 }
  
-write.csv(EAClean, 'Euonymus_IPM/Euonymus_Clean.csv',
+write.csv(EAClean, 'Euonymus_IPM/Euonymus_Census_Clean.csv',
             row.names = FALSE)
 
-save(EAClean, file = 'Euonymus_IPM/Euonymus_Clean.rda')
+save(EAClean, file = 'Euonymus_IPM/Euonymus_Census_Clean.rda')
 
 # Reproduction data
 EA_RARaw <- read.csv('Uncleaned_Data/Euonymus/RA4R.csv')
@@ -276,17 +276,17 @@ KS15Clean <- KS15Raw %>%
   select(Treatment, Plot, Plant, Alive, Notes) %>%
   setNames(c('Treatment', 'Plot', 'Plant', 
              'Survival','Notes')) %T>%
-  write.csv('Kummerowia_MPM/Kummerowia_15_Clean.csv',
+  write.csv('Kummerowia_MPM/Kummerowia_15_Census_Clean.csv',
             row.names = FALSE)
 
 KS14Clean <- KS14Raw %>%
   select(-X) %>%
   setNames(c('Treatment', 'Plot', 'Plant', 'Survival', 'Seeds')) %T>%
-  write.csv('Kummerowia_MPM/Kummerowia_14_Clean.csv',
+  write.csv('Kummerowia_MPM/Kummerowia_14_Census_Clean.csv',
             row.names = FALSE)
 
-save(KS15Clean, file = 'Kummerowia_MPM/Kummerowia_15_Clean.rda')
-save(KS14Clean, file = 'Kummerowia_MPM/Kummerowia_14_Clean.rda')
+save(KS15Clean, file = 'Kummerowia_MPM/Kummerowia_15_Census_Clean.rda')
+save(KS14Clean, file = 'Kummerowia_MPM/Kummerowia_14_Census_Clean.rda')
 
 
 # Lepidium
@@ -298,10 +298,10 @@ LCClean <- LCRaw %>%
   select(-Seeds) %>%
   setNames(c('Treatment', 'Plot', 'Plant',
              'Survival', 'Fruit')) %T>% 
-  write.csv('Lepidium_MPM/Lepidium_Clean.csv',
+  write.csv('Lepidium_MPM/Lepidium_Census_Clean.csv',
             row.names = FALSE)
 
-save(LCClean, file = 'Lepidium_MPM/Lepidium_Clean.rda')
+save(LCClean, file = 'Lepidium_MPM/Lepidium_Census_Clean.rda')
 
 
 # Lespedeza
@@ -333,10 +333,10 @@ for(i in seq_len(dim(LCClean)[1])) {
 }
 
 
-write.csv(LCClean, 'Lespedeza_MPM/Lespedeza_Clean.csv', 
+write.csv(LCClean, 'Lespedeza_MPM/Lespedeza_Census_Clean.csv', 
             row.names = FALSE)
 
-save(LCClean, file = 'Lespedeza_MPM/Lespedeza_Clean.rda')
+save(LCClean, file = 'Lespedeza_MPM/Lespedeza_Census_Clean.rda')
 
 
 # Ligustrum
@@ -364,10 +364,10 @@ for(i in seq_len(dim(LOClean)[1])) {
   }
 } 
 
-write.csv(LOClean, 'Ligustrum_IPM/Ligustrum_Clean.csv',
+write.csv(LOClean, 'Ligustrum_IPM/Ligustrum_Census_Clean.csv',
           row.names = FALSE)
 
-save(LOClean, file = 'Ligustrum_IPM/Ligustrum_Clean.rda')
+save(LOClean, file = 'Ligustrum_IPM/Ligustrum_Census_Clean.rda')
 
 LO_RARaw <- read.csv('Uncleaned_Data/Ligustrum/RA4R.csv')
 
@@ -405,10 +405,10 @@ LMClean <- LMRaw %>%
 
 LMClean$Reproductive[is.na(LMClean$StageNext)] <- NA_integer_
   
-write.csv(LMClean, 'Lonicera_IPM/Lonicera_Clean.csv',
+write.csv(LMClean, 'Lonicera_IPM/Lonicera_Census_Clean.csv',
             row.names = FALSE)
 
-save(LMClean, file = 'Lonicera_IPM/Lonicera_Clean.rda')
+save(LMClean, file = 'Lonicera_IPM/Lonicera_Census_Clean.rda')
 
 
 # Perilla
@@ -429,10 +429,10 @@ for(i in seq_len(dim(PFClean)[1])) {
   
 }
 
-write.csv(PFClean, 'Perilla_MPM/Perilla_Clean.csv',
+write.csv(PFClean, 'Perilla_MPM/Perilla_Census_Clean.csv',
           row.names = FALSE)
 
-save(PFClean, file = 'Perilla_MPM/Perilla_Clean.rda')
+save(PFClean, file = 'Perilla_MPM/Perilla_Census_Clean.rda')
 
 # Potentilla
 # rm(list = ls())
@@ -452,10 +452,10 @@ PRCleaned <- PRRaw %>%
              'Leaf', 'LongestLeaf', 'Stage',
              'Fruit', 'Notes', 'StageNext', 'LeafNext',
              'LongestLeafNext', 'FruitNext', 'Survival', 'NotesNext')) %T>%
-  write.csv('Potentilla_MPM/Potentilla_Clean.csv',
+  write.csv('Potentilla_MPM/Potentilla_Census_Clean.csv',
             row.names = FALSE)
 
-save(PRCleaned, file = 'Potentilla_MPM/Potentilla_Clean.rda')
+save(PRCleaned, file = 'Potentilla_MPM/Potentilla_Census_Clean.rda')
 
 PR_SDLClean <- PR_SDLRaw %>%
   select(-Subquad) %>%
@@ -475,10 +475,10 @@ TPRaw <- read.csv('Uncleaned_Data/Thlaspi/ThlaspiD.csv',
 TPClean <- TPRaw %>%
   select(Treatment:Fruit) %>%
   setNames(c('Treatment', 'Plot', 'Plant', 'Survival', 'Fruit')) %T>%
-  write.csv('Thlaspi_MPM/Thlaspi_Clean.csv',
+  write.csv('Thlaspi_MPM/Thlaspi_Census_Clean.csv',
             row.names = FALSE)
 
-save(TPClean, file = 'Thlaspi_MPM/Thlaspi_Clean.rda')
+save(TPClean, file = 'Thlaspi_MPM/Thlaspi_Census_Clean.rda')
 
 # Verbascum
 # rm(list = ls())
@@ -490,7 +490,7 @@ VTClean <- VTRaw %>%
            Alive15, Seeds, Notes15)) %>%
   setNames(c('Treatment', 'Plot', 'Plant', 'Diameter',
              'Notes', 'Survival', 'Seeds', 'NotesNext')) %T>%
-  write.csv('Verbascum_MPM/Verbascum_Clean.csv', 
+  write.csv('Verbascum_MPM/Verbascum_Census_Clean.csv', 
             row.names = FALSE)
 
-save(VTClean, file = 'Verbascum_MPM/Verbascum_Clean.rda')
+save(VTClean, file = 'Verbascum_MPM/Verbascum_Census_Clean.rda')

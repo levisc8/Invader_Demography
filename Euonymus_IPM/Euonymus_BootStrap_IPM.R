@@ -25,7 +25,7 @@ source('Euonymus_IPM/IPM_Functions_Euonymus.R')
 
 # load the data
 RAs<-read.csv("Euonymus_IPM/Euonymus_RA_Clean.csv")
-AllPlants1 <- read.csv("Euonymus_IPM/Euonymus_Clean.csv") 
+AllPlants1 <- read.csv("Euonymus_IPM/Euonymus_Census_Clean.csv") 
 
 AllPlants1$incr<-AllPlants1$HeightNext-AllPlants1$Height
 

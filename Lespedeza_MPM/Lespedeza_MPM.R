@@ -5,7 +5,7 @@
 library(dplyr)
 library(ggplot2)
 
-PopData <- read.csv('Lespedeza_MPM/Lespedeza_Clean.csv', 
+PopData <- read.csv('Lespedeza_MPM/Lespedeza_Census_Clean.csv', 
                     stringsAsFactors = FALSE) 
 
 # Delineating stage classes for adults at 250, 251-1000, 1000 > cm.

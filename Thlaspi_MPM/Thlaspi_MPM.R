@@ -5,7 +5,7 @@ library(dplyr)
 library(ggplot2)
 
 # Import data
-ks <- read.csv("Thlaspi_MPM/Thlaspi_Clean.csv",
+ks <- read.csv("Thlaspi_MPM/Thlaspi_Census_Clean.csv",
                stringsAsFactors = FALSE)
 
 # Calculate parameter values by treatment

@@ -1,6 +1,6 @@
 
 ### Infile growth, survival, and reproduction data ###
-Ailanthus4R <- read.csv("Ailanthus_IPM/Ailanthus_Clean.csv", header = TRUE)
+Ailanthus4R <- read.csv("Ailanthus_IPM/Ailanthus_Census_Clean.csv", header = TRUE)
 
 
 ### Infile germination data ###

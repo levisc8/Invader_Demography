@@ -4,7 +4,7 @@ library(dplyr)
 library(ggplot2)
 
 # read in data
-ks <- read.csv("Perilla_MPM/Perilla_Clean.csv",
+ks <- read.csv("Perilla_MPM/Perilla_Census_Clean.csv",
                stringsAsFactors = FALSE)
 
 cont <- filter(ks, Treatment == "Control")

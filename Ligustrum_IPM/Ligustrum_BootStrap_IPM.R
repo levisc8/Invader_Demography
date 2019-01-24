@@ -24,7 +24,7 @@ source('Ligustrum_IPM/IPM_Functions_Ligustrum.R')
 # load the data and do some basic restructuring
 
 RAs <- read.csv("Ligustrum_IPM/Ligustrum_RA_Clean.csv")
-AllPlants <- read.csv("Ligustrum_IPM/Ligustrum_Clean.csv",
+AllPlants <- read.csv("Ligustrum_IPM/Ligustrum_Census_Clean.csv",
                       stringsAsFactors = FALSE)
 
 AllPlants$Plant <- as.numeric(AllPlants$Plant)

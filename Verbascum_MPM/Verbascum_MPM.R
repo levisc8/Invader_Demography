@@ -5,7 +5,7 @@ library(dplyr)
 library(ggplot2)
 
 # import data into R studio
-ks <- read.csv("Verbascum_MPM/Verbascum_Clean.csv",
+ks <- read.csv("Verbascum_MPM/Verbascum_Census_Clean.csv",
             stringsAsFactors = FALSE) 
 
 # Extract vital rate parameters

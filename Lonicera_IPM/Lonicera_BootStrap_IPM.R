@@ -15,7 +15,7 @@ library(tidyr)
 library(stringr)
 
 # Read in data and get rid of extraneous info
-AllPlants <- read.csv('Lonicera_IPM/Lonicera_Clean.csv',
+AllPlants <- read.csv('Lonicera_IPM/Lonicera_Census_Clean.csv',
                       stringsAsFactors = FALSE)
 
 AllCR <- filter(AllPlants, Treatment == 'CompN')

@@ -5,7 +5,7 @@ library(dplyr)
 library(ggplot2)
 
 ##Import data
-ks <- read.csv("Draba_MPM/Draba_Clean.csv",
+ks <- read.csv("Draba_MPM/Draba_Census_Clean.csv",
                stringsAsFactors = FALSE)
 
 # 17.2 seeds/fruit obtained from a subsample of 30 fruits in April 2014

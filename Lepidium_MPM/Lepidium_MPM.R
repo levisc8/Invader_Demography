@@ -4,7 +4,7 @@
 # Import data and add seed counts. Lepidium always makes 2 seeds/fruit
 library(dplyr)
 library(ggplot2)
-ks <- read.csv("Lepidium_MPM/Lepidium_Clean.csv") %>%
+ks <- read.csv("Lepidium_MPM/Lepidium_Census_Clean.csv") %>%
   mutate(Seeds = Fruit * 2) # 2 seeds/fruit 
 
 # Compute other parameter values by treatment

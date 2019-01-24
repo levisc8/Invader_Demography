@@ -5,7 +5,7 @@ library(dplyr)
 library(ggplot2)
 
 #import data into R studio
-ks <- read.csv("Carduus_MPM/Carduus_Clean.csv") 
+ks <- read.csv("Carduus_MPM/Carduus_Census_Clean.csv") 
 
 # Seeds/infloresence was calculated from a subsample of 20 infloresences.
 ks$Seeds <- ks$Fruit * 88.5
