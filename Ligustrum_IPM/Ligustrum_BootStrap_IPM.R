@@ -67,7 +67,7 @@ fec <- glm(Seeds ~ Height,
 summary(fec)
 
 #Pr(Reproductive) - Logistic regression ----------------------------------
-AllPlants$Repro <- ifelse(AllPlants$Stage15 == "RA", 1, 0)
+AllPlants$Repro <- ifelse(AllPlants$StageNext == "RA", 1, 0)
 
 Regression.Data <- filter(AllPlants, Survival != "NA")
 
@@ -77,7 +77,7 @@ Repro.Glm <- glm(Repro ~ Height,
 
 
 # Recruit size distribution----------------------------------------------------------------------
-sdls <- filter(AllPlants, Stage14 == "SDL")
+sdls <- filter(AllPlants, Stage == "SDL")
 Sdl.mean <- mean(sdls$Height, na.rm = TRUE)
 Sdl.SD <- sd(sdls$Height, na.rm = TRUE)
 
@@ -320,7 +320,7 @@ AllBig <- filter(AllPlants, Treatment == 'All')
 #                         data = BootReproData,
 #                         family = binomial())
 #     
-#     BootSdls <- filter(AllData, Stage14 == 'SDL')
+#     BootSdls <- filter(AllData, Stage == 'SDL')
 #     BootSdlMean <- mean(BootSdls$Height, na.rm = TRUE)
 #     BootSdlSD <- sd(BootSdls$Height, na.rm = TRUE)
 #     

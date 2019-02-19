@@ -55,6 +55,26 @@ source('CR_Biomass/Biomass_Cleaning.R')
 # Ailanthus--------------------
 source('Ailanthus_IPM/Ailanthus_Figures.R') # Contains bootstrapping for both!
 
+CompN_lambda_CI <- AllParams %>%
+  filter(Variable == 'lambda' & Treatment == 'CR') %>%
+  select(UpCI, LoCI) %>%
+  unlist()
+
+ContN_lambda_CI <- AllParams %>%
+  filter(Variable == 'lambda' & Treatment == 'Control') %>%
+  select(UpCI, LoCI) %>%
+  unlist()
+
+CompN_lambda <- AllParams %>%
+  filter(Variable == 'lambda' & Treatment == 'CR') %>%
+  select(Obs) %>%
+  unlist()
+
+
+ContN_lambda <- AllParams %>%
+  filter(Variable == 'lambda' & Treatment == 'Control') %>%
+  select(Obs) %>%
+  unlist()
 
 # Test if confidence intervals overlap. If not, effect size is LLR,
 # if so, effect size is 0
@@ -192,7 +212,7 @@ if(results$LoCI[38] > results$UpCI[37] |
 
 # Ligustrum------------------
 # Same as for Euonymus
-results <- read.csv('Ligustrum_IPM/Ligustrum_Bootstrap_Output.csv',
+results <- read.csv('Ligustrum_IPM/Ligustrum_All_Lambdas.csv',
                     stringsAsFactors = FALSE)
 if(any(results$lambda_comp_Quad_lo > results$lambda_cont_Quad_up) |
    any(results$lambda_comp_Quad_up < results$lambda_cont_Quad_lo)) {
@@ -302,9 +322,13 @@ save(.DemoTable, file = 'Master_R/Cleaned_Demographic_Model_Output.rda')
 
 # Move the hidden object into the tyson data object and save it!
 tyson$demo.data <- .DemoTable
-devtools::use_data(tyson,
-                   pkg = '../../Tyson/Writing/Tyson_Traits_Analysis/Fun_Phylo_Package/Fun_Phylo_Package',
+
+usethis::proj_set(path = '../../Tyson/Writing/Tyson_Traits_Analysis/Fun_Phylo_Package/Fun_Phylo_Package')
+
+usethis::use_data(tyson,
                    overwrite = TRUE)
+
+usethis::proj_set(path = getwd())
 
 # Done! :)
 
