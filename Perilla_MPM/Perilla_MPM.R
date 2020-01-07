@@ -149,6 +149,8 @@ boot_f_c <- sort(boot_f_c)
 boot_l_cr <- sort(boot_l_cr)
 boot_l_c <- sort(boot_l_c)
 
+var_escr <- var(log(boot_l_cr + 0.5) - log(boot_l_c + 0.5))
+
 # creating vector of upper and lower confidence intervals for each vital rate
 lower <- c(boot_s_cr[25], boot_s_c[25],
            boot_f_cr[25], boot_f_c[25], 

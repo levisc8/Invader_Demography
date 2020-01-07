@@ -170,6 +170,8 @@ boot_f_cr <- sort(boot_f_cr)
 boot_l_c <- sort(boot_l_c)
 boot_l_cr <- sort(boot_l_cr)
 
+var_escr <- var(log(boot_l_cr + 0.5) - log(boot_l_c + 0.5))
+
 lower <- c(boot_s_c[25], boot_s_cr[25],
            boot_f_c[25], boot_f_cr[25],
            boot_l_c[25], boot_l_cr[25])

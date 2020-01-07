@@ -730,6 +730,8 @@ LoCI <- c(boot_Cont_F_Large[25], boot_CR_F_Large[25],
           boot_Cont_Surv_Large[25], boot_CR_Surv_Large[25],
           boot_Cont_Lambda[25], boot_CR_Lambda[25])
 
+var_escr <- var(log(boot_CR_Lambda + 0.5) - log(boot_Cont_Lambda + 0.5))
+
 # Create data frame to store everything -------------------
 # Again, we create ugly expressions to make pretty labels
 results <- tibble(Trt = rep(c('Control', 'CR'), 19),
