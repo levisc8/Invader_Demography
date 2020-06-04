@@ -675,6 +675,12 @@ for(i in 1:nResamp) {
   
 }
 
+lambdas <- data.frame(lambda_c = c(Cont_Lambda, boot_Cont_Lambda),
+                      lambda_cr = c(CR_Lambda, boot_CR_Lambda),
+                      boot_obs = c("observed", rep("bootstrap", 1000)))
+
+saveRDS(lambdas, file = '../Data/bootstrap_lambdas/Lespedeza_lambdas.rds')
+
 # Sort all of these vectors ------------
 ForSorting <- ls(pattern = 'boot_CR_|boot_Cont_|boot_ES_')
 
@@ -730,7 +736,7 @@ LoCI <- c(boot_Cont_F_Large[25], boot_CR_F_Large[25],
           boot_Cont_Surv_Large[25], boot_CR_Surv_Large[25],
           boot_Cont_Lambda[25], boot_CR_Lambda[25])
 
-var_escr <- var(log(boot_CR_Lambda + 0.5) - log(boot_Cont_Lambda + 0.5))
+var_escr <- var(boot_ES_Lambda)
 
 # Create data frame to store everything -------------------
 # Again, we create ugly expressions to make pretty labels

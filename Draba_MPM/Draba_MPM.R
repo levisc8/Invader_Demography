@@ -185,10 +185,17 @@ boot_s_cr <- sort(boot_s_cr)
 
 boot_f_c <- sort(boot_f_c)
 boot_f_cr <- sort(boot_f_cr)
-boot_l_c <- sort(boot_l_c)
-boot_l_cr <- sort(boot_l_cr)
 
 var_escr <- var(log(boot_l_cr + 0.5) - log(boot_l_c + 0.5))
+
+lambdas <- data.frame(lambda_c = c(values[5], boot_l_c),
+                      lambda_cr = c(values[6], boot_l_cr),
+                      boot_obs = c("observed", rep("bootstrap", 1000)))
+
+saveRDS(lambdas, file = '../Data/bootstrap_lambdas/Draba_lambdas.rds')
+
+boot_l_c <- sort(boot_l_c)
+boot_l_cr <- sort(boot_l_cr)
 
 lower <- c(boot_s_c[25], boot_s_cr[25],
            boot_f_c[25], boot_f_cr[25], 
@@ -234,7 +241,7 @@ results$y[5:6] <- .99 * max(results$upper[5:6])
 # Use the code below to graph results for surival, fecundity, and lambda.
 # These weird looking expressions create pretty labels when used in conjunction
 # with the labeller = label_parsed line in facet_wrap
-results$Trt <- c('Control', 'CR')
+results$Trt <- rep(c('Control', 'CR'), 3)
 results$Var <- factor(c('paste(italic(s))', 
                         'paste(italic(s))',
                         'paste(italic(f))',
