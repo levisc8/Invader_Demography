@@ -1,4 +1,4 @@
-// generated with brms 2.9.0
+// generated with brms 2.12.0
 functions {
 }
 data {
@@ -10,7 +10,7 @@ data {
 }
 transformed data {
   int Kc = K - 1;
-  matrix[N, Kc] Xc;  // centered version of X
+  matrix[N, Kc] Xc;  // centered version of X without an intercept
   vector[Kc] means_X;  // column means of X before centering
   for (i in 2:K) {
     means_X[i - 1] = mean(X[, i]);
@@ -19,20 +19,19 @@ transformed data {
 }
 parameters {
   vector[Kc] b;  // population-level effects
-  real temp_Intercept;  // temporary intercept
+  real Intercept;  // temporary intercept for centered predictors
 }
 transformed parameters {
 }
 model {
-  vector[N] mu = temp_Intercept + Xc * b;
   // priors including all constants
-  target += student_t_lpdf(temp_Intercept | 3, 0, 10);
+  target += student_t_lpdf(Intercept | 3, 0, 10);
   // likelihood including all constants
   if (!prior_only) {
-    target += bernoulli_logit_lpmf(Y | mu);
+    target += bernoulli_logit_glm_lpmf(Y | Xc, Intercept, b);
   }
 }
 generated quantities {
   // actual population-level intercept
-  real b_Intercept = temp_Intercept - dot_product(means_X, b);
+  real b_Intercept = Intercept - dot_product(means_X, b);
 }

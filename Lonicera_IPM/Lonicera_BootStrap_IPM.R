@@ -254,195 +254,195 @@ CompLambda_Lin_obs
 # resources to run them, feel free to uncomment them and re-run the procedure.
 # The commented code is provided to facilitate understanding how the procedure
 # was run. 
-# 
-# CRData <- filter(AllPlants, Treatment == 'CompN')
-# ContData <- filter(AllPlants, Treatment == 'ContN')
-# BigData <- filter(AllPlants, Treatment == 'AllN')
-# 
-# nCR <- dim(CRData)[1]
-# nCont <- dim(ContData)[1]
-# nBig <- dim(BigData)[1]
-# nSurv <- dim(SurvChainsCont_Quad)[1]
-# 
-# nBootSamples <- 1000
-# 
-# OutputValues <- list(GrowSlope_CR = rep(NA, nBootSamples),
-#                      GrowInt_CR = rep(NA, nBootSamples),
-#                      GrowSlope_Cont = rep(NA, nBootSamples),
-#                      GrowInt_Cont = rep(NA, nBootSamples),
-#                      RepSlope = rep(NA, nBootSamples),
-#                      RepInt = rep(NA, nBootSamples),
-#                      SeedSlope = rep(NA, nBootSamples),
-#                      SeedInt = rep(NA, nBootSamples),
-#                      RecMean = rep(NA, nBootSamples),
-#                      RecSD = rep(NA, nBootSamples),
-#                      Lambda_CR_Quad = rep(NA, nBootSamples),
-#                      Lambda_CR_Lin = rep(NA, nBootSamples),
-#                      Lambda_Cont_Quad = rep(NA, nBootSamples),
-#                      Lambda_Cont_Lin = rep(NA, nBootSamples))
-# 
-# ObservedValues <- list(GrowSlope_CR = coef(CompGrowLM)[2],
-#                        GrowInt_CR = coef(CompGrowLM)[1],
-#                        GrowSlope_Cont = coef(ContGrowLM)[2],
-#                        GrowInt_Cont = coef(ContGrowLM)[1],
-#                        RepSlope = coef(ReproGLM)[2],
-#                        RepInt = coef(ReproGLM)[1],
-#                        SeedSlope = coef(SeedGLM)[2],
-#                        SeedInt = coef(SeedGLM)[1],
-#                        RecMean = SdlMean,
-#                        RecSD = SdlSD,
-#                        Lambda_CR_Quad = CompLambda_Quad_obs,
-#                        Lambda_CR_Lin = CompLambda_Lin_obs,
-#                        Lambda_Cont_Quad = ContLambda_Quad_obs,
-#                        Lambda_Cont_Lin = ContLambda_Lin_obs)
-# 
-# for(i in seq_len(nBootSamples)) {
-  
-  # Set up resampling vectors. This generates a vector by sampling 
+
+CRData <- filter(AllPlants, Treatment == 'CompN')
+ContData <- filter(AllPlants, Treatment == 'ContN')
+BigData <- filter(AllPlants, Treatment == 'AllN')
+
+nCR <- dim(CRData)[1]
+nCont <- dim(ContData)[1]
+nBig <- dim(BigData)[1]
+nSurv <- dim(SurvChainsCont_Quad)[1]
+
+nBootSamples <- 1000
+
+OutputValues <- list(GrowSlope_CR = rep(NA, nBootSamples),
+                     GrowInt_CR = rep(NA, nBootSamples),
+                     GrowSlope_Cont = rep(NA, nBootSamples),
+                     GrowInt_Cont = rep(NA, nBootSamples),
+                     RepSlope = rep(NA, nBootSamples),
+                     RepInt = rep(NA, nBootSamples),
+                     SeedSlope = rep(NA, nBootSamples),
+                     SeedInt = rep(NA, nBootSamples),
+                     RecMean = rep(NA, nBootSamples),
+                     RecSD = rep(NA, nBootSamples),
+                     Lambda_CR_Quad = rep(NA, nBootSamples),
+                     Lambda_CR_Lin = rep(NA, nBootSamples),
+                     Lambda_Cont_Quad = rep(NA, nBootSamples),
+                     Lambda_Cont_Lin = rep(NA, nBootSamples))
+
+ObservedValues <- list(GrowSlope_CR = coef(CompGrowLM)[2],
+                       GrowInt_CR = coef(CompGrowLM)[1],
+                       GrowSlope_Cont = coef(ContGrowLM)[2],
+                       GrowInt_Cont = coef(ContGrowLM)[1],
+                       RepSlope = coef(ReproGLM)[2],
+                       RepInt = coef(ReproGLM)[1],
+                       SeedSlope = coef(SeedGLM)[2],
+                       SeedInt = coef(SeedGLM)[1],
+                       RecMean = SdlMean,
+                       RecSD = SdlSD,
+                       Lambda_CR_Quad = CompLambda_Quad_obs,
+                       Lambda_CR_Lin = CompLambda_Lin_obs,
+                       Lambda_Cont_Quad = ContLambda_Quad_obs,
+                       Lambda_Cont_Lin = ContLambda_Lin_obs)
+
+for(i in seq_len(nBootSamples)) {
+
+  # Set up resampling vectors. This generates a vector by sampling
   # rows of the data frame with replacement, then subsets the treatment
   # data using that vector.
-  
-  # CRSampler <- sample(1:nCR, nCR, replace = TRUE)
-  # ContSampler <- sample(1:nCont, nCont, replace = TRUE)
-  # BigSampler <- sample(1:nBig, nBig, replace = TRUE)
-  # SurvSampler <- sample(1:nSurv, 1)
-  # 
-  # BootCRData <- CRData[CRSampler, ]
-  # BootContData <- ContData[ContSampler, ]
-  # BootBigData <- BigData[BigSampler, ]
-  # 
-  # # Growth regressions
-  # BootCompGrowLM <- lm(HeightNext ~ Height, data = rbind(BootCRData,
-  #                                                  BootBigData))
-  # BootContGrowLM <- lm(HeightNext ~ Height, data = rbind(BootContData,
-  #                                                    BootBigData))
-  # 
-  # # Survival. These are created by resampling the joint posterior distribution
-  # # for each of our regressions rather than re-fitting the model (which would be
-  # # extremely time consuming).
-  # 
-  # BootContSurv_Lin <- SurvChainsCont_Lin[SurvSampler, ] %>% unlist()
-  # BootCompSurv_Lin <- SurvChainsCR_Lin[SurvSampler, ] %>% unlist()
-  # BootContSurv_Quad <- SurvChainsCont_Quad[SurvSampler, ] %>% unlist()
-  # BootCompSurv_Quad <- SurvChainsCR_Quad[SurvSampler, ] %>% unlist()
-  # 
-  # # Recreate reproduction parameters with pooled bootstrap samples
-  # AllBootData <- rbind(BootCRData, BootContData, BootBigData)
-  # 
-  # BootReproGLM <- glm(Reproductive ~ HeightNext, 
-  #                     data = AllBootData,
-  #                     family = quasibinomial())
-  # 
-  # BootSeedGLM <- glm(Seeds ~ HeightNext,
-  #                    data = AllBootData,
-  #                    family = quasipoisson())
-  # 
+
+  CRSampler <- sample(1:nCR, nCR, replace = TRUE)
+  ContSampler <- sample(1:nCont, nCont, replace = TRUE)
+  BigSampler <- sample(1:nBig, nBig, replace = TRUE)
+  SurvSampler <- sample(1:nSurv, 1)
+
+  BootCRData <- CRData[CRSampler, ]
+  BootContData <- ContData[ContSampler, ]
+  BootBigData <- BigData[BigSampler, ]
+
+  # Growth regressions
+  BootCompGrowLM <- lm(HeightNext ~ Height, data = rbind(BootCRData,
+                                                   BootBigData))
+  BootContGrowLM <- lm(HeightNext ~ Height, data = rbind(BootContData,
+                                                     BootBigData))
+
+  # Survival. These are created by resampling the joint posterior distribution
+  # for each of our regressions rather than re-fitting the model (which would be
+  # extremely time consuming).
+
+  BootContSurv_Lin <- SurvChainsCont_Lin[SurvSampler, 2:4] %>% unlist()
+  BootCompSurv_Lin <- SurvChainsCR_Lin[SurvSampler, 2:4] %>% unlist()
+  BootContSurv_Quad <- SurvChainsCont_Quad[SurvSampler, 2:4] %>% unlist()
+  BootCompSurv_Quad <- SurvChainsCR_Quad[SurvSampler, 2:4] %>% unlist()
+
+  # Recreate reproduction parameters with pooled bootstrap samples
+  AllBootData <- rbind(BootCRData, BootContData, BootBigData)
+
+  BootReproGLM <- glm(Reproductive ~ HeightNext,
+                      data = AllBootData,
+                      family = quasibinomial())
+
+  BootSeedGLM <- glm(Seeds ~ HeightNext,
+                     data = AllBootData,
+                     family = quasipoisson())
+
   # Use the boot strapped data set to generate a recruit size distribution
-  
-#   BootSdls <- filter(AllBootData, StageNext == 'S')
-#   BootSdlMean <- mean(BootSdls$HeightNext, na.rm = TRUE)
-#   BootSdlSD <- sd(BootSdls$HeightNext, na.rm = TRUE)
-#   
-#   
-#   BootFecModels <- list(PRep = BootReproGLM,
-#                         Seeds = BootSeedGLM,
-#                         EstProb = EstProb,
-#                         SizeDist = list(Mean = BootSdlMean,
-#                                         SD = BootSdlSD)) 
-#   
-#   # Now, begin constructing kernels. We don't need to re-assign any of the 
-#   # constants used to construct the models so I'll skip that
-#   GMat_Cont <- CellSize * outer(MeshPts, MeshPts, FUN = GrowFun, Model = BootContGrowLM)
-#   GMat_Comp <- CellSize * outer(MeshPts, MeshPts, FUN = GrowFun, Model = BootCompGrowLM)
-#   
-#   # Correct for eviction in the growth kernels
-#   GMat_Cont <- GMat_Cont/matrix(as.vector(apply(GMat_Cont,
-#                                                 2,
-#                                                 sum)),
-#                                 nrow = nMeshPts,
-#                                 ncol = nMeshPts,
-#                                 byrow = TRUE)
-#   
-#   GMat_Comp <- GMat_Comp/matrix(as.vector(apply(GMat_Comp,
-#                                                 2,
-#                                                 sum)),
-#                                 nrow = nMeshPts,
-#                                 ncol = nMeshPts,
-#                                 byrow = TRUE)
-#   
-#   SVec_Cont_Quad <- SurvFun(MeshPts, BootContSurv_Quad)
-#   SVec_Comp_Quad <- SurvFun(MeshPts, BootCompSurv_Quad)
-#   
-#   SVec_Cont_Lin <- SurvFun(MeshPts, BootContSurv_Lin)
-#   SVec_Comp_Lin <- SurvFun(MeshPts, BootCompSurv_Lin)
-#   
-#   # P, F, and K matrices
-#   PMat_Cont_Quad <- PMat_Comp_Quad <- matrix(0, nMeshPts, nMeshPts)
-#   
-#   PMat_Cont_Lin <- PMat_Comp_Lin <- matrix(0, nMeshPts, nMeshPts)
-#   
-#   # Generate P Matrix
-#   
-#   for(j in seq_len(nMeshPts)){
-#     PMat_Cont_Quad[ ,j] <- GMat_Cont[ ,j] * SVec_Cont_Quad[j]
-#     PMat_Comp_Quad[ ,j] <- GMat_Comp[ ,j] * SVec_Comp_Quad[j]
-#     
-#     PMat_Cont_Lin[ ,j] <- GMat_Cont[ ,j] * SVec_Cont_Lin[j]
-#     PMat_Comp_Lin[ ,j] <- GMat_Comp[ ,j] * SVec_Comp_Lin[j]
-#   }
-#   
-#   # Generate the F Matrix. This is the same for both treatments
-#   FMat <- CellSize * outer(MeshPts, MeshPts, FUN = FecFun, Models = FecModels)
-#   
-#   KMat_Cont_Quad <- PMat_Cont_Quad + FMat
-#   KMat_Comp_Quad <- PMat_Comp_Quad + FMat
-#   
-#   KMat_Cont_Lin <- PMat_Cont_Lin + FMat
-#   KMat_Comp_Lin <- PMat_Comp_Lin + FMat
-#   
-#   # Extract lambdas
-#   ContEV_Quad <- eigen(KMat_Cont_Quad)
-#   CompEV_Quad <- eigen(KMat_Comp_Quad)
-#   ContLambda_Quad_boot <- max(Re(ContEV_Quad$values))
-#   CompLambda_Quad_boot <- max(Re(CompEV_Quad$values))
-#   ContEV_Lin <- eigen(KMat_Cont_Lin)
-#   CompEV_Lin <- eigen(KMat_Comp_Lin)
-#   ContLambda_Lin_boot <- max(Re(ContEV_Lin$values))
-#   CompLambda_Lin_boot <- max(Re(CompEV_Lin$values))
-#   
-#   # Store values
-#   OutputValues$GrowSlope_CR[i] <- coef(BootCompGrowLM)[2]
-#   OutputValues$GrowInt_CR[i] <- coef(BootCompGrowLM)[1]
-#   OutputValues$GrowSlope_Cont[i] <- coef(BootContGrowLM)[2]
-#   OutputValues$GrowInt_Cont[i] <- coef(BootContGrowLM)[1]
-#   OutputValues$RepSlope[i] <- coef(BootReproGLM)[2]
-#   OutputValues$RepInt[i] <- coef(BootReproGLM)[1]
-#   OutputValues$SeedSlope[i] <- coef(BootSeedGLM)[2]
-#   OutputValues$SeedInt[i] <- coef(BootSeedGLM)[1]
-#   OutputValues$RecMean[i] <- BootSdlMean
-#   OutputValues$RecSD[i] <- BootSdlSD
-#   OutputValues$Lambda_CR_Quad[i] <- CompLambda_Quad_boot
-#   OutputValues$Lambda_CR_Lin[i] <- CompLambda_Lin_boot
-#   OutputValues$Lambda_Cont_Quad[i] <- ContLambda_Quad_boot
-#   OutputValues$Lambda_Cont_Lin[i] <- ContLambda_Lin_boot
-#   
-#   if(i %% 100 == 0) {
-#     message(i / 10, '% of data crunched')
-#   }
-#   
-# }
+
+  BootSdls <- filter(AllBootData, StageNext == 'S')
+  BootSdlMean <- mean(BootSdls$HeightNext, na.rm = TRUE)
+  BootSdlSD <- sd(BootSdls$HeightNext, na.rm = TRUE)
+
+
+  BootFecModels <- list(PRep = BootReproGLM,
+                        Seeds = BootSeedGLM,
+                        EstProb = EstProb,
+                        SizeDist = list(Mean = BootSdlMean,
+                                        SD = BootSdlSD))
+
+  # Now, begin constructing kernels. We don't need to re-assign any of the
+  # constants used to construct the models so I'll skip that
+  GMat_Cont <- CellSize * outer(MeshPts, MeshPts, FUN = GrowFun, Model = BootContGrowLM)
+  GMat_Comp <- CellSize * outer(MeshPts, MeshPts, FUN = GrowFun, Model = BootCompGrowLM)
+
+  # Correct for eviction in the growth kernels
+  GMat_Cont <- GMat_Cont/matrix(as.vector(apply(GMat_Cont,
+                                                2,
+                                                sum)),
+                                nrow = nMeshPts,
+                                ncol = nMeshPts,
+                                byrow = TRUE)
+
+  GMat_Comp <- GMat_Comp/matrix(as.vector(apply(GMat_Comp,
+                                                2,
+                                                sum)),
+                                nrow = nMeshPts,
+                                ncol = nMeshPts,
+                                byrow = TRUE)
+
+  SVec_Cont_Quad <- SurvFun(MeshPts, BootContSurv_Quad)
+  SVec_Comp_Quad <- SurvFun(MeshPts, BootCompSurv_Quad)
+
+  SVec_Cont_Lin <- SurvFun(MeshPts, BootContSurv_Lin[!is.na(BootContSurv_Lin)])
+  SVec_Comp_Lin <- SurvFun(MeshPts, BootCompSurv_Lin[!is.na(BootCompSurv_Lin)])
+
+  # P, F, and K matrices
+  PMat_Cont_Quad <- PMat_Comp_Quad <- matrix(0, nMeshPts, nMeshPts)
+
+  PMat_Cont_Lin <- PMat_Comp_Lin <- matrix(0, nMeshPts, nMeshPts)
+
+  # Generate P Matrix
+
+  for(j in seq_len(nMeshPts)){
+    PMat_Cont_Quad[ ,j] <- GMat_Cont[ ,j] * SVec_Cont_Quad[j]
+    PMat_Comp_Quad[ ,j] <- GMat_Comp[ ,j] * SVec_Comp_Quad[j]
+
+    PMat_Cont_Lin[ ,j] <- GMat_Cont[ ,j] * SVec_Cont_Lin[j]
+    PMat_Comp_Lin[ ,j] <- GMat_Comp[ ,j] * SVec_Comp_Lin[j]
+  }
+
+  # Generate the F Matrix. This is the same for both treatments
+  FMat <- CellSize * outer(MeshPts, MeshPts, FUN = FecFun, Models = FecModels)
+
+  KMat_Cont_Quad <- PMat_Cont_Quad + FMat
+  KMat_Comp_Quad <- PMat_Comp_Quad + FMat
+
+  KMat_Cont_Lin <- PMat_Cont_Lin + FMat
+  KMat_Comp_Lin <- PMat_Comp_Lin + FMat
+
+  # Extract lambdas
+  ContEV_Quad <- eigen(KMat_Cont_Quad)
+  CompEV_Quad <- eigen(KMat_Comp_Quad)
+  ContLambda_Quad_boot <- max(Re(ContEV_Quad$values))
+  CompLambda_Quad_boot <- max(Re(CompEV_Quad$values))
+  ContEV_Lin <- eigen(KMat_Cont_Lin)
+  CompEV_Lin <- eigen(KMat_Comp_Lin)
+  ContLambda_Lin_boot <- max(Re(ContEV_Lin$values))
+  CompLambda_Lin_boot <- max(Re(CompEV_Lin$values))
+
+  # Store values
+  OutputValues$GrowSlope_CR[i] <- coef(BootCompGrowLM)[2]
+  OutputValues$GrowInt_CR[i] <- coef(BootCompGrowLM)[1]
+  OutputValues$GrowSlope_Cont[i] <- coef(BootContGrowLM)[2]
+  OutputValues$GrowInt_Cont[i] <- coef(BootContGrowLM)[1]
+  OutputValues$RepSlope[i] <- coef(BootReproGLM)[2]
+  OutputValues$RepInt[i] <- coef(BootReproGLM)[1]
+  OutputValues$SeedSlope[i] <- coef(BootSeedGLM)[2]
+  OutputValues$SeedInt[i] <- coef(BootSeedGLM)[1]
+  OutputValues$RecMean[i] <- BootSdlMean
+  OutputValues$RecSD[i] <- BootSdlSD
+  OutputValues$Lambda_CR_Quad[i] <- CompLambda_Quad_boot
+  OutputValues$Lambda_CR_Lin[i] <- CompLambda_Lin_boot
+  OutputValues$Lambda_Cont_Quad[i] <- ContLambda_Quad_boot
+  OutputValues$Lambda_Cont_Lin[i] <- ContLambda_Lin_boot
+
+  if(i %% 100 == 0) {
+    message(i / 10, '% of data crunched')
+  }
+
+}
 
 # Save all of the computed values
-# OutputData <- as.data.frame(OutputValues) %>%
-#   mutate(Boot_Obs = 'Boot')
-# 
-# AllValues <- as.data.frame(ObservedValues) %>%
-#   mutate(Boot_Obs = 'Observed') %>%
-#   rbind(OutputData) 
-# 
-# write.csv(AllValues, 'Lonicera_IPM/BootStrap_Output_Lonicera.csv',
-#           row.names = FALSE)
-# 
+OutputData <- as.data.frame(OutputValues) %>%
+  mutate(Boot_Obs = 'Boot')
+
+AllValues <- as.data.frame(ObservedValues) %>%
+  mutate(Boot_Obs = 'Observed') %>%
+  rbind(OutputData)
+
+write.csv(AllValues, 'Lonicera_IPM/Lonicera_BootStrap_Output.csv',
+          row.names = FALSE)
+
 
 # Now, to make the figures. This next bit does a bunch of re-structuring of the
 # data so that it's ggplot2-friendly
@@ -488,6 +488,7 @@ PlotData <- rbind(fixef(ContSurvBRM_Lin),
   select(obs, UpCI, LoCI) %>%
   cbind(SurvData, .) %>%
   rbind(AllData)
+
 write.csv(PlotData, file = 'Lonicera_IPM/Lonicera_Summarized_Output.csv',
           row.names = FALSE)
 
