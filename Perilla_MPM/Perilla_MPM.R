@@ -146,10 +146,17 @@ boot_s_cr <- sort(boot_s_cr)
 boot_s_c <- sort(boot_s_c)
 boot_f_cr <- sort(boot_f_cr)
 boot_f_c <- sort(boot_f_c)
-boot_l_cr <- sort(boot_l_cr)
-boot_l_c <- sort(boot_l_c)
 
 var_escr <- var(log(boot_l_cr + 0.5) - log(boot_l_c + 0.5))
+
+lambdas <- data.frame(lambda_c = c(l_c, boot_l_c),
+                      lambda_cr = c(l_cr, boot_l_cr),
+                      boot_obs = c("observed", rep("bootstrap", 1000)))
+
+saveRDS(lambdas, file = '../Data/bootstrap_lambdas/Perilla_lambdas.rds')
+
+boot_l_cr <- sort(boot_l_cr)
+boot_l_c <- sort(boot_l_c)
 
 # creating vector of upper and lower confidence intervals for each vital rate
 lower <- c(boot_s_cr[25], boot_s_c[25],
@@ -196,7 +203,7 @@ if(results$upper[5] < results$lower[6] |
 results$y[5:6] <- .99 * max(results$upper[5:6])
 
 # Makes for prettier labels when used w/ facet_wrap()
-results$Treatment <- c('Control', 'CR')
+results$Treatment <- rep(c('CR', 'Control'), 3)
 results$Var <- factor(c('paste(italic(s))', 
                         'paste(italic(s))',
                         'paste(italic(f))',

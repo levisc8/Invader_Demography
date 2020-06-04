@@ -352,10 +352,17 @@ boot_pfra_cr <- sort(boot_pfra_cr)
 
 boot_f_c <- sort(boot_f_c)
 boot_f_cr <- sort(boot_f_cr)
-boot_l_c <- sort(boot_l_c)
-boot_l_cr <- sort(boot_l_cr)
 
 var_escr <- var(log(boot_l_cr + 0.5) - log(boot_l_c + 0.5))
+
+lambdas <- data.frame(lambda_c = c(values[15], boot_l_c),
+                      lambda_cr = c(values[16], boot_l_cr),
+                      boot_obs = c("observed", rep("bootstrap", 1000)))
+
+saveRDS(lambdas, file = '../Data/bootstrap_lambdas/Potentilla_lambdas.rds')
+
+boot_l_c <- sort(boot_l_c)
+boot_l_cr <- sort(boot_l_cr)
 
 # Extract confidence intervals
 lower <- c(boot_s1_c[25], boot_s1_cr[25],
